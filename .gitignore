@@ -1,0 +1,29 @@
+# ENV
+.env
+.env.*
+!.env.example
+
+# Laravel
+src/vendor/
+src/storage/logs/*
+src/storage/framework/*
+src/bootstrap/cache/*
+src/.phpunit.result.cache
+
+# Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/dist/
+frontend/out/
+
+# Docker volumes
+postgres_data/
+postgres_backups/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
