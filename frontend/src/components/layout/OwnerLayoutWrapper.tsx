@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Header from "./Header";
 import { GripVertical } from "lucide-react";
 import OwnerSidebar from "./OwnerSidebar";
+import TenantHeader from "./TenantHeader";
 
 interface OwnerLayoutWrapperProps {
     children: React.ReactNode;
@@ -54,7 +55,7 @@ const OwnerLayoutWrapper: React.FC<OwnerLayoutWrapperProps> = ({ children }) => 
             <div className="flex flex-col h-full bg-zinc-100 ">
                 {/* Header */}
 
-                <Header isOpen={isOpen} pathname={pathname} />
+                <TenantHeader/>
 
                 {/* Main Container */}
                 <div className="flex flex-1 overflow-visible">

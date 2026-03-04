@@ -233,22 +233,95 @@ class TenantController extends Controller
     }
 
     /**
-     * GET /api/tenants/current
-     */
-    public function current()
-    {
+ * GET /api/tenant/current
+ * Dipanggil dari tenant subdomain
+ */
+public function current(Request $request)
+{
+    try {
         $tenant = tenant();
 
         if (!$tenant) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tenant not found',
-            ], 404);
+            return ApiResponse::error('Tenant not found', null, 404);
         }
 
-        return ApiResponse::success(
-            new TenantResource($tenant->load(['domains','branches'])),
-            'Current tenant retrieved'
+        $tenantData = DB::connection('central')
+            ->table('tenants')
+            ->where('id', $tenant->id)
+            ->first();
+
+        if (!$tenantData) {
+            return ApiResponse::error('Tenant data not found', null, 404);
+        }
+
+        // Ambil subscription aktif
+        $subscription = DB::connection('central')
+            ->table('subscriptions')
+            ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
+            ->where('subscriptions.tenant_id', $tenant->id)
+            ->where('subscriptions.status', 'active')
+            ->select(
+                'subscriptions.id',
+                'subscriptions.status',
+                'subscriptions.billing_cycle',
+                'subscriptions.current_period_ends_at',
+                'plans.name as plan_name',
+                'plans.code as plan_code',
+            )
+            ->first();
+
+        // Ambil branch yang sedang dipakai dari header/session
+        // Branch diidentifikasi dari request header X-Branch-Id atau query param
+        $branchId = $request->header('X-Branch-Id') ?? $request->get('branch_id');
+
+        $currentBranch = null;
+        if ($branchId) {
+            $currentBranch = DB::table('branches')
+                ->where('id', $branchId)
+                ->where('is_active', true)
+                ->select('id', 'name', 'address')
+                ->first();
+        }
+
+        // Fallback ke main branch jika tidak ada branch dipilih
+        if (!$currentBranch) {
+            $currentBranch = DB::table('branches')
+                ->where('is_active', true)
+                ->select('id', 'name', 'address')
+                ->first();
+        }
+
+        // Ambil semua branch aktif untuk switcher
+        $branches = DB::table('branches')
+            ->where('is_active', true)
+            ->select('id', 'name', 'address')
+            ->orderBy('name')
+            ->get();
+
+        return ApiResponse::success([
+            'id'                   => $tenantData->id,
+            'name'                 => $tenantData->name,
+            'slug'                 => $tenantData->slug,
+            'logo_url'             => $tenantData->logo_url,
+            'status'               => $tenantData->status,
+            'owner_name'           => $tenantData->owner_name,
+            'owner_email'          => $tenantData->owner_email,
+            'max_branches'         => $tenantData->max_branches,
+            'current_branch_count' => $tenantData->current_branch_count,
+            'subscription_ends_at' => $tenantData->subscription_ends_at,
+            'trial_ends_at'        => $tenantData->trial_ends_at,
+            'subscription'         => $subscription,
+            'current_branch'       => $currentBranch,
+            'branches'             => $branches,
+        ], 'Tenant data retrieved successfully');
+
+    } catch (\Exception $e) {
+        Log::error('Error fetching tenant current', ['error' => $e->getMessage()]);
+        return ApiResponse::error(
+            'Failed to fetch tenant data',
+            config('app.debug') ? $e->getMessage() : null,
+            500
         );
     }
+}
 }

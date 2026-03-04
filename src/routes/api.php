@@ -11,6 +11,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DomainRequestController;
 use App\Http\Controllers\SubscriptionTenantController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Tenant\StaffController;
 
 
     
@@ -100,3 +101,14 @@ Route::prefix('domain-requests')->group(function () {
 
 // Webhook — tanpa middleware, Midtrans yang call ini
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+
+// Central routes (admin)
+Route::prefix('payments')->group(function () {
+    Route::get('/', [PaymentController::class, 'index']);
+    Route::get('/{id}', [PaymentController::class, 'show']);
+});
+
+Route::prefix('invoices')->group(function () {
+    Route::get('/', [PaymentController::class, 'indexInvoices']);
+    Route::get('/{id}', [PaymentController::class, 'showInvoice']);
+});

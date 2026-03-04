@@ -46,7 +46,7 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
         <div className="bg-white">
             <div className="flex flex-col h-full bg-zinc-100">
                 {/* Header - akan fetch tenant sendiri */}
-                <TenantHeader isOpen={isOpen} />
+                <TenantHeader />
 
                 {/* Main Container */}
                 <div className="flex flex-1 overflow-visible">

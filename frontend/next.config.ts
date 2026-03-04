@@ -4,6 +4,11 @@ const nextConfig: NextConfig = {
     /* config options here */
     output: "standalone",
 
+    // Skip ESLint during production builds (run lint separately)
+    eslint: {
+        ignoreDuringBuilds: true,
+    },
+
     // Images optimization
     images: {
         unoptimized: true,

@@ -213,7 +213,7 @@ export default function TenantDetail() {
                                                 : "bg-red-100 text-red-700"
                                         }`}
                                     >
-                                        {tenant.latestSubscription.status.charAt(0).toUpperCase() + tenant.latestSubscription.status.slice(1)}
+                                        {tenant.latestSubscription?.status ? tenant.latestSubscription.status.charAt(0).toUpperCase() + tenant.latestSubscription.status.slice(1) : tenant.status?.charAt(0).toUpperCase() + (tenant.status?.slice(1) ?? "")}
                                     </span>
                                 </div>
                             </div>

@@ -6,6 +6,7 @@ export type SubscriptionsQueryParams = {
     page?: number;
     per_page?: number;
     search?: string;
+    status?: string[]; // New status filter
 };
 
 /* =====================================================

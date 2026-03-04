@@ -37,6 +37,11 @@ public function index(Request $request)
         });
     }
 
+    if ($request->filled('status')) {
+    $statuses = explode(',', $request->status);
+    $query->whereIn('subscriptions.status', $statuses);
+}
+
     // 📦 Order latest
     $subscriptions = $query
         ->orderBy('created_at', 'desc')

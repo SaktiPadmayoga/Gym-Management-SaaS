@@ -94,13 +94,7 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
         Icon: IconCreditCard,
         IconSolid: IconCreditCardFilled,
     },
-    {
-        id: "nav-profile",
-        title: "Profile",
-        path: "/owner/profile",
-        Icon: IconUser,
-        IconSolid: IconUserFilled,
-    },
+    
 
 
     // =========================
@@ -113,6 +107,13 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
         path: "/owner/users",
         Icon: IconUsersGroup,
         IconSolid: IconUsersGroup,
+    },
+    {
+        id: "nav-staff",
+        title: "Staff",
+        path: "/owner/staffs",
+        Icon: IconUser,
+        IconSolid: IconUserFilled,
     },
 
     // =========================

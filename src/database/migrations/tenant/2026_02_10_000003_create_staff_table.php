@@ -7,15 +7,22 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('tenant_users', function (Blueprint $table) {
+        Schema::create('staff', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
+            $table->string('phone')->nullable();
+            $table->string('avatar')->nullable();
 
-            $table->enum('role', ['owner', 'admin', 'finance', 'support'])->default('admin');
+            // Role global — hanya untuk identifikasi level tertinggi
+            // Permission detail ditentukan di staff_branches per branch
+            $table->enum('role', ['owner', 'staff'])->default('staff');
+
             $table->boolean('is_active')->default(true);
+            $table->timestamp('email_verified_at')->nullable();
+            $table->rememberToken();
             $table->timestamp('last_login_at')->nullable();
 
             $table->timestamps();
@@ -27,6 +34,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('tenant_users');
+        Schema::dropIfExists('staff');
     }
 };

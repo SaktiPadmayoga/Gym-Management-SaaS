@@ -163,8 +163,8 @@ export default function PlansModal() {
                     setProcessingPlanId(null);
                 },
             });
-        } catch (err) {
-            const message = err?.response?.data?.message || "Failed to initiate payment";
+        } catch (err: unknown) {
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to initiate payment";
             toast.error(message);
             setProcessingPlanId(null);
         }

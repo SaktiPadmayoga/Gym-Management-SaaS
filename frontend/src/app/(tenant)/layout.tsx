@@ -6,6 +6,7 @@ import { useTenant } from "@/hooks/useTenant";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import { ReactNode } from "react";
 import QueryProvider from "@/providers/QueryProvider";
+import { BranchProvider } from "@/providers/BranchProvider";
 
 export default function TenantLayout({ children }: { children: ReactNode }) {
     const { tenant, isLoading } = useTenant();
@@ -27,7 +28,10 @@ export default function TenantLayout({ children }: { children: ReactNode }) {
     // If valid tenant, wrap with layout
     return (
         <QueryProvider>
-            <LayoutWrapper>{children}</LayoutWrapper>
+            <BranchProvider>
+                        <LayoutWrapper>{children}</LayoutWrapper>
+            </BranchProvider>    
+
         </QueryProvider>
     );
 }

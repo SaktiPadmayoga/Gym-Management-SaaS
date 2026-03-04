@@ -2,12 +2,13 @@ import apiClient from "@/lib/api-client";
 import { SubscriptionsData, SubscriptionCreateRequest } from "@/types/central/subscriptions";
 
 export const subscriptionsAPI = {
-    getAll: async (params?: { page?: number; per_page?: number; search?: string }): Promise<SubscriptionsData[]> => {
+    getAll: async (params?: { page?: number; per_page?: number; search?: string; status?: string[]; }): Promise<SubscriptionsData[]> => {
         const response = await apiClient.get("/subscriptions", {
             params: {
                 page: params?.page || 1,
                 per_page: params?.per_page || 15,
                 search: params?.search || "",
+                status: params?.status?.join(","), 
             },
         });
 

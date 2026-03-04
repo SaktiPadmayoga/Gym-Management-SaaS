@@ -2,45 +2,94 @@
 
 namespace App\Models\Tenant;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Branch;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class Staff extends Model
+class Staff extends Authenticatable
 {
-    use HasUuids, SoftDeletes;
+    use HasApiTokens, HasFactory, HasUuids, Notifiable, SoftDeletes;
 
-    protected $table = 'staff'; // Laravel pluralizer might fail on 'staff'
+    protected $table = 'staff';
 
     protected $fillable = [
-        'user_id', 'name', 'phone', 'staff_type', 'join_date', 'end_date',
-        'base_salary', 'payment_type', 'specializations', 'certifications',
-        'bio', 'photo', 'commission_rate', 'status'
+        'name',
+        'email',
+        'password',
+        'phone',
+        'avatar',
+        'role',
+        'is_active',
+        'last_login_at',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     protected $casts = [
-        'join_date' => 'date',
-        'end_date' => 'date',
-        'specializations' => 'array',
-        'certifications' => 'array',
-        'base_salary' => 'decimal:2',
-        'commission_rate' => 'decimal:2',
+        'is_active'          => 'boolean',
+        'email_verified_at'  => 'datetime',
+        'last_login_at'      => 'datetime',
+        'password'           => 'hashed',
     ];
 
-    public function user()
+    // =============================================
+    // Relationships
+    // =============================================
+
+    public function staffBranches()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(StaffBranch::class, 'staff_id');
     }
 
-    // Sebagai Instructor di Class Schedule
-    public function classSchedules()
+    public function branches()
     {
-        return $this->hasMany(ClassSchedule::class, 'instructor_id');
+        return $this->belongsToMany(Branch::class, 'staff_branches', 'staff_id', 'branch_id')
+            ->withPivot(['role', 'is_active', 'joined_at'])
+            ->withTimestamps()
+            ->wherePivot('is_active', true);
     }
 
-    // Sebagai PT di PT Session
-    public function ptSessions()
+    // =============================================
+    // Helpers
+    // =============================================
+
+    public function isOwner(): bool
     {
-        return $this->hasMany(PtSession::class, 'pt_id');
+        return $this->role === 'owner';
+    }
+
+    /**
+     * Cek apakah staff punya akses ke branch tertentu
+     */
+    public function hasAccessToBranch(string $branchId): bool
+    {
+        if ($this->isOwner()) return true;
+
+        return $this->staffBranches()
+            ->where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->exists();
+    }
+
+    /**
+     * Ambil role staff di branch tertentu
+     */
+    public function getRoleInBranch(string $branchId): ?string
+    {
+        if ($this->isOwner()) return 'owner';
+
+        $pivot = $this->staffBranches()
+            ->where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->first();
+
+        return $pivot?->role;
     }
 }
