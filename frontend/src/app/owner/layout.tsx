@@ -5,6 +5,7 @@ import OwnerLayoutWrapper from "@/components/layout/OwnerLayoutWrapper";
 import { ReactNode } from "react";
 import QueryProvider from "@/providers/QueryProvider";
 import { Toaster } from "sonner";
+import { BranchProvider } from "@/providers/BranchProvider";
 
 export default function CentralLayout({ children }: { children: ReactNode }) {
     const { isMaster, isLoading, isTenant } = useTenant();
@@ -26,7 +27,9 @@ export default function CentralLayout({ children }: { children: ReactNode }) {
     return (
         <QueryProvider>
             <Toaster />
-            <OwnerLayoutWrapper>{children}</OwnerLayoutWrapper>
+            <BranchProvider>
+                <OwnerLayoutWrapper>{children}</OwnerLayoutWrapper>
+            </BranchProvider>
         </QueryProvider>
     );
 }

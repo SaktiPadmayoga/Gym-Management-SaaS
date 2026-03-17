@@ -14,7 +14,7 @@ class AssignBranchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'branch_id'  => ['required', 'uuid', 'exists:branches,id'],
+            'branch_id' => ['nullable', 'uuid'],
             'role'       => ['required', 'in:branch_manager,trainer,receptionist,cashier'],
             'joined_at'  => ['nullable', 'date'],
         ];

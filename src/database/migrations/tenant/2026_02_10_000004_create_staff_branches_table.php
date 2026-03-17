@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('staff_branches', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
-            $table->uuid('staff_id');
+            $table->uuid('staffs_id');
             $table->uuid('branch_id');
 
             // Role spesifik per branch — berbeda dengan role global di tabel staff
@@ -22,12 +22,12 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
 
-            $table->foreign('staff_id')->references('id')->on('staff')->cascadeOnDelete();
+            $table->foreign('staffs_id')->references('id')->on('staffs')->cascadeOnDelete();
             $table->foreign('branch_id')->references('id')->on('branches')->cascadeOnDelete();
 
-            $table->unique(['staff_id', 'branch_id']);
+            $table->unique(['staffs_id', 'branch_id']);
             $table->index(['branch_id', 'is_active']); // query staff per branch
-            $table->index(['staff_id', 'is_active']);  // query branch per staff
+            $table->index(['staffs_id', 'is_active']);  // query branch per staff
         });
     }
 
