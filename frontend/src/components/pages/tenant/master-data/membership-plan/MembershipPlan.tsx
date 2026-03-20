@@ -1,33 +1,53 @@
 "use client";
 
 import CustomTable, { Column, ActionItem } from "@/components/ui/table/CustomTable";
-import { MembershipPlanData } from "@/types/membership-plan";
-import { DUMMY_MEMBERSHIP_PLANS } from "@/lib/dummy/membershipPlanDummy";
+import { MembershipPlanData, MembershipPlanWithKeyword } from "@/types/tenant/membership-plans";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { SearchInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
 import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
+import { useMembershipPlans, useDeleteMembershipPlan, useToggleMembershipPlan, useDuplicateMembershipPlan } from "@/hooks/tenant/useMembershipPlans";
+import { useDebounce } from "@/hooks/useDebounce";
 
-type MembershipPlanWithKeyword = {
-    keyword: string;
-};
-
-export default function MembershipPlanPage() {
+export default function MembershipPlan() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
 
+    const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
+    const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
+
     const form = useForm<MembershipPlanWithKeyword>({
-        defaultValues: {
-            keyword: "",
-        },
+        defaultValues: { search: searchParams.get("search") || "" },
     });
 
-    /** 🔔 Toast handler */
+    const searchValue = form.watch("search");
+    const debouncedSearch = useDebounce(searchValue, 500);
+
+    const { data, isLoading, isError } = useMembershipPlans({
+        search: debouncedSearch,
+        page,
+        per_page: perPage,
+    });
+
+    const deleteMutation = useDeleteMembershipPlan();
+    const toggleMutation = useToggleMembershipPlan();
+    const duplicateMutation = useDuplicateMembershipPlan();
+
+    // Sync URL
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        params.set("page", String(page));
+        params.set("per_page", String(perPage));
+        router.replace(`/membership-plan?${params.toString()}`);
+    }, [debouncedSearch, page, perPage, router]);
+
+    // Toast
     useEffect(() => {
         const success = searchParams.get("success");
         const updated = searchParams.get("updated");
@@ -37,67 +57,99 @@ export default function MembershipPlanPage() {
             hasShownToast.current = false;
             return;
         }
-
         if (success === "true" && !hasShownToast.current) {
             toast.success("Membership plan created successfully");
+            hasShownToast.current = true;
         }
-
         if (updated === "true" && !hasShownToast.current) {
             toast.success("Membership plan updated successfully");
+            hasShownToast.current = true;
         }
-
         if (deleted === "true" && !hasShownToast.current) {
             toast.success("Membership plan deleted successfully");
+            hasShownToast.current = true;
         }
 
-        hasShownToast.current = true;
         window.history.replaceState({}, "", "/membership-plan");
     }, [searchParams]);
 
-    /** 📊 Table Columns */
+    const entries: MembershipPlanData[] = data ?? [];
+    const totalData = entries.length;
+
+    if (isError) {
+        toast.error("Error loading membership plans");
+        return <div className="py-10 text-center text-red-500">Error loading membership plans</div>;
+    }
+
+    /* =========================
+     * TABLE COLUMNS
+     * ========================= */
     const columns: Column<MembershipPlanData>[] = [
-        {
-            header: "ID",
-            render: (item) => <span className="font-medium">{item.id}</span>,
-            width: "w-40",
-        },
         {
             header: "Name",
             render: (item) => (
-                <Link href={`/membership-plan/${item.id}`} className="font-medium hover:underline">
-                    {item.name}
-                </Link>
+                <div className="flex items-center gap-2">
+                    {item.color && <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />}
+                    <Link href={`/membership-plan/${item.id}`} className="font-medium hover:underline">
+                        {item.name}
+                    </Link>
+                </div>
             ),
-            width: "w-64",
+            width: "w-52",
         },
         {
             header: "Category",
-            render: (item) => <span>{item.category}</span>,
-            width: "w-48",
+            render: (item) => <span className="rounded-lg px-2 py-1 text-xs font-medium bg-zinc-100 text-zinc-600">{item.category}</span>,
+            width: "w-36",
         },
         {
             header: "Duration",
             render: (item) => (
-                <span>
-                    {item.duration} {item.durationUnit}
+                <span className="text-sm text-zinc-700">
+                    {item.duration} {item.duration_unit}
                 </span>
             ),
-            width: "w-40",
+            width: "w-28",
         },
         {
             header: "Price",
-            render: (item) => <span className="font-medium">Rp {item.price.toLocaleString("id-ID")}</span>,
-            width: "w-48",
+            render: (item) => <span className="font-medium text-zinc-800">Rp {Number(item.price).toLocaleString("id-ID")}</span>,
+            width: "w-36",
+        },
+        {
+            header: "Check-in",
+            render: (item) => <span className="text-sm text-zinc-600">{item.unlimited_checkin ? "Unlimited" : `${item.checkin_quota_per_month ?? "-"}x / month`}</span>,
+            width: "w-32",
+        },
+        {
+            header: "Access",
+            render: (item) => (
+                <span className={`rounded-lg px-2 py-1 text-xs font-medium ${item.access_type === "all_branches" ? "bg-indigo-100 text-indigo-700" : "bg-zinc-100 text-zinc-600"}`}>
+                    {item.access_type === "all_branches" ? "All Branches" : "Single Branch"}
+                </span>
+            ),
+            width: "w-32",
+        },
+        {
+            header: "Quota",
+            render: (item) => <span className="text-sm text-zinc-600">{item.unlimited_sold ? "Unlimited" : `${item.remaining_quota ?? "-"} left`}</span>,
+            width: "w-28",
         },
         {
             header: "Status",
             render: (item) =>
-                item.availabilitySetting.alwaysAvailable ? <span className="text-green-600 rounded-lg p-2 bg-green-600/10 font-medium">Active</span> : <span className="text-red-600 rounded-lg p-2 bg-red-600/10">Inactive</span>,
-            width: "w-32",
+                item.is_active ? (
+                    <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium text-sm">Active</span>
+                ) : (
+                    <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium text-sm">Inactive</span>
+                ),
+            width: "w-24",
         },
     ];
 
-    /** ⚙️ Row Actions */
+    /* =========================
+     * ROW ACTIONS
+     * ========================= */
     const actions: ActionItem<MembershipPlanData>[] = [
         {
             label: "View Detail",
@@ -111,78 +163,91 @@ export default function MembershipPlanPage() {
             onClick: (row) => router.push(`/membership-plan/${row.id}`),
         },
         {
+            label: (row) => (row.is_active ? "Deactivate" : "Activate"),
+            icon: "eye",
+            onClick: (row) => {
+                toggleMutation.mutate(row.id, {
+                    onSuccess: () => toast.success(`Plan ${row.is_active ? "deactivated" : "activated"}`),
+                    onError: () => toast.error("Failed to update status"),
+                });
+            },
+        },
+        {
+            label: "Duplicate",
+            icon: "edit",
+            onClick: (row) => {
+                duplicateMutation.mutate(row.id, {
+                    onSuccess: () => toast.success("Plan duplicated"),
+                    onError: () => toast.error("Failed to duplicate"),
+                });
+            },
+        },
+        {
             label: "Delete",
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
             onClick: (row) => {
                 if (confirm("Are you sure you want to delete this membership plan?")) {
-                    toast.success("Membership plan deleted");
+                    deleteMutation.mutate(row.id, {
+                        onSuccess: () => toast.success("Membership plan deleted"),
+                        onError: () => toast.error("Failed to delete"),
+                    });
                 }
             },
         },
     ];
 
-    /** 📄 Pagination */
-    const page = Number(searchParams.get("page")) || 1;
-    const perPage = Number(searchParams.get("per_page")) || 5;
-
-    const start = (page - 1) * perPage;
-    const end = start + perPage;
-
-    const entries = DUMMY_MEMBERSHIP_PLANS.slice(start, end);
-
-    const showingFrom = entries.length === 0 ? 0 : start + 1;
-    const showingTo = Math.min(end, DUMMY_MEMBERSHIP_PLANS.length);
-    const totalData = DUMMY_MEMBERSHIP_PLANS.length;
-
     return (
         <FormProvider {...form}>
             <div>
-                <form>
-                    <div className="rounded-xl font-figtree  bg-white border border-gray-500/20 px-6 py-4">
-                        <Toaster position="top-center" />
+                <div className="rounded-xl font-figtree bg-white border border-gray-500/20 px-6 py-4">
+                    <Toaster position="top-center" />
 
-                        {/* Breadcrumb */}
-                        <div className="breadcrumbs text-sm text-zinc-400 mb-4">
-                            <ul>
-                                <li>Master Data</li>
-                                <li className="text-aksen-secondary">Membership Plan</li>
-                            </ul>
+                    {/* Breadcrumb */}
+                    <div className="breadcrumbs text-sm text-zinc-400 mb-4">
+                        <ul>
+                            <li>Master Data</li>
+                            <li className="text-aksen-secondary">Membership Plan</li>
+                        </ul>
+                    </div>
+
+                    {/* Header */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Membership Plan</h1>
+                            <p className="text-zinc-500">Manage membership plans available for members</p>
                         </div>
-
-                        {/* Header */}
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h1 className="text-2xl font-semibold text-zinc-800">Membership Plan</h1>
-                                <p className="text-zinc-500">Manage membership plans available for customers</p>
+                        <div className="flex gap-3">
+                            <div className="w-64 text-zinc-800">
+                                <SearchInput name="search" />
                             </div>
-
-                            <div className="flex gap-3">
-                                <div className="w-64 text-zinc-800">
-                                    <SearchInput name="keyword" />
-                                </div>
-                                <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/membership-plan/create")}>
-                                    New Plan
-                                </CustomButton>
-                            </div>
-                        </div>
-
-                        {/* Table */}
-                        <div className="overflow-x-auto">
-                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/membership-plan/${row.id}`)} />
-                        </div>
-
-                        {/* Info */}
-                        <div className="mt-4 text-sm text-zinc-500">
-                            Showing {showingFrom} to {showingTo} of {totalData} data
+                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/membership-plan/create")}>
+                                New Plan
+                            </CustomButton>
                         </div>
                     </div>
-                </form>
 
-                {/* Pagination */}
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        {isLoading ? (
+                            <div className="space-y-3">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
+                                ))}
+                            </div>
+                        ) : (
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/membership-plan/${row.id}`)} />
+                        )}
+                    </div>
+
+                    <div className="mt-4 text-sm text-zinc-500">
+                        Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
+                    </div>
+                </div>
+
                 <div className="mt-4">
-                    <PaginationWithRows hasNextPage={end < totalData} hasPrevPage={start > 0} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={5} />
+                    <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={perPage} />
                 </div>
             </div>
         </FormProvider>

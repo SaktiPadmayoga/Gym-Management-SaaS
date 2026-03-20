@@ -1,109 +1,147 @@
 "use client";
 
-import { Icon } from "@/components/icon";
-import CustomButton from "@/components/ui/button/CustomButton";
-import { SearchableDropdown, DropdownOption } from "@/components/ui/input/CustomDropdown";
-import { NumberInput, TextInput } from "@/components/ui/input/Input";
-import { MembershipPlanData } from "@/types/membership-plan";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormProvider, useForm, useWatch } from "react-hook-form";
+import { toast, Toaster } from "sonner";
 import { useState } from "react";
 
-export default function CreateMembershipPlan() {
+import { Icon } from "@/components/icon";
+import CustomButton from "@/components/ui/button/CustomButton";
+import { TextInput, NumberInput } from "@/components/ui/input/Input";
+import { SearchableDropdown, DropdownOption } from "@/components/ui/input/CustomDropdown";
+import { useBranch } from "@/providers/BranchProvider";
+import { useCreateMembershipPlan } from "@/hooks/tenant/useMembershipPlans";
+import { MembershipPlanCreateRequest, DEFAULT_CHECKIN_SCHEDULE, CheckinSchedule } from "@/types/tenant/membership-plans";
+
+/* =========================
+ * OPTIONS
+ * ========================= */
+
+const durationUnitOptions: DropdownOption<string>[] = [
+    { key: "day", label: "Day", value: "day" },
+    { key: "week", label: "Week", value: "week" },
+    { key: "month", label: "Month", value: "month" },
+    { key: "year", label: "Year", value: "year" },
+];
+
+const accessTypeOptions: DropdownOption<string>[] = [
+    { key: "single_branch", label: "Single Branch", value: "single_branch" },
+    { key: "all_branches", label: "All Branches", value: "all_branches" },
+];
+
+const DAYS = [
+    { key: "mon", label: "Monday" },
+    { key: "tue", label: "Tuesday" },
+    { key: "wed", label: "Wednesday" },
+    { key: "thu", label: "Thursday" },
+    { key: "fri", label: "Friday" },
+    { key: "sat", label: "Saturday" },
+    { key: "sun", label: "Sunday" },
+] as const;
+
+/* =========================
+ * FORM TYPE
+ * ========================= */
+
+interface CreateMembershipPlanFormData {
+    name: string;
+    category: string;
+    description: string;
+    color: string;
+    price: number;
+    duration: number;
+    duration_unit: "day" | "week" | "month" | "year";
+    loyalty_points_reward: number;
+    max_sharing_members: number;
+    access_type: "all_branches" | "single_branch";
+    unlimited_checkin: boolean;
+    checkin_quota_per_month: number | undefined;
+    unlimited_sold: boolean;
+    total_quota: number | undefined;
+    always_available: boolean;
+    available_from: string;
+    available_until: string;
+    is_active: boolean;
+    checkin_schedule: CheckinSchedule;
+}
+
+export default function CreateMembershipPlanPage() {
     const router = useRouter();
+    const createMutation = useCreateMembershipPlan();
+    const { branchId } = useBranch();
+
     const [showSchedule, setShowSchedule] = useState(false);
 
-    const form = useForm<MembershipPlanData>({
+    const form = useForm<CreateMembershipPlanFormData>({
         mode: "onChange",
         defaultValues: {
-            id: "",
             name: "",
             category: "",
-
+            description: "",
+            color: "",
             price: 0,
             duration: 1,
-            durationUnit: "month",
-            description: "",
-
-            maxSharingAccess: 0,
-            loyaltyPoint: 0,
-
-            checkinSetting: {
-                accessType: "all_club",
-                classAccessType: "all_classes",
-                unlimitedCheckinMembership: true,
-                unlimitedCheckinClass: true,
-            },
-
-            availabilitySetting: {
-                unlimitedSold: true,
-                quota: undefined,
-
-                alwaysAvailable: true,
-                availableFrom: "2000-01-01",
-                availableUntil: "2100-12-31",
-            },
-
-            /** 🔥 DEFAULT 24 JAM SETIAP HARI */
-            checkinSchedule: {
-                monday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-                tuesday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-                wednesday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-                thursday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-                friday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-                saturday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-                sunday: { enabled: true, startAt: "00:00", endAt: "23:59" },
-            },
+            duration_unit: "month",
+            loyalty_points_reward: 0,
+            max_sharing_members: 0,
+            access_type: "single_branch",
+            unlimited_checkin: true,
+            checkin_quota_per_month: undefined,
+            unlimited_sold: true,
+            total_quota: undefined,
+            always_available: true,
+            available_from: "",
+            available_until: "",
+            is_active: true,
+            checkin_schedule: DEFAULT_CHECKIN_SCHEDULE,
         },
     });
 
-    const onSubmit = (data: MembershipPlanData) => {
-        console.log("Membership Plan Data:", data);
-        router.push("/membership-plan?success=true");
+    const unlimitedCheckin = useWatch({ control: form.control, name: "unlimited_checkin" });
+    const unlimitedSold = useWatch({ control: form.control, name: "unlimited_sold" });
+    const alwaysAvailable = useWatch({ control: form.control, name: "always_available" });
+
+    const onSubmit = async (formData: CreateMembershipPlanFormData) => {
+        try {
+            const payload: MembershipPlanCreateRequest = {
+                name: formData.name,
+                category: formData.category,
+                description: formData.description || undefined,
+                color: formData.color || undefined,
+                price: formData.price,
+                duration: formData.duration,
+                duration_unit: formData.duration_unit,
+                loyalty_points_reward: formData.loyalty_points_reward,
+                max_sharing_members: formData.max_sharing_members,
+                access_type: formData.access_type,
+                unlimited_checkin: formData.unlimited_checkin,
+                checkin_quota_per_month: formData.unlimited_checkin ? undefined : formData.checkin_quota_per_month,
+                unlimited_sold: formData.unlimited_sold,
+                total_quota: formData.unlimited_sold ? undefined : formData.total_quota,
+                always_available: formData.always_available,
+                available_from: formData.always_available ? undefined : formData.available_from || undefined,
+                available_until: formData.always_available ? undefined : formData.available_until || undefined,
+                is_active: formData.is_active,
+                checkin_schedule: showSchedule ? formData.checkin_schedule : undefined,
+                branch_id: branchId ?? undefined,
+            };
+
+            await createMutation.mutateAsync(payload);
+            toast.success("Membership plan created successfully");
+            router.push("/membership-plan?success=true");
+        } catch (err) {
+            toast.error("Failed to create membership plan");
+            console.error(err);
+        }
     };
-
-    const categoryOptions: DropdownOption<string>[] = [
-        { key: "gym-access", label: "Gym Access", value: "Gym Access" },
-        { key: "personal-training", label: "Personal Training", value: "Personal Training" },
-        { key: "class-package", label: "Class Package", value: "Class Package" },
-        { key: "premium", label: "Premium", value: "Premium" },
-    ];
-
-    const days = [
-        { key: "monday", label: "Monday" },
-        { key: "tuesday", label: "Tuesday" },
-        { key: "wednesday", label: "Wednesday" },
-        { key: "thursday", label: "Thursday" },
-        { key: "friday", label: "Friday" },
-        { key: "saturday", label: "Saturday" },
-        { key: "sunday", label: "Sunday" },
-    ] as const;
-
-    const unlimitedMembership = useWatch({
-        control: form.control,
-        name: "checkinSetting.unlimitedCheckinMembership",
-    });
-
-    const unlimitedClass = useWatch({
-        control: form.control,
-        name: "checkinSetting.unlimitedCheckinClass",
-    });
-
-    const unlimitedSold = useWatch({
-        control: form.control,
-        name: "availabilitySetting.unlimitedSold",
-    });
-
-    const alwaysAvailable = useWatch({
-        control: form.control,
-        name: "availabilitySetting.alwaysAvailable",
-    });
 
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
+                    <Toaster position="top-center" />
+
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
@@ -123,29 +161,28 @@ export default function CreateMembershipPlan() {
                             </button>
                             <h1 className="text-2xl font-semibold">Create Membership Plan</h1>
                         </div>
-
-                        <CustomButton type="submit" className="bg-aksen-secondary text-white px-4 py-2.5">
-                            Create and save
+                        <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-4 py-2.5 disabled:opacity-50">
+                            {createMutation.isPending ? "Creating..." : "Create and save"}
                         </CustomButton>
                     </div>
 
                     <hr />
 
                     <div className="flex flex-col gap-6 mt-6">
-                        {/* Basic Info */}
+                        {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
                                 <TextInput name="name" label="Plan Name" placeholder="Enter plan name" />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="category" label="Category" options={categoryOptions} />
+                                <TextInput name="category" label="Category" placeholder="e.g Basic, Premium, VIP" />
                             </div>
                             <div className="col-span-4">
                                 <TextInput name="description" label="Description" placeholder="Enter description" />
                             </div>
                         </div>
 
-                        {/* Price & Duration */}
+                        {/* PRICE & DURATION */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
                                 <NumberInput name="price" label="Price (Rp)" />
@@ -154,180 +191,113 @@ export default function CreateMembershipPlan() {
                                 <NumberInput name="duration" label="Duration" />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown
-                                    name="durationUnit"
-                                    label="Duration Unit"
-                                    options={[
-                                        { key: "day", label: "Day", value: "day" },
-                                        { key: "week", label: "Week", value: "week" },
-                                        { key: "month", label: "Month", value: "month" },
-                                        { key: "year", label: "Year", value: "year" },
-                                    ]}
-                                />
+                                <SearchableDropdown name="duration_unit" label="Duration Unit" options={durationUnitOptions} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="loyaltyPoint" label="Loyalty Point" />
+                                <NumberInput name="loyalty_points_reward" label="Loyalty Points Reward" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="maxSharingAccess" label="Max Sharing Access" />
+                                <NumberInput name="max_sharing_members" label="Max Sharing Members" />
+                            </div>
+                            <div className="col-span-4">
+                                <label className="block text-sm font-medium text-zinc-700 mb-1">Color (optional)</label>
+                                <div className="flex items-center gap-2">
+                                    <input type="color" {...form.register("color")} className="w-10 h-10 rounded cursor-pointer border border-zinc-200" />
+                                    <TextInput name="color" placeholder="#4F46E5" />
+                                </div>
                             </div>
                         </div>
 
                         <hr />
 
-                        <h2 className="text-xl font-semibold text-gray-800">Checkin setting</h2>
+                        {/* CHECKIN SETTING */}
+                        <h2 className="text-xl font-semibold text-gray-800">Check-in Setting</h2>
 
                         <div className="flex flex-col gap-5 text-zinc-800">
                             <div className="flex flex-row gap-5 w-full">
                                 <div className="w-full">
-                                    <SearchableDropdown
-                                        name="checkinSetting.accessType"
-                                        label="Access Type"
-                                        options={[
-                                            {
-                                                key: "all-club",
-                                                label: "All Club",
-                                                value: "all_club",
-                                            },
-                                            {
-                                                key: "single-club",
-                                                label: "Single Club",
-                                                value: "single_club",
-                                            },
-                                        ]}
-                                    />
+                                    <SearchableDropdown name="access_type" label="Access Type" options={accessTypeOptions} />
                                 </div>
                                 <div className="grid grid-cols-12 gap-3 items-center w-full">
-                                    {/* Checkbox */}
-                                    <div className="col-span-6 flex items-center gap-3 ">
-                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("checkinSetting.unlimitedCheckinMembership")} />
-                                        <span className="text-sm font-medium">Unlimited Membership Check-in</span>
-                                    </div>
-
-                                    {/* Quota muncul jika LIMITED */}
-                                    {!unlimitedMembership && (
-                                        <div className="col-span-6">
-                                            <NumberInput name="checkinSetting.membershipQuota" label="Membership Check-in Quota" />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="flex flex-row w-full gap-5 ">
-                                <div className="w-full">
-                                    <SearchableDropdown
-                                        name="checkinSetting.classAccessType"
-                                        label="Class Access Type"
-                                        options={[
-                                            {
-                                                key: "all-classes",
-                                                label: "All Classes",
-                                                value: "all_classes",
-                                            },
-                                            {
-                                                key: "premium-only",
-                                                label: "Premium Only",
-                                                value: "premium_class_only",
-                                            },
-                                            {
-                                                key: "regular-only",
-                                                label: "Regular Only",
-                                                value: "regular_class_only",
-                                            },
-                                            {
-                                                key: "no-access",
-                                                label: "No Access",
-                                                value: "no_access_to_all_classes",
-                                            },
-                                        ]}
-                                    />
-                                </div>
-                                <div className="grid grid-cols-12 gap-3 items-center w-full">
-                                    {/* Checkbox */}
                                     <div className="col-span-6 flex items-center gap-3">
-                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("checkinSetting.unlimitedCheckinClass")} />
-                                        <span className="text-sm font-medium">Unlimited Class Check-in</span>
+                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("unlimited_checkin")} />
+                                        <span className="text-sm font-medium">Unlimited Check-in</span>
                                     </div>
-
-                                    {/* Quota muncul jika LIMITED */}
-                                    {!unlimitedClass && (
+                                    {!unlimitedCheckin && (
                                         <div className="col-span-6">
-                                            <NumberInput name="checkinSetting.classQuota" label="Class Check-in Quota" />
+                                            <NumberInput name="checkin_quota_per_month" label="Check-in Quota / Month" />
                                         </div>
                                     )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Availability */}
-
                         <hr />
 
+                        {/* AVAILABILITY */}
                         <h2 className="text-xl font-semibold text-gray-800">Availability Setting</h2>
-                        <div className=" text-gray-800">
+
+                        <div className="text-gray-800">
                             <div className="grid grid-cols-12 gap-6">
-                                {/* Unlimited Sold */}
                                 <div className="col-span-12 grid grid-cols-12 gap-3 items-center">
                                     <div className="col-span-4 flex items-center gap-3">
-                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("availabilitySetting.unlimitedSold")} />
+                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("unlimited_sold")} />
                                         <span className="text-sm font-medium">Unlimited Sold / Quota</span>
                                     </div>
-
                                     {!unlimitedSold && (
                                         <div className="col-span-4">
-                                            <NumberInput name="availabilitySetting.quota" label="Max Sold / Quota" />
+                                            <NumberInput name="total_quota" label="Max Sold / Quota" />
                                         </div>
                                     )}
                                 </div>
 
-                                {/* Always Available */}
                                 <div className="col-span-12 grid grid-cols-12 gap-3 items-center">
                                     <div className="col-span-4 flex items-center gap-3">
-                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("availabilitySetting.alwaysAvailable")} />
+                                        <input type="checkbox" className="checkbox checkbox-sm" {...form.register("always_available")} />
                                         <span className="text-sm font-medium">Always Available</span>
                                     </div>
-
                                     {!alwaysAvailable && (
                                         <>
                                             <div className="col-span-4">
-                                                <TextInput type="date" name="availabilitySetting.availableFrom" label="Available From" />
+                                                <TextInput type="date" name="available_from" label="Available From" />
                                             </div>
                                             <div className="col-span-4">
-                                                <TextInput type="date" name="availabilitySetting.availableUntil" label="Available Until" />
+                                                <TextInput type="date" name="available_until" label="Available Until" />
                                             </div>
                                         </>
                                     )}
                                 </div>
+
+                                <div className="col-span-12 flex items-center gap-3">
+                                    <input type="checkbox" className="checkbox checkbox-sm" {...form.register("is_active")} />
+                                    <span className="text-sm font-medium">Active</span>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Toggle Schedule */}
+                        {/* CHECKIN SCHEDULE */}
                         <div className="flex items-center gap-3 text-zinc-800">
-                            <input type="checkbox" checked={showSchedule} onChange={() => setShowSchedule(!showSchedule)} />
+                            <input type="checkbox" checked={showSchedule} onChange={() => setShowSchedule(!showSchedule)} className="checkbox checkbox-sm" />
                             <span className="text-sm font-medium">Custom Check-in Schedule</span>
                         </div>
 
-                        {/* Check-in Schedule */}
                         {showSchedule && (
                             <div className="p-4 bg-gray-100 rounded-lg text-zinc-800">
                                 <p className="text-sm font-medium mb-4">Check-in Schedule</p>
-
                                 <div className="flex flex-col gap-3">
-                                    {days.map((day) => {
-                                        const enabled = form.watch(`checkinSchedule.${day.key}.enabled`);
-
+                                    {DAYS.map((day) => {
+                                        const isOpen = form.watch(`checkin_schedule.${day.key}.is_open`);
                                         return (
                                             <div key={day.key} className="grid grid-cols-12 gap-3 items-center bg-white p-3 rounded-md border border-zinc-300">
                                                 <div className="col-span-3 flex gap-2 items-center">
-                                                    <input type="checkbox" {...form.register(`checkinSchedule.${day.key}.enabled`)} />
+                                                    <input type="checkbox" {...form.register(`checkin_schedule.${day.key}.is_open`)} />
                                                     <span>{day.label}</span>
                                                 </div>
-
                                                 <div className="col-span-4">
-                                                    <TextInput type="time" name={`checkinSchedule.${day.key}.startAt`} disabled={!enabled} />
+                                                    <TextInput type="time" name={`checkin_schedule.${day.key}.open`} disabled={!isOpen} />
                                                 </div>
-
                                                 <div className="col-span-4">
-                                                    <TextInput type="time" name={`checkinSchedule.${day.key}.endAt`} disabled={!enabled} />
+                                                    <TextInput type="time" name={`checkin_schedule.${day.key}.close`} disabled={!isOpen} />
                                                 </div>
                                             </div>
                                         );

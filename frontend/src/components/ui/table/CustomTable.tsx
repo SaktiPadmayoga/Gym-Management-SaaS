@@ -12,7 +12,7 @@ export interface Column<T> {
 }
 
 export interface ActionItem<T> {
-    label: string;
+    label: string | ((row: T) => string);
     icon?: React.ComponentProps<typeof Icon>["name"];
     onClick: (row: T) => void;
     className?: string;
@@ -142,7 +142,7 @@ export default function CustomTable<T>({ columns, data, withCheckbox = false, on
                                                                 className={`flex items-center gap-2 px-3 py-2 text-sm ${action.className ?? ""}`}
                                                             >
                                                                 {action.icon && <Icon name={action.icon} className="h-4 w-4" />}
-                                                                <span>{action.label}</span>
+                                                                <span>{typeof action.label === "function" ? action.label(row) : action.label}</span>
                                                             </button>
                                                         </li>
                                                     </React.Fragment>

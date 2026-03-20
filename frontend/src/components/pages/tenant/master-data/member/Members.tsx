@@ -18,30 +18,30 @@ import { useDebounce } from "@/hooks/useDebounce";
  * ========================= */
 
 const memberStatusColor: Record<string, string> = {
-    active:   "bg-green-100 text-green-700",
+    active: "bg-green-100 text-green-700",
     inactive: "bg-zinc-100 text-zinc-500",
-    expired:  "bg-orange-100 text-orange-700",
-    frozen:   "bg-blue-100 text-blue-700",
-    banned:   "bg-red-100 text-red-700",
+    expired: "bg-orange-100 text-orange-700",
+    frozen: "bg-blue-100 text-blue-700",
+    banned: "bg-red-100 text-red-700",
 };
 
 export default function Members() {
-    const router       = useRouter();
+    const router = useRouter();
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
 
-    const [page, setPage]       = useState(() => Number(searchParams.get("page"))     || 1);
+    const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
     const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
 
     const form = useForm<MemberDataWithKeyword>({
         defaultValues: { search: searchParams.get("search") || "" },
     });
 
-    const searchValue    = form.watch("search");
+    const searchValue = form.watch("search");
     const debouncedSearch = useDebounce(searchValue, 500);
 
     const { data, isLoading, isError } = useMembers({
-        search:   debouncedSearch,
+        search: debouncedSearch,
         page,
         per_page: perPage,
     });
@@ -63,16 +63,28 @@ export default function Members() {
         const updated = searchParams.get("updated");
         const deleted = searchParams.get("deleted");
 
-        if (!success && !updated && !deleted) { hasShownToast.current = false; return; }
+        if (!success && !updated && !deleted) {
+            hasShownToast.current = false;
+            return;
+        }
 
-        if (success === "true" && !hasShownToast.current) { toast.success("Member created successfully"); hasShownToast.current = true; }
-        if (updated === "true" && !hasShownToast.current) { toast.success("Member updated successfully"); hasShownToast.current = true; }
-        if (deleted === "true" && !hasShownToast.current) { toast.success("Member deleted successfully"); hasShownToast.current = true; }
+        if (success === "true" && !hasShownToast.current) {
+            toast.success("Member created successfully");
+            hasShownToast.current = true;
+        }
+        if (updated === "true" && !hasShownToast.current) {
+            toast.success("Member updated successfully");
+            hasShownToast.current = true;
+        }
+        if (deleted === "true" && !hasShownToast.current) {
+            toast.success("Member deleted successfully");
+            hasShownToast.current = true;
+        }
 
         window.history.replaceState({}, "", "/members");
     }, [searchParams]);
 
-    const entries: MemberData[] = data?.data ?? [];
+    const entries: MemberData[] = data ?? [];
     const totalData = entries.length;
 
     if (isError) {
@@ -91,17 +103,13 @@ export default function Members() {
                     {item.avatar ? (
                         <img src={item.avatar} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
                     ) : (
-                        <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 font-semibold text-sm">
-                            {item.name.charAt(0).toUpperCase()}
-                        </div>
+                        <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 font-semibold text-sm">{item.name.charAt(0).toUpperCase()}</div>
                     )}
                     <div>
                         <Link href={`/members/${item.id}`} className="font-medium text-zinc-800 hover:underline">
                             {item.name}
                         </Link>
-                        {item.current_membership?.member_code && (
-                            <p className="text-xs text-zinc-400">{item.current_membership.member_code}</p>
-                        )}
+                        {item.current_membership?.member_code && <p className="text-xs text-zinc-400">{item.current_membership.member_code}</p>}
                     </div>
                 </div>
             ),
@@ -119,11 +127,7 @@ export default function Members() {
         },
         {
             header: "Status",
-            render: (item) => (
-                <span className={`rounded-lg px-2 py-1 text-xs font-medium capitalize ${memberStatusColor[item.status] ?? "bg-zinc-100 text-zinc-600"}`}>
-                    {item.status}
-                </span>
-            ),
+            render: (item) => <span className={`rounded-lg px-2 py-1 text-xs font-medium capitalize ${memberStatusColor[item.status] ?? "bg-zinc-100 text-zinc-600"}`}>{item.status}</span>,
             width: "w-28",
         },
         {
@@ -133,15 +137,9 @@ export default function Members() {
                 if (!mb) return <span className="text-zinc-400 text-sm">No membership</span>;
                 return (
                     <div>
-                        <p className="text-sm text-zinc-700">
-                            {mb.expires_at ? new Date(mb.expires_at).toLocaleDateString() : "-"}
-                        </p>
+                        <p className="text-sm text-zinc-700">{mb.expires_at ? new Date(mb.expires_at).toLocaleDateString() : "-"}</p>
                         {mb.days_until_expiry !== null && mb.days_until_expiry !== undefined && (
-                            <p className={`text-xs ${mb.days_until_expiry <= 7 ? "text-orange-500" : "text-zinc-400"}`}>
-                                {mb.days_until_expiry > 0
-                                    ? `${mb.days_until_expiry}d left`
-                                    : "Expired"}
-                            </p>
+                            <p className={`text-xs ${mb.days_until_expiry <= 7 ? "text-orange-500" : "text-zinc-400"}`}>{mb.days_until_expiry > 0 ? `${mb.days_until_expiry}d left` : "Expired"}</p>
                         )}
                     </div>
                 );
@@ -150,27 +148,17 @@ export default function Members() {
         },
         {
             header: "Gender",
-            render: (item) => (
-                <span className="text-sm text-zinc-500 capitalize">{item.gender ?? "-"}</span>
-            ),
+            render: (item) => <span className="text-sm text-zinc-500 capitalize">{item.gender ?? "-"}</span>,
             width: "w-24",
         },
         {
             header: "Member Since",
-            render: (item) => (
-                <span className="text-sm text-zinc-500">
-                    {item.member_since ? new Date(item.member_since).toLocaleDateString() : "-"}
-                </span>
-            ),
+            render: (item) => <span className="text-sm text-zinc-500">{item.member_since ? new Date(item.member_since).toLocaleDateString() : "-"}</span>,
             width: "w-32",
         },
         {
             header: "Last Check-in",
-            render: (item) => (
-                <span className="text-sm text-zinc-500">
-                    {item.last_checkin_at ? new Date(item.last_checkin_at).toLocaleDateString() : "-"}
-                </span>
-            ),
+            render: (item) => <span className="text-sm text-zinc-500">{item.last_checkin_at ? new Date(item.last_checkin_at).toLocaleDateString() : "-"}</span>,
             width: "w-32",
         },
     ];
@@ -181,25 +169,25 @@ export default function Members() {
     const actions: ActionItem<MemberData>[] = [
         {
             label: "View Detail",
-            icon:  "eye",
+            icon: "eye",
             onClick: (row) => router.push(`/members/${row.id}`),
         },
         {
             label: "Edit",
-            icon:  "edit",
+            icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
             onClick: (row) => router.push(`/members/${row.id}/edit`),
         },
         {
             label: "Delete",
-            icon:  "trash",
+            icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
             onClick: (row) => {
                 if (confirm("Are you sure you want to delete this member?")) {
                     deleteMutation.mutate(row.id, {
                         onSuccess: () => toast.success("Member deleted"),
-                        onError:   () => toast.error("Failed to delete member"),
+                        onError: () => toast.error("Failed to delete member"),
                     });
                 }
             },
@@ -230,11 +218,7 @@ export default function Members() {
                             <div className="w-64 text-zinc-800">
                                 <SearchInput name="search" />
                             </div>
-                            <CustomButton
-                                iconName="plus"
-                                className="text-white px-3"
-                                onClick={() => router.push("/members/create")}
-                            >
+                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/members/create")}>
                                 New Member
                             </CustomButton>
                         </div>
@@ -249,12 +233,7 @@ export default function Members() {
                                 ))}
                             </div>
                         ) : (
-                            <CustomTable
-                                columns={columns}
-                                data={entries}
-                                actions={actions}
-                                onRowClick={(row) => router.push(`/members/${row.id}`)}
-                            />
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/members/${row.id}`)} />
                         )}
                     </div>
 
@@ -264,13 +243,7 @@ export default function Members() {
                 </div>
 
                 <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={false}
-                        hasPrevPage={false}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
+                    <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={perPage} />
                 </div>
             </div>
         </FormProvider>
