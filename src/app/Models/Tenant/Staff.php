@@ -14,7 +14,7 @@ class Staff extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasUuids, Notifiable, SoftDeletes;
 
-    protected $table = 'staff';
+    protected $table = 'staffs';
 
     protected $fillable = [
         'name',

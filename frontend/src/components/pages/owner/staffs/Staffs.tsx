@@ -47,7 +47,7 @@ export default function Staff() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         params.set("page", String(page));
         params.set("per_page", String(perPage));
-        router.replace(`/staffs?${params.toString()}`);
+        router.replace(`/owner/staffs?${params.toString()}`);
     }, [debouncedSearch, page, perPage, router]);
 
     // Toast handler
@@ -76,7 +76,7 @@ export default function Staff() {
             hasShownToast.current = true;
         }
 
-        window.history.replaceState({}, "", "/dashboard/staff");
+        window.history.replaceState({}, "", "/owner/staffs");
     }, [searchParams]);
 
     const entries: StaffData[] = data?.data ?? [];
@@ -110,7 +110,7 @@ export default function Staff() {
             header: "Name",
             render: (item) => (
                 <Link
-                    href={`/dashboard/staff/${item.id}`}
+                    href={`/owner/staffs/${item.id}`}
                     className="font-medium hover:underline"
                 >
                     {item.name}
@@ -206,13 +206,13 @@ export default function Staff() {
         {
             label: "View Detail",
             icon: "eye",
-            onClick: (row) => router.push(`/dashboard/staff/${row.id}`),
+            onClick: (row) => router.push(`/owner/staffs/${row.id}`),
         },
         {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/dashboard/staff/${row.id}/edit`),
+            onClick: (row) => router.push(`/owner/staffs/${row.id}/edit`),
         },
         {
             label: "Delete",

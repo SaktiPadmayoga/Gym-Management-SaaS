@@ -45,6 +45,7 @@ import {
     ArchiveBoxIcon as ArchiveBoxIconSolid,
     BuildingOffice2Icon as BuildingOffice2IconSolid,
 } from "@heroicons/react/24/solid";
+import { IconSettings, IconSettingsFilled } from "@tabler/icons-react";
 
 export type IconType = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
@@ -86,7 +87,7 @@ export const sidebarData: SidebarItem[] = [
 
     // MASTER DATA
     { id: "header-master", title: "Master Data", isHeader: true },
-    { id: "nav-profile", title: "Profile", path: "/profile", Icon: UserIcon, IconSolid: UserIconSolid },
+    { id: "nav-member", title: "Members", path: "/members", Icon: UserIcon, IconSolid: UserIconSolid },
     { id: "nav-membership-plan", title: "Membership Plans", path: "/membership-plan", Icon: UsersIcon, IconSolid: UsersIconSolid },
     { id: "nav-class-plan", title: "Class Plans", path: "/class-plan", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
     { id: "nav-pt-sessions-plan", title: "PT Sessions Plans", path: "/pt-sessions-plan", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
@@ -118,5 +119,12 @@ export const sidebarData: SidebarItem[] = [
             { id: "report-finance-outstanding", title: "Finance Outstanding", path: "/report/finance/outstanding", Icon: DocumentMinusIcon, IconSolid: DocumentMinusIconSolid },
             { id: "report-payment-mutation", title: "Payment Mutation", path: "/report/finance/payment-mutation", Icon: DocumentCurrencyDollarIcon, IconSolid: DocumentCurrencyDollarIconSolid },
         ],
+    },
+    {
+        id: "nav-settings",
+        title: "Settings",
+        path: "/settings",
+        Icon: IconSettings,
+        IconSolid: IconSettingsFilled,
     },
 ];

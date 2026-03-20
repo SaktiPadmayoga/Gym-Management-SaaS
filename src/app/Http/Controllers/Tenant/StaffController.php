@@ -78,7 +78,7 @@ class StaffController extends Controller
 
         if (!empty($data['branch_id'])) {
             StaffBranch::create([
-                'staff_id'  => $staff->id,
+                'staffs_id'  => $staff->id,
                 'branch_id' => $data['branch_id'],
                 'role'      => $data['branch_role'],
                 'joined_at' => now(),
@@ -132,7 +132,7 @@ class StaffController extends Controller
     {
         $staff = Staff::findOrFail($id);
 
-        StaffBranch::where('staff_id', $staff->id)->update(['is_active' => false]);
+        StaffBranch::where('staffs_id', $staff->id)->update(['is_active' => false]);
         $staff->delete();
 
         return ApiResponse::success(null, 'Staff deleted successfully');
@@ -144,7 +144,7 @@ class StaffController extends Controller
         $data  = $request->validated();
 
         $existing = StaffBranch::withTrashed()
-            ->where('staff_id', $staff->id)
+            ->where('staffs_id', $staff->id)
             ->where('branch_id', $data['branch_id'])
             ->first();
 
@@ -158,7 +158,7 @@ class StaffController extends Controller
             $staffBranch = $existing;
         } else {
             $staffBranch = StaffBranch::create([
-                'staff_id'  => $staff->id,
+                'staffs_id'  => $staff->id,
                 'branch_id' => $data['branch_id'],
                 'role'      => $data['role'],
                 'joined_at' => $data['joined_at'] ?? now(),
@@ -172,7 +172,7 @@ class StaffController extends Controller
 
     public function revokeBranch(string $id, string $branchId)
     {
-        $staffBranch = StaffBranch::where('staff_id', $id)
+        $staffBranch = StaffBranch::where('staffs_id', $id)
             ->where('branch_id', $branchId)
             ->firstOrFail();
 

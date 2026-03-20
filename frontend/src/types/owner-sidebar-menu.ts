@@ -102,9 +102,9 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     // =========================
     { id: "header-user", title: "User Management", isHeader: true },
     {
-        id: "nav-users",
-        title: "Users",
-        path: "/owner/users",
+        id: "nav-members",
+        title: "Members",
+        path: "/owner/members",
         Icon: IconUsersGroup,
         IconSolid: IconUsersGroup,
     },
@@ -127,13 +127,4 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
         Icon: IconClock,
         IconSolid: IconClockFilled,
     },
-    {
-        id: "nav-settings",
-        title: "Settings",
-        path: "/owner/settings",
-        Icon: IconSettings,
-        IconSolid: IconSettingsFilled,
-    },
-
-  
 ];
