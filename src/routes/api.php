@@ -12,6 +12,7 @@ use App\Http\Controllers\DomainRequestController;
 use App\Http\Controllers\SubscriptionTenantController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Tenant\StaffController;
+use App\Http\Controllers\Auth\AdminAuthController;
 
 
     
@@ -53,9 +54,28 @@ Route::prefix('subscriptions')->group(function () {
 
 });
 
-Route::prefix('admin')->group(function () {
-    Route::apiResource('admins' , AdminController::class);
+ 
+// -----------------------------------------------
+// Admin Auth — tidak perlu middleware tenant
+// -----------------------------------------------
+ 
+Route::prefix('admin/auth')->group(function () {
+    // Public
+    Route::post('/login',  [AdminAuthController::class, 'login']);
+ 
+    // Protected
+    Route::middleware('auth:admin')->group(function () {
+        Route::post('/logout',          [AdminAuthController::class, 'logout']);
+        Route::get('/me',               [AdminAuthController::class, 'me']);
+        Route::post('/change-password', [AdminAuthController::class, 'changePassword']);
+    });
 });
+ 
+// Semua route admin lainnya dilindungi auth:admin
+Route::middleware('auth:admin')->prefix('admin')->group(function () {
+    Route::apiResource('admins', AdminController::class);
+});
+ 
 
 // Route::apiResource('admins', AdminController::class);
 

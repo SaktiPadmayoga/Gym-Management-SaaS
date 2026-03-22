@@ -92,7 +92,7 @@ export const sidebarData: SidebarItem[] = [
     { id: "nav-class-plan", title: "Class Plans", path: "/class-plan", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
     { id: "nav-pt-sessions-plan", title: "PT Sessions Plans", path: "/pt-sessions-plan", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
     { id: "nav-facility", title: "Facility", path: "/facility", Icon: BuildingOffice2Icon, IconSolid: BuildingOffice2IconSolid },
-    { id: "nav-product", title: "Products", path: "/product", Icon: ArchiveBoxIcon, IconSolid: ArchiveBoxIconSolid },
+    { id: "nav-products", title: "Products", path: "/products", Icon: ArchiveBoxIcon, IconSolid: ArchiveBoxIconSolid },
     { id: "nav-staff", title: "Staffs", path: "/staffs", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
 
     // REPORTS

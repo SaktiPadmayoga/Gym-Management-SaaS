@@ -73,7 +73,7 @@ export default function Members() {
         window.history.replaceState({}, "", "/owner/members");
     }, [searchParams]);
 
-    const entries: MemberData[] = data?.data ?? [];
+    const entries: MemberData[] = data ?? [];
     const totalData = entries.length;
 
     if (isError) {

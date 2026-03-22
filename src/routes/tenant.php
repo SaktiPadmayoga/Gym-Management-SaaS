@@ -11,6 +11,7 @@ use App\Http\Controllers\Tenant\MembershipPlanController;
 use App\Http\Controllers\Tenant\ClassPlanController;
 use App\Http\Controllers\Tenant\PtSessionPlanController;
 use App\Http\Controllers\Tenant\FacilityController;
+use App\Http\Controllers\Tenant\ProductController;
 
 // Health check
 Route::get('/health', function () {
@@ -163,4 +164,20 @@ Route::get('/facilities/{facility}',              [FacilityController::class, 's
 Route::put('/facilities/{facility}',              [FacilityController::class, 'update']);
 Route::delete('/facilities/{facility}',           [FacilityController::class, 'destroy']);
 Route::patch('/facilities/{facility}/toggle-active', [FacilityController::class, 'toggleActive']);
+ 
+// -----------------------------------------------
+// Products
+// -----------------------------------------------
+Route::get('/products/categories',                  [ProductController::class, 'categories']);
+Route::get('/products',                             [ProductController::class, 'index']);
+Route::post('/products',                            [ProductController::class, 'store']);
+Route::get('/products/{product}',                   [ProductController::class, 'show']);
+Route::put('/products/{product}',                   [ProductController::class, 'update']);
+Route::delete('/products/{product}',                [ProductController::class, 'destroy']);
+Route::patch('/products/{product}/toggle-active',   [ProductController::class, 'toggleActive']);
+ 
+// Stock Management
+Route::post('/products/{product}/stock/add',        [ProductController::class, 'addStock']);
+Route::post('/products/{product}/stock/adjust',     [ProductController::class, 'adjustStock']);
+Route::get('/products/{product}/stock/history',     [ProductController::class, 'stockHistory']);
  

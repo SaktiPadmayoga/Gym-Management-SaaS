@@ -1,227 +1,277 @@
-// File: src/app/products/page.tsx
 "use client";
 
 import CustomTable, { Column, ActionItem } from "@/components/ui/table/CustomTable";
-import { ProductData, ProductDataWithKeyword } from "@/types/product";
-import { DUMMY_PRODUCTS } from "@/lib/dummy/productDummy";
+import { ProductData, ProductDataWithKeyword } from "@/types/tenant/products";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { SearchInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
 import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
+import { useProducts, useDeleteProduct, useToggleProduct } from "@/hooks/tenant/useProducts";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Products() {
-    const router = useRouter();
-    const form = useForm<ProductDataWithKeyword>({
-        defaultValues: {
-            keyword: "",
-        },
-    });
-    const searchParams = useSearchParams();
+    const router        = useRouter();
+    const searchParams  = useSearchParams();
     const hasShownToast = useRef(false);
 
-    const keyword = form.watch("keyword") || "";
+    const [page,    setPage]    = useState(() => Number(searchParams.get("page"))     || 1);
+    const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
 
-    // Filter products based on keyword
-    const filteredProducts = useMemo(() => {
-        if (!keyword.trim()) {
-            return DUMMY_PRODUCTS;
-        }
+    const form = useForm<ProductDataWithKeyword>({
+        defaultValues: { search: searchParams.get("search") || "" },
+    });
 
-        const lowerKeyword = keyword.toLowerCase();
-        return DUMMY_PRODUCTS.filter((product) => product.name.toLowerCase().includes(lowerKeyword) || product.id.toLowerCase().includes(lowerKeyword) || product.category.toLowerCase().includes(lowerKeyword));
-    }, [keyword]);
+    const searchValue     = form.watch("search");
+    const debouncedSearch = useDebounce(searchValue, 500);
 
+    const { data, isLoading, isError } = useProducts({
+        search:   debouncedSearch,
+        page,
+        per_page: perPage,
+    });
+
+    const deleteMutation = useDeleteProduct();
+    const toggleMutation = useToggleProduct();
+
+    // Sync URL
     useEffect(() => {
-        if (!searchParams.get("success") && !searchParams.get("updated") && !searchParams.get("deleted")) {
-            hasShownToast.current = false;
-            return;
-        }
+        const params = new URLSearchParams();
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        params.set("page", String(page));
+        params.set("per_page", String(perPage));
+        router.replace(`/products?${params.toString()}`);
+    }, [debouncedSearch, page, perPage, router]);
 
-        if (searchParams.get("success") === "true" && !hasShownToast.current) {
-            toast.success("New product has been created successfully", {
-                style: {
-                    background: "green",
-                    color: "white",
-                },
-            });
-            hasShownToast.current = true;
-            window.history.replaceState({}, "", "/products");
-        } else if (searchParams.get("updated") === "true" && !hasShownToast.current) {
-            toast.success("Product successfully updated", {
-                style: {
-                    background: "green",
-                    color: "white",
-                },
-            });
-            hasShownToast.current = true;
-            window.history.replaceState({}, "", "/products");
-        } else if (searchParams.get("deleted") === "true" && !hasShownToast.current) {
-            toast.success("Product successfully deleted", {
-                style: {
-                    background: "green",
-                    color: "white",
-                },
-            });
-            hasShownToast.current = true;
-            window.history.replaceState({}, "", "/products");
-        }
+    // Toast
+    useEffect(() => {
+        const success = searchParams.get("success");
+        const updated = searchParams.get("updated");
+        const deleted = searchParams.get("deleted");
+
+        if (!success && !updated && !deleted) { hasShownToast.current = false; return; }
+        if (success === "true" && !hasShownToast.current) { toast.success("Product created successfully"); hasShownToast.current = true; }
+        if (updated === "true" && !hasShownToast.current) { toast.success("Product updated successfully"); hasShownToast.current = true; }
+        if (deleted === "true" && !hasShownToast.current) { toast.success("Product deleted successfully"); hasShownToast.current = true; }
+
+        window.history.replaceState({}, "", "/products");
     }, [searchParams]);
 
+    const entries: ProductData[] = data ?? [];
+    const totalData = entries.length;
+
+    if (isError) {
+        toast.error("Error loading products");
+        return <div className="py-10 text-center text-red-500">Error loading products</div>;
+    }
+
+    /* =========================
+     * STOCK BADGE
+     * ========================= */
+    const stockBadge = (item: ProductData) => {
+        if (item.is_out_of_stock) {
+            return <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">{item.stock} {item.unit}</span>;
+        }
+        if (item.is_low_stock) {
+            return <span className="px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">{item.stock} {item.unit}</span>;
+        }
+        return <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">{item.stock} {item.unit}</span>;
+    };
+
+    /* =========================
+     * TABLE COLUMNS
+     * ========================= */
     const columns: Column<ProductData>[] = [
-        {
-            header: "ID",
-            render: (item) => <div className="flex items-center gap-3 truncate">{item?.id}</div>,
-            width: "w-44",
-        },
         {
             header: "Image",
             render: (item) => (
-                <div className="flex items-center h-12 w-12 gap-3 bg-gray-300 rounded-lg truncate">
-                    <Image src={(item?.image as string) || "images/placeholder.svg"} alt={item?.name || ""} width={48} height={48} className="object-cover rounded" />
+                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                    {item.image_url ? (
+                        <Image
+                            src={item.image_url}
+                            alt={item.name}
+                            width={48}
+                            height={48}
+                            className="object-cover w-full h-full"
+                        />
+                    ) : (
+                        <span className="text-zinc-400 text-xs">No img</span>
+                    )}
                 </div>
             ),
-            width: "w-34",
+            width: "w-20",
         },
         {
             header: "Product Name",
             render: (item) => (
-                <div className="flex items-center gap-3 truncate">
-                    <div className=" font-medium">{item?.name}</div>
+                <div>
+                    <Link href={`/products/${item.id}`} className="font-medium text-zinc-800 hover:underline">
+                        {item.name}
+                    </Link>
+                    {item.sku && <p className="text-xs text-zinc-400">{item.sku}</p>}
                 </div>
             ),
-            width: "w-74",
+            width: "w-52",
         },
         {
             header: "Category",
-            render: (item) => <div className="flex items-center gap-3 truncate">{item?.category}</div>,
-            width: "w-54",
+            render: (item) => (
+                <span className="text-sm text-zinc-600">{item.category}</span>
+            ),
+            width: "w-36",
         },
         {
             header: "Cost Price",
-            render: (item) => <div className="flex items-center gap-3 truncate">Rp {item?.costPrice?.toLocaleString("id-ID")}</div>,
-            width: "w-54",
+            render: (item) => (
+                <span className="text-sm text-zinc-700">
+                    Rp {Number(item.cost_price).toLocaleString("id-ID")}
+                </span>
+            ),
+            width: "w-36",
         },
         {
             header: "Selling Price",
-            render: (item) => <div className="flex items-center gap-3 truncate">Rp {item?.sellingPrice?.toLocaleString("id-ID")}</div>,
-            width: "w-54",
+            render: (item) => (
+                <span className="font-medium text-zinc-800">
+                    Rp {Number(item.selling_price).toLocaleString("id-ID")}
+                </span>
+            ),
+            width: "w-36",
+        },
+        {
+            header: "Margin",
+            render: (item) => (
+                <span className="text-sm text-zinc-600">{item.margin ?? 0}%</span>
+            ),
+            width: "w-24",
         },
         {
             header: "Stock",
-            render: (item) => (
-                <div className="flex items-center gap-3 truncate">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${item?.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{item?.stock} units</span>
-                </div>
-            ),
-            width: "w-54",
+            render: (item) => stockBadge(item),
+            width: "w-28",
+        },
+        {
+            header: "Status",
+            render: (item) =>
+                item.is_active ? (
+                    <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium text-sm">Active</span>
+                ) : (
+                    <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium text-sm">Inactive</span>
+                ),
+            width: "w-24",
         },
     ];
 
-    const customActions: ActionItem<ProductData>[] = [
+    /* =========================
+     * ROW ACTIONS
+     * ========================= */
+    const actions: ActionItem<ProductData>[] = [
         {
             label: "View Details",
-            icon: "eye",
-            onClick: (row) => {
-                router.push(`/products/${row.id}`);
-            },
-            className: "hover:bg-zinc-100",
+            icon:  "eye",
+            onClick: (row) => router.push(`/products/${row.id}`),
         },
         {
             label: "Edit",
-            icon: "edit",
+            icon:  "edit",
+            className: "text-blue-600 hover:bg-blue-50",
+            onClick: (row) => router.push(`/products/${row.id}`),
+        },
+        {
+            label: (row) => row.is_active ? "Deactivate" : "Activate",
+            icon:  "eye",
             onClick: (row) => {
-                console.log("Edit:", row);
-                router.push(`/products/${row.id}/edit`);
+                toggleMutation.mutate(row.id, {
+                    onSuccess: () => toast.success(`Product ${row.is_active ? "deactivated" : "activated"}`),
+                    onError:   () => toast.error("Failed to update status"),
+                });
             },
-            className: "hover:bg-blue-50 text-blue-600",
         },
         {
             label: "Delete",
-            icon: "trash",
+            icon:  "trash",
+            className: "text-red-600 hover:bg-red-50",
+            divider: true,
             onClick: (row) => {
-                console.log("Delete:", row);
                 if (confirm("Are you sure you want to delete this product?")) {
-                    toast.success("Product deleted successfully");
+                    deleteMutation.mutate(row.id, {
+                        onSuccess: () => toast.success("Product deleted"),
+                        onError:   () => toast.error("Failed to delete product"),
+                    });
                 }
             },
-            className: "hover:bg-red-50 text-red-600",
-            divider: true,
         },
     ];
-
-    const page = Number(searchParams.get("page")) || 1;
-    const per_page = Number(searchParams.get("per_page")) || 5;
-
-    const start = (page - 1) * per_page;
-    const end = start + per_page;
-    const entries = filteredProducts.slice(start, end);
-
-    const showingFrom = filteredProducts.length === 0 ? 0 : start + 1;
-    const showingTo = Math.min(end, filteredProducts.length);
-    const totalData = filteredProducts.length;
 
     return (
         <FormProvider {...form}>
             <div>
-                <form>
-                    <div className="font-figtree text-zinc-900 rounded-xl bg-white border border-gray-500/20 px-6 py-4">
-                        <Toaster
-                            toastOptions={{
-                                classNames: {
-                                    description: "!bg-green-500",
-                                },
-                            }}
-                            position="top-center"
-                        />
-                        <div className="breadcrumbs text-sm text-zinc-400 mb-4">
-                            <ul>
-                                <li>Master Data</li>
-                                <li>
-                                    <a className="text-aksen-secondary">Products</a>
-                                </li>
-                            </ul>
+                <div className="font-figtree text-zinc-900 rounded-xl bg-white border border-gray-500/20 px-6 py-4">
+                    <Toaster position="top-center" />
+
+                    {/* Breadcrumb */}
+                    <div className="breadcrumbs text-sm text-zinc-400 mb-4">
+                        <ul>
+                            <li>Master Data</li>
+                            <li className="text-aksen-secondary">Products</li>
+                        </ul>
+                    </div>
+
+                    {/* Header */}
+                    <div className="mb-6 flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Products</h1>
+                            <p className="text-zinc-500">Manage your gym products and inventory</p>
                         </div>
-
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h1 className="text-aksen-secondary text-2xl font-semibold">Products</h1>
-                                <p className="text-geonet-gray max-w-2xl mt-[-6]">Manage your products here.</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-64 text-zinc-800">
+                                <SearchInput name="search" />
                             </div>
-
-                            <div className="flex items-center justify-between flex-row gap-3">
-                                <div className="w-67">
-                                    <SearchInput name={"keyword"} />
-                                </div>
-                                <CustomButton className="px-3 py-2 text-sm text-white" iconName="plus" onClick={() => router.push("/product/create")}>
-                                    New Product
-                                </CustomButton>
-                            </div>
+                            <CustomButton
+                                className="px-3 py-2 text-sm text-white"
+                                iconName="plus"
+                                onClick={() => router.push("/products/create")}
+                            >
+                                New Product
+                            </CustomButton>
                         </div>
+                    </div>
 
-                        <div className="overflow-x-auto">
+                    {/* Table */}
+                    <div className="overflow-x-auto">
+                        {isLoading ? (
+                            <div className="space-y-3">
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
+                                ))}
+                            </div>
+                        ) : (
                             <CustomTable
                                 columns={columns}
                                 data={entries}
-                                onRowClick={(row) => {
-                                    router.push(`/products/${row.id}`);
-                                }}
-                                actions={customActions}
+                                actions={actions}
+                                onRowClick={(row) => router.push(`/products/${row.id}`)}
                             />
-                        </div>
-
-                        <div className="mt-4 text-sm text-zinc-500">
-                            Showing {showingFrom} to {showingTo} of {totalData} data
-                        </div>
+                        )}
                     </div>
-                </form>
+
+                    <div className="mt-4 text-sm text-zinc-500">
+                        Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
+                    </div>
+                </div>
 
                 <div className="mt-4">
-                    <PaginationWithRows hasNextPage={end < filteredProducts.length} hasPrevPage={start > 0} totalItems={filteredProducts.length} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={5} />
+                    <PaginationWithRows
+                        hasNextPage={false}
+                        hasPrevPage={false}
+                        totalItems={totalData}
+                        rowOptions={[5, 10, 20, 50]}
+                        defaultRowsPerPage={perPage}
+                    />
                 </div>
             </div>
         </FormProvider>

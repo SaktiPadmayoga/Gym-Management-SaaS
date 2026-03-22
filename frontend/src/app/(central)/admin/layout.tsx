@@ -6,33 +6,35 @@ import { useEffect, ReactNode } from "react";
 import AdminLayoutWrapper from "@/components/layout/AdminLayoutWrapper";
 import QueryProvider from "@/providers/QueryProvider";
 import { Toaster } from "sonner";
+import { AdminAuthProvider, useAdminAuth } from "@/providers/AdminAuthProvider";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-    const { isMaster, isLoading, isTenant } = useTenant();
+    const { admin, isReady } = useAdminAuth();
     const router = useRouter();
-
+ 
     useEffect(() => {
-        if (!isLoading && isTenant) {
-            // ✅ Kalau diakses dari tenant subdomain, redirect ke owner
-            router.replace("/admin/domains");
+        if (isReady && !admin) {
+            router.replace("/auth/login");
         }
-    }, [isLoading, isTenant, router]);
-
-    if (isLoading) return <div className="p-4">Loading...</div>;
-
-    if (!isMaster) {
+    }, [isReady, admin, router]);
+ 
+    if (!isReady) {
         return (
-            <div className="p-4 text-red-600">
-                <h1>Admin Access Only</h1>
-                <p>Please access from localhost</p>
+            <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aksen-secondary" />
             </div>
         );
     }
+ 
+    if (!admin) return null;
+ 
 
     return (
+
         <QueryProvider>
             <Toaster />
             <AdminLayoutWrapper>{children}</AdminLayoutWrapper>
         </QueryProvider>
+
     );
 }

@@ -1,9 +1,9 @@
 // lib/api-client.ts
-// Khusus untuk admin/central routes — tidak perlu X-Tenant header
+// API client untuk central/admin routes — tidak perlu X-Tenant header
 import axios, { AxiosInstance, AxiosError } from "axios";
 
 const apiClient: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
+    baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost/api",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -13,16 +13,13 @@ const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
     (config) => {
-        if (typeof window !== "undefined") {
-            const token = localStorage.getItem("admin_token");
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
+        const token = localStorage.getItem("admin_token");
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
 
         if (process.env.NODE_ENV === "development") {
             console.log(`[Admin API] ${config.method?.toUpperCase()} ${config.url}`);
-            if (config.data) console.log("➡️ DATA:", config.data);
         }
 
         return config;
@@ -42,11 +39,10 @@ apiClient.interceptors.response.use(
     },
     (error: AxiosError) => {
         if (error.response?.status === 401) {
+            // Token expired atau invalid — redirect ke login
             if (typeof window !== "undefined") {
                 localStorage.removeItem("admin_token");
                 localStorage.removeItem("admin_data");
-                // Hapus cookie juga
-                document.cookie = "admin_token=; path=/; max-age=${60 * 60 * 8}";
                 window.location.href = "/admin/login";
             }
         }

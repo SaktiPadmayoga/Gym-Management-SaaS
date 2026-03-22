@@ -84,12 +84,11 @@ class Staff extends Authenticatable
     public function getRoleInBranch(string $branchId): ?string
     {
         if ($this->isOwner()) return 'owner';
-
-        $pivot = $this->staffBranches()
-            ->where('branch_id', $branchId)
-            ->where('is_active', true)
-            ->first();
-
-        return $pivot?->role;
+        return $this->staffBranches()->where('branch_id', $branchId)->where('is_active', true)->value('role');
+    }
+ 
+    public function getDashboardPath(): string
+    {
+        return $this->isOwner() ? '/owner/dashboard' : '/dashboard';
     }
 }
