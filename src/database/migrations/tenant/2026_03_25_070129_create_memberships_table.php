@@ -18,10 +18,10 @@ return new class extends Migration
             // RELASI UTAMA (Murni, tanpa tenant_id)
             // ==========================================
             $table->uuid('member_id');
-            $table->uuid('plan_id');
+            $table->uuid('membership_plan_id');
             
             // Cabang tempat transaksi/pembelian terjadi (Untuk Laporan Omzet)
-            $table->uuid('branch_id')->nullable(); 
+            $table->uuid('home_branch_id')->nullable(); 
             
             // ID Transaksi untuk nyambung ke Invoice/Midtrans
             $table->string('last_transaction_id')->nullable();
@@ -56,9 +56,9 @@ return new class extends Migration
             // FOREIGN KEYS
             // ==========================================
             $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
-            $table->foreign('plan_id')->references('id')->on('membership_plans')->onDelete('cascade');
+            $table->foreign('_membership_plan_id')->references('id')->on('membership_plans')->onDelete('cascade');
             // Jika cabang tutup/dihapus, riwayat transaksi tetap ada, tapi branch_id jadi null
-            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('set null');
+            $table->foreign('home_branch_id')->references('id')->on('branches')->onDelete('set null');
         });
     }
 

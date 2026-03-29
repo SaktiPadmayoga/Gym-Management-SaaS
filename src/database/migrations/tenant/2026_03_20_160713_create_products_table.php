@@ -12,7 +12,7 @@ return new class extends Migration {
 
             // Identity
             $table->string('name');
-            $table->string('sku')->unique()->nullable();
+            $table->string('code')->unique()->nullable();
             $table->string('category');
             $table->text('description')->nullable();
             $table->string('color')->nullable();
@@ -44,7 +44,7 @@ return new class extends Migration {
             $table->index(['category', 'is_active']);
             $table->index(['branch_id', 'is_active']);
             $table->index('stock');
-            $table->index('sku');
+            $table->index('code');
         });
 
         // Stock Movements — audit trail setiap perubahan stock
