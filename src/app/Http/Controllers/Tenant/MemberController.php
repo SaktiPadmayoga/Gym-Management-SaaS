@@ -149,28 +149,41 @@ class MemberController extends Controller
     {
         $member = Member::findOrFail($id);
         
+        // Kita terima baik nama variabel baru (start_date) maupun lama (started_at)
         $request->validate([
             'plan_id'    => ['required', 'uuid', 'exists:membership_plans,id'],
-            'start_date' => ['required', 'date'],
-            'end_date'   => ['nullable', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'date'],
+            'started_at' => ['nullable', 'date'], // Antisipasi frontend lama
+            'end_date'   => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date'], // Antisipasi frontend lama
             'notes'      => ['nullable', 'string'],
         ]);
 
         $plan = MembershipPlan::findOrFail($request->plan_id);
 
-        // Kalkulasi end_date otomatis jika tidak dikirim dari frontend
-        $endDate = $request->end_date;
+        // Ambil tanggal mulai (prioritaskan start_date, jika kosong pakai started_at, jika kosong lagi pakai hari ini)
+        $startDate = $request->start_date ?? $request->started_at ?? now()->toDateString();
+        
+        // Ambil tanggal berakhir (prioritaskan end_date, jika kosong pakai expires_at)
+        $endDate = $request->end_date ?? $request->expires_at;
+
+        // Jika frontend tidak mengirim tanggal berakhir, kita hitung otomatis!
         if (!$endDate) {
-            // Asumsi tabel plan punya durasi, misal 'duration' dan 'duration_unit'
-            $unit = $plan->duration_unit === 'month' ? 'months' : ($plan->duration_unit === 'year' ? 'years' : 'days');
-            $endDate = \Carbon\Carbon::parse($request->start_date)->add($plan->duration, $unit)->toDateString();
+            // Perbaikan logika durasi agar "week" terhitung dengan benar
+            $unit = match($plan->duration_unit) {
+                'year'  => 'years',
+                'month' => 'months',
+                'week'  => 'weeks',
+                default => 'days',
+            };
+            $endDate = \Carbon\Carbon::parse($startDate)->add($plan->duration, $unit)->toDateString();
         }
 
         $membership = Membership::create([
             'member_id'               => $member->id,
             'plan_id'                 => $plan->id,
             'branch_id'               => $request->header('X-Branch-Id'),
-            'start_date'              => $request->start_date,
+            'start_date'              => $startDate,
             'end_date'                => $endDate,
             'unlimited_checkin'       => $plan->unlimited_checkin ?? false,
             'remaining_checkin_quota' => $plan->checkin_quota_per_month ?? null,

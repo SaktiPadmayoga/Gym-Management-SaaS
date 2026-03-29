@@ -45,7 +45,7 @@ class MembershipPlan extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
-        'checkin_schedule' => 'array', // Cast JSON otomatis ke array PHP
+        'checkin_schedule' => 'array', 
         'available_from' => 'date',
         'available_until' => 'date',
         'is_active' => 'boolean',

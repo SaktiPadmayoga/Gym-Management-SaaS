@@ -19,7 +19,7 @@ class Member extends Authenticatable
     use HasApiTokens, HasFactory, HasUuids, SoftDeletes, Notifiable;
 
     protected $fillable = [
-        'home_branch_id',
+        'branch_id',
         'name',
         'email',
         'phone',
@@ -51,7 +51,7 @@ class Member extends Authenticatable
 
     public function homeBranch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class, 'home_branch_id');
+        return $this->belongsTo(Branch::class, 'branch_id');
     }
 
     public function memberships(): HasMany

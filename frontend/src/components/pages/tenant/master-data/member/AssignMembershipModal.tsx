@@ -78,6 +78,7 @@ export default function AssignMembershipModal({ isOpen, onClose, memberId }: Ass
             toast.success("Membership successfully assigned!");
             onClose();
         } catch (error) {
+            console.error(error);
             toast.error("Failed to assign membership");
         }
     };

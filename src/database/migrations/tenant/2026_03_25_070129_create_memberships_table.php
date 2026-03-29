@@ -4,46 +4,67 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('memberships', function (Blueprint $table) {
             $table->uuid('id')->primary();
-
-            // Relasi Member & Paket
-            $table->foreignUuid('member_id')->constrained('members')->cascadeOnDelete();
-            $table->foreignUuid('plan_id')->constrained('membership_plans')->cascadeOnDelete();
-
-            $table->uuid('branch_id')->nullable();
             
-            // Periode Aktif
+            // ==========================================
+            // RELASI UTAMA (Murni, tanpa tenant_id)
+            // ==========================================
+            $table->uuid('member_id');
+            $table->uuid('plan_id');
+            
+            // Cabang tempat transaksi/pembelian terjadi (Untuk Laporan Omzet)
+            $table->uuid('branch_id')->nullable(); 
+            
+            // ID Transaksi untuk nyambung ke Invoice/Midtrans
+            $table->string('last_transaction_id')->nullable();
+
+            // ==========================================
+            // MASA BERLAKU & STATUS
+            // ==========================================
             $table->date('start_date');
-            $table->date('end_date');
-            
-            // Kuota Operasional
+            $table->date('end_date')->nullable(); // Boleh null jika paketnya "Lifetime"
+            $table->string('status')->default('active'); // active, expired, frozen, cancelled
+
+            // ==========================================
+            // KUOTA CHECK-IN
+            // ==========================================
             $table->boolean('unlimited_checkin')->default(false);
-            $table->integer('remaining_checkin_quota')->nullable(); 
-            $table->integer('total_checkins')->default(0); 
+            $table->integer('remaining_checkin_quota')->nullable();
+            $table->integer('total_checkins')->default(0);
 
-            // Status
-            $table->enum('status', [
-                'active', 
-                'expired', 
-                'cancelled', 
-                'frozen'
-            ])->default('active');
-
+            // ==========================================
+            // SISTEM CUTI (FREEZE)
+            // ==========================================
+            $table->date('frozen_at')->nullable();
             $table->date('frozen_until')->nullable();
-            $table->text('notes')->nullable();
-            
-            $table->timestamps();
-            $table->softDeletes();
+            $table->integer('freeze_days_used')->default(0);
 
-            // Index untuk kecepatan validasi scan barcode
-            $table->index(['member_id', 'status', 'end_date']);
+            $table->text('notes')->nullable();
+
+            $table->timestamps();
+            $table->softDeletes(); // Wajib agar history pendapatan tidak hilang kalau paket dihapus
+
+            // ==========================================
+            // FOREIGN KEYS
+            // ==========================================
+            $table->foreign('member_id')->references('id')->on('members')->onDelete('cascade');
+            $table->foreign('plan_id')->references('id')->on('membership_plans')->onDelete('cascade');
+            // Jika cabang tutup/dihapus, riwayat transaksi tetap ada, tapi branch_id jadi null
+            $table->foreign('branch_id')->references('id')->on('branches')->onDelete('set null');
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('memberships');

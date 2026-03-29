@@ -23,6 +23,6 @@ class FacilityBooking extends Model
 
     public function memberProfile()
     {
-        return $this->belongsTo(MemberProfile::class);
+        return $this->belongsTo(Member::class);
     }
 }
