@@ -44,7 +44,7 @@ export default function MembershipPlan() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         params.set("page", String(page));
         params.set("per_page", String(perPage));
-        router.replace(`/membership-plan?${params.toString()}`);
+        router.replace(`/membership-plans?${params.toString()}`);
     }, [debouncedSearch, page, perPage, router]);
 
     // Toast
@@ -70,7 +70,7 @@ export default function MembershipPlan() {
             hasShownToast.current = true;
         }
 
-        window.history.replaceState({}, "", "/membership-plan");
+        window.history.replaceState({}, "", "/membership-plans");
     }, [searchParams]);
 
     const entries: MembershipPlanData[] = data ?? [];
@@ -90,7 +90,7 @@ export default function MembershipPlan() {
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.color && <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />}
-                    <Link href={`/membership-plan/${item.id}`} className="font-medium hover:underline">
+                    <Link href={`/membership-plans/${item.id}`} className="font-medium hover:underline">
                         {item.name}
                     </Link>
                 </div>
@@ -124,8 +124,8 @@ export default function MembershipPlan() {
         {
             header: "Access",
             render: (item) => (
-                <span className={`rounded-lg px-2 py-1 text-xs font-medium ${item.access_type === "all_branches" ? "bg-indigo-100 text-indigo-700" : "bg-zinc-100 text-zinc-600"}`}>
-                    {item.access_type === "all_branches" ? "All Branches" : "Single Branch"}
+                <span className={`rounded-lg px-2 py-1 text-xs font-medium ${item.access_type === "cross_branch" ? "bg-indigo-100 text-indigo-700" : "bg-zinc-100 text-zinc-600"}`}>
+                    {item.access_type === "cross_branch" ? "Cross Branch" : "Single Branch"}
                 </span>
             ),
             width: "w-32",
@@ -154,13 +154,13 @@ export default function MembershipPlan() {
         {
             label: "View Detail",
             icon: "eye",
-            onClick: (row) => router.push(`/membership-plan/${row.id}`),
+            onClick: (row) => router.push(`/membership-plans/${row.id}`),
         },
         {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/membership-plan/${row.id}`),
+            onClick: (row) => router.push(`/membership-plans/${row.id}`),
         },
         {
             label: (row) => (row.is_active ? "Deactivate" : "Activate"),
@@ -222,7 +222,7 @@ export default function MembershipPlan() {
                             <div className="w-64 text-zinc-800">
                                 <SearchInput name="search" />
                             </div>
-                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/membership-plan/create")}>
+                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/membership-plans/create")}>
                                 New Plan
                             </CustomButton>
                         </div>
@@ -237,7 +237,7 @@ export default function MembershipPlan() {
                                 ))}
                             </div>
                         ) : (
-                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/membership-plan/${row.id}`)} />
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/membership-plans/${row.id}`)} />
                         )}
                     </div>
 

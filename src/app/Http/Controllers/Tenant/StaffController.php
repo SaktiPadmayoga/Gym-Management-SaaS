@@ -56,7 +56,14 @@ class StaffController extends Controller
 
         $staff = $query->orderBy('name')->paginate($request->get('per_page', 15));
 
-        return ApiResponse::success(StaffResource::collection($staff)->response()->getData(true));
+        return ApiResponse::success([
+            'data' => StaffResource::collection($staff->items()),
+            'meta' => [
+                'total' => $staff->total(),
+                'per_page' => $staff->perPage(),
+                'current_page' => $staff->currentPage(),
+            ],
+        ]);
     }
 
     public function store(StoreStaffRequest $request)
@@ -78,7 +85,7 @@ class StaffController extends Controller
 
         if (!empty($data['branch_id'])) {
             StaffBranch::create([
-                'staffs_id'  => $staff->id,
+                'staff_id'  => $staff->id,
                 'branch_id' => $data['branch_id'],
                 'role'      => $data['branch_role'],
                 'joined_at' => now(),
@@ -132,7 +139,7 @@ class StaffController extends Controller
     {
         $staff = Staff::findOrFail($id);
 
-        StaffBranch::where('staffs_id', $staff->id)->update(['is_active' => false]);
+        StaffBranch::where('staff_id', $staff->id)->update(['is_active' => false]);
         $staff->delete();
 
         return ApiResponse::success(null, 'Staff deleted successfully');
@@ -144,7 +151,7 @@ class StaffController extends Controller
         $data  = $request->validated();
 
         $existing = StaffBranch::withTrashed()
-            ->where('staffs_id', $staff->id)
+            ->where('staff_id', $staff->id)
             ->where('branch_id', $data['branch_id'])
             ->first();
 
@@ -158,7 +165,7 @@ class StaffController extends Controller
             $staffBranch = $existing;
         } else {
             $staffBranch = StaffBranch::create([
-                'staffs_id'  => $staff->id,
+                'staff_id'  => $staff->id,
                 'branch_id' => $data['branch_id'],
                 'role'      => $data['role'],
                 'joined_at' => $data['joined_at'] ?? now(),
@@ -172,7 +179,7 @@ class StaffController extends Controller
 
     public function revokeBranch(string $id, string $branchId)
     {
-        $staffBranch = StaffBranch::where('staffs_id', $id)
+        $staffBranch = StaffBranch::where('staff_id', $id)
             ->where('branch_id', $branchId)
             ->firstOrFail();
 

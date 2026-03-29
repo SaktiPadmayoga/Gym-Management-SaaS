@@ -44,7 +44,7 @@ export default function PtSessionPlan() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         params.set("page", String(page));
         params.set("per_page", String(perPage));
-        router.replace(`/pt-sessions-plan?${params.toString()}`);
+        router.replace(`/pt-sessions-plans?${params.toString()}`);
     }, [debouncedSearch, page, perPage, router]);
 
     // Toast
@@ -70,7 +70,7 @@ export default function PtSessionPlan() {
             hasShownToast.current = true;
         }
 
-        window.history.replaceState({}, "", "/pt-sessions-plan");
+        window.history.replaceState({}, "", "/pt-sessions-plans");
     }, [searchParams]);
 
     const entries: PtSessionPlanData[] = data ?? [];
@@ -90,7 +90,7 @@ export default function PtSessionPlan() {
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.color && <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />}
-                    <Link href={`/pt-sessions-plan/${item.id}`} className="font-medium hover:underline">
+                    <Link href={`/pt-sessions-plans/${item.id}`} className="font-medium hover:underline">
                         {item.name}
                     </Link>
                 </div>
@@ -155,13 +155,13 @@ export default function PtSessionPlan() {
         {
             label: "View Detail",
             icon: "eye",
-            onClick: (row) => router.push(`/pt-sessions-plan/${row.id}`),
+            onClick: (row) => router.push(`/pt-sessions-plans/${row.id}`),
         },
         {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/pt-sessions-plan/${row.id}`),
+            onClick: (row) => router.push(`/pt-sessions-plans/${row.id}`),
         },
         {
             label: (row) => (row.is_active ? "Deactivate" : "Activate"),
@@ -223,7 +223,7 @@ export default function PtSessionPlan() {
                             <div className="w-64 text-zinc-800">
                                 <SearchInput name="search" />
                             </div>
-                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/pt-sessions-plan/create")}>
+                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/pt-sessions-plans/create")}>
                                 New Plan
                             </CustomButton>
                         </div>
@@ -238,7 +238,7 @@ export default function PtSessionPlan() {
                                 ))}
                             </div>
                         ) : (
-                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/pt-sessions-plan/${row.id}`)} />
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/pt-sessions-plans/${row.id}`)} />
                         )}
                     </div>
 

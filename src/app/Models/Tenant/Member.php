@@ -4,17 +4,22 @@ namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use App\Models\Branch;
+use App\Models\Tenant;
 
 class Member extends Authenticatable
 {
-    use HasFactory, HasUuids, Notifiable, SoftDeletes;
-
-    protected $table = 'members';
+    use HasApiTokens, HasFactory, HasUuids, SoftDeletes, Notifiable;
 
     protected $fillable = [
+        'home_branch_id',
         'name',
         'email',
         'phone',
@@ -24,7 +29,6 @@ class Member extends Authenticatable
         'avatar',
         'address',
         'id_card_number',
-        'password',
         'status',
         'is_active',
         'last_checkin_at',
@@ -32,65 +36,32 @@ class Member extends Authenticatable
         'member_since',
     ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
     protected $casts = [
-        'is_active'          => 'boolean',
-        'date_of_birth'      => 'date',
-        'member_since'       => 'date',
-        'email_verified_at'  => 'datetime',
-        'last_checkin_at'    => 'datetime',
-        'last_login_at'      => 'datetime',
-        'password'           => 'hashed',
+        'date_of_birth' => 'date',
+        'last_checkin_at' => 'datetime',
+        'last_login_at' => 'datetime',
+        'member_since' => 'date',
+        'is_active' => 'boolean',
     ];
 
-    // =============================================
-    // Relationships
-    // =============================================
-
-    public function memberBranches()
+    public function tenant(): BelongsTo
     {
-        return $this->hasMany(MemberBranch::class, 'member_id');
+        return $this->belongsTo(Tenant::class);
     }
 
-    public function branches()
+    public function homeBranch(): BelongsTo
     {
-        return $this->belongsToMany(\App\Models\Branch::class, 'member_branches', 'member_id', 'branch_id')
-            ->withPivot(['status', 'plan_id', 'started_at', 'expires_at', 'member_code', 'is_primary', 'joined_at'])
-            ->withTimestamps();
+        return $this->belongsTo(Branch::class, 'home_branch_id');
     }
 
-    public function primaryBranch()
+    public function memberships(): HasMany
     {
-        return $this->hasOne(MemberBranch::class, 'member_id')->where('is_primary', true);
+        return $this->hasMany(Membership::class);
     }
 
-    // =============================================
-    // Helpers
-    // =============================================
-
-    public function isActiveInBranch(string $branchId): bool
+    // Helper untuk mengambil membership yang sedang aktif saat ini
+    public function activeMembership()
     {
-        return $this->memberBranches()
-            ->where('branch_id', $branchId)
-            ->where('status', 'active')
-            ->exists();
-    }
-
-    public function getMembershipInBranch(string $branchId): ?MemberBranch
-    {
-        return $this->memberBranches()
-            ->where('branch_id', $branchId)
-            ->first();
-    }
-
-    public function getAge(): ?int
-    {
-        return $this->date_of_birth
-            ? $this->date_of_birth->age
-            : null;
+        return $this->hasOne(Membership::class)->where('status', 'active');
     }
 }

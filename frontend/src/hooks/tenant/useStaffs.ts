@@ -1,11 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { staffAPI } from "@/lib/api/tenant/staffs";
-import {
-    AssignBranchRequest,
-    StaffCreateRequest,
-    StaffData,
-    StaffUpdateRequest, 
-} from "@/types/tenant/staffs";
+import { AssignBranchRequest, StaffCreateRequest, StaffData, StaffUpdateRequest } from "@/types/tenant/staffs";
 
 export type StaffQueryParams = {
     page?: number;
@@ -25,15 +20,7 @@ export const staffKeys = {
 
     lists: () => [...staffKeys.all, "list"] as const,
 
-    list: (params?: StaffQueryParams) =>
-        [
-            ...staffKeys.lists(),
-            params?.page ?? 1,
-            params?.per_page ?? 15,
-            params?.search ?? "",
-            params?.branch_id ?? "",
-            params?.role ?? "",
-        ] as const,
+    list: (params?: StaffQueryParams) => [...staffKeys.lists(), params?.page ?? 1, params?.per_page ?? 15, params?.search ?? "", params?.branch_id ?? "", params?.role ?? ""] as const,
 
     details: () => [...staffKeys.all, "detail"] as const,
 
@@ -109,13 +96,7 @@ export function useUpdateStaff() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            id,
-            payload,
-        }: {
-            id: string;
-            payload: StaffUpdateRequest;
-        }) => staffAPI.update(id, payload),
+        mutationFn: ({ id, payload }: { id: string; payload: StaffUpdateRequest }) => staffAPI.update(id, payload),
 
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: staffKeys.detail(id) });
@@ -156,13 +137,7 @@ export function useAssignBranch() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            staffId,
-            payload,
-        }: {
-            staffId: string;
-            payload: AssignBranchRequest;
-        }) => staffAPI.assignBranch(staffId, payload),
+        mutationFn: ({ staffId, payload }: { staffId: string; payload: AssignBranchRequest }) => staffAPI.assignBranch(staffId, payload),
 
         onSuccess: (_, { staffId }) => {
             queryClient.invalidateQueries({
@@ -181,13 +156,7 @@ export function useRevokeBranch() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            staffId,
-            branchId,
-        }: {
-            staffId: string;
-            branchId: string;
-        }) => staffAPI.revokeBranch(staffId, branchId),
+        mutationFn: ({ staffId, branchId }: { staffId: string; branchId: string }) => staffAPI.revokeBranch(staffId, branchId),
 
         onSuccess: (_, { staffId }) => {
             queryClient.invalidateQueries({

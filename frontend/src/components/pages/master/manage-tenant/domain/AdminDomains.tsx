@@ -259,13 +259,15 @@ export default function AdminDomainsPage() {
 
                 <div className="mt-4">
                     <PaginationWithRows
-                        hasNextPage={data?.meta?.current_page && data?.meta?.last_page
-                            ? data.meta.current_page < data.meta.last_page
-                            : false}
+                        hasNextPage={data?.meta?.current_page ? data.meta.current_page < (data.meta.last_page || 1) : false}
                         hasPrevPage={(data?.meta?.current_page ?? 0) > 1}
                         totalItems={totalData}
+                        currentPage={page}                    // ← Penting
+                        currentPerPage={perPage}              // ← Penting
+                        onPageChange={setPage}                // ← Penting
+                        onRowsPerPageChange={setPerPage}      // ← Penting
                         rowOptions={[5, 10, 15, 20, 50]}
-                        defaultRowsPerPage={perPage}
+                        defaultRowsPerPage={15}
                     />
                 </div>
             </div>

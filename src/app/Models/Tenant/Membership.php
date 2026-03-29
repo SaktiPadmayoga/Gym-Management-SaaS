@@ -2,47 +2,44 @@
 
 namespace App\Models\Tenant;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Membership extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'member_profile_id', 'membership_plan_id', 'additional_fee_id',
-        'join_date', 'start_date', 'end_date',
-        'original_price', 'final_price', 'discount_amount', 'discount_percent',
-        'extra_duration_days', 'extra_membership_session',
-        'referral_sales_id', 'sales_type',
-        'used_checkin_count', 'used_class_count', 'last_checkin_at',
-        'status', 'notes', 'auto_renew', 'renewal_date'
+        'member_id',
+        'plan_id',
+        'branch_id', // Tambahkan ini
+        'start_date',
+        'end_date',
+        'unlimited_checkin',
+        'remaining_checkin_quota',
+        'total_checkins',
+        'status',
+        'frozen_until',
+        'notes',
     ];
 
     protected $casts = [
-        'join_date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
-        'renewal_date' => 'date',
-        'last_checkin_at' => 'datetime',
-        'original_price' => 'decimal:2',
-        'final_price' => 'decimal:2',
-        'auto_renew' => 'boolean',
+        'frozen_until' => 'date',
+        'unlimited_checkin' => 'boolean',
     ];
 
-    public function memberProfile()
+    public function member(): BelongsTo
     {
-        return $this->belongsTo(MemberProfile::class);
+        return $this->belongsTo(Member::class);
     }
 
-    public function membershipPlan()
+    public function plan(): BelongsTo
     {
-        return $this->belongsTo(MembershipPlan::class);
-    }
-
-    public function salesStaff()
-    {
-        return $this->belongsTo(Staff::class, 'referral_sales_id');
+        return $this->belongsTo(MembershipPlan::class, 'plan_id');
     }
 }

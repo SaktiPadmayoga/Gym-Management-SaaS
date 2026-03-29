@@ -30,9 +30,7 @@ function getCurrentBranchId(): string | null {
 }
 
 const tenantApiClient: AxiosInstance = axios.create({
-    baseURL: typeof window !== "undefined"
-        ? `${window.location.origin}/api`
-        : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
+    baseURL: typeof window !== "undefined" ? `${window.location.origin}/api` : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -42,7 +40,7 @@ const tenantApiClient: AxiosInstance = axios.create({
 
 tenantApiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("staff_token");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -58,15 +56,12 @@ tenantApiClient.interceptors.request.use(
         }
 
         if (process.env.NODE_ENV === "development") {
-            console.log(
-                `[Tenant API] ${config.method?.toUpperCase()} ${config.url}`,
-                `(tenant: ${tenantSlug}, branch: ${branchId})`
-            );
+            console.log(`[Tenant API] ${config.method?.toUpperCase()} ${config.url}`, `(tenant: ${tenantSlug}, branch: ${branchId})`);
         }
 
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
 );
 
 tenantApiClient.interceptors.response.use(
@@ -75,10 +70,7 @@ tenantApiClient.interceptors.response.use(
             console.log(`[Tenant API] Response:`, response.data);
         }
 
-        if (
-            typeof response.data === "string" &&
-            response.data.includes("<!DOCTYPE html>")
-        ) {
+        if (typeof response.data === "string" && response.data.includes("<!DOCTYPE html>")) {
             throw new Error("API returned HTML instead of JSON");
         }
 
@@ -86,12 +78,16 @@ tenantApiClient.interceptors.response.use(
     },
     (error: AxiosError) => {
         if (error.response?.status === 401) {
-            window.location.href = "/login";
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("staff_token");
+                // hapus key lain jika perlu: staff_data, dll.
+                window.location.href = "/tenant-auth/login"; // sesuaikan path login kamu
+            }
         }
 
         console.error("[Tenant API Error]:", error.response?.data);
         return Promise.reject(error);
-    }
+    },
 );
 
 export default tenantApiClient;

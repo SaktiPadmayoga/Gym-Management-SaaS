@@ -100,8 +100,8 @@ export default function Members() {
             header: "Name",
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    {item.avatar ? (
-                        <img src={item.avatar} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
+                    {item.avatar_url ? (
+                        <img src={item.avatar_url} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
                     ) : (
                         <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 font-semibold text-sm">{item.name.charAt(0).toUpperCase()}</div>
                     )}
@@ -109,7 +109,7 @@ export default function Members() {
                         <Link href={`/members/${item.id}`} className="font-medium text-zinc-800 hover:underline">
                             {item.name}
                         </Link>
-                        {item.current_membership?.member_code && <p className="text-xs text-zinc-400">{item.current_membership.member_code}</p>}
+                        {item.home_branch && <p className="text-xs text-zinc-400">Home: {item.home_branch.name}</p>}
                     </div>
                 </div>
             ),
@@ -133,18 +133,35 @@ export default function Members() {
         {
             header: "Membership",
             render: (item) => {
-                const mb = item.current_membership ?? item.branches?.[0];
+                // Cari membership yang sedang aktif, atau ambil yang paling pertama jika tidak ada yang aktif
+                const mb = item.memberships?.find((m) => m.status === "active") ?? item.memberships?.[0];
+
                 if (!mb) return <span className="text-zinc-400 text-sm">No membership</span>;
+
+                // Kalkulasi sisa hari
+                let daysLeft = 0;
+                if (mb.end_date) {
+                    const end = new Date(mb.end_date);
+                    const today = new Date();
+                    // Reset waktu ke tengah malam agar kalkulasi hari akurat
+                    today.setHours(0, 0, 0, 0);
+                    end.setHours(0, 0, 0, 0);
+                    const diffTime = end.getTime() - today.getTime();
+                    daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                }
+
                 return (
                     <div>
-                        <p className="text-sm text-zinc-700">{mb.expires_at ? new Date(mb.expires_at).toLocaleDateString() : "-"}</p>
-                        {mb.days_until_expiry !== null && mb.days_until_expiry !== undefined && (
-                            <p className={`text-xs ${mb.days_until_expiry <= 7 ? "text-orange-500" : "text-zinc-400"}`}>{mb.days_until_expiry > 0 ? `${mb.days_until_expiry}d left` : "Expired"}</p>
+                        <p className="text-sm text-zinc-700 font-medium">{mb.plan?.name ?? "Custom Plan"}</p>
+                        <p className="text-xs text-zinc-500 mb-1">Ends: {mb.end_date ? new Date(mb.end_date).toLocaleDateString() : "-"}</p>
+                        {mb.status === "active" && daysLeft !== null && (
+                            <p className={`text-[10px] font-semibold uppercase ${daysLeft <= 7 ? "text-orange-500" : "text-emerald-500"}`}>{daysLeft > 0 ? `${daysLeft} days left` : "Expires today"}</p>
                         )}
+                        {mb.status !== "active" && <p className="text-[10px] font-semibold uppercase text-zinc-400">{mb.status}</p>}
                     </div>
                 );
             },
-            width: "w-36",
+            width: "w-48",
         },
         {
             header: "Gender",

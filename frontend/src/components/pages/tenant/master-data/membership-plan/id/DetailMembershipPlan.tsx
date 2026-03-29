@@ -26,9 +26,10 @@ const durationUnitOptions: DropdownOption<string>[] = [
     { key: "year", label: "Year", value: "year" },
 ];
 
+// PERBAIKAN: Mengganti 'all_branches' menjadi 'cross_branch'
 const accessTypeOptions: DropdownOption<string>[] = [
     { key: "single_branch", label: "Single Branch", value: "single_branch" },
-    { key: "all_branches", label: "All Branches", value: "all_branches" },
+    { key: "cross_branch", label: "Cross Branch (Multiple)", value: "cross_branch" },
 ];
 
 const DAYS = [
@@ -55,7 +56,7 @@ interface MembershipPlanFormData {
     duration_unit: "day" | "week" | "month" | "year";
     loyalty_points_reward: number;
     max_sharing_members: number;
-    access_type: "all_branches" | "single_branch";
+    access_type: "cross_branch" | "single_branch"; // PERBAIKAN TYPE
     unlimited_checkin: boolean;
     checkin_quota_per_month: number | undefined;
     unlimited_sold: boolean;
@@ -69,7 +70,6 @@ interface MembershipPlanFormData {
 
 /* =========================
  * CLASS PLAN SELECTOR
- * (inline — tidak perlu file terpisah)
  * ========================= */
 
 function ClassPlanSelector({ membershipPlanId, includedClassPlans }: { membershipPlanId: string; includedClassPlans: ClassPlanData[] }) {
@@ -80,7 +80,6 @@ function ClassPlanSelector({ membershipPlanId, includedClassPlans }: { membershi
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(includedClassPlans.map((cp) => cp.id)));
     const [isDirty, setIsDirty] = useState(false);
 
-    // Sync selectedIds jika includedClassPlans berubah (setelah fetch)
     useEffect(() => {
         setSelectedIds(new Set(includedClassPlans.map((cp) => cp.id)));
     }, [includedClassPlans.length]);
@@ -160,7 +159,7 @@ function ClassPlanSelector({ membershipPlanId, includedClassPlans }: { membershi
  * MAIN PAGE
  * ========================= */
 
-export default function DetailMembershipPlan() {
+export default function MembershipPlanDetail() {
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;
@@ -195,7 +194,7 @@ export default function DetailMembershipPlan() {
             duration_unit: plan.duration_unit,
             loyalty_points_reward: plan.loyalty_points_reward,
             max_sharing_members: plan.max_sharing_members,
-            access_type: plan.access_type,
+            access_type: plan.access_type, // Mencegah TS error saat initial load
             unlimited_checkin: plan.unlimited_checkin,
             checkin_quota_per_month: plan.checkin_quota_per_month ?? undefined,
             unlimited_sold: plan.unlimited_sold,
@@ -492,7 +491,6 @@ export default function DetailMembershipPlan() {
                         <hr />
 
                         {/* CLASS PLAN INCLUSIONS */}
-                        {/* Section ini independen dari isEditMode — bisa diubah kapan saja */}
                         <ClassPlanSelector membershipPlanId={id} includedClassPlans={(plan?.class_plans ?? []) as ClassPlanData[]} />
                     </div>
                 </div>

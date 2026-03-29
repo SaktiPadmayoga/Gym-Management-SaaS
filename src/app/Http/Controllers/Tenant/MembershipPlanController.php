@@ -80,6 +80,7 @@ class MembershipPlanController extends Controller
         $plan = MembershipPlan::findOrFail($id);
         $data = $request->validated();
 
+
         if (isset($data['unlimited_checkin']) && $data['unlimited_checkin'])   $data['checkin_quota_per_month'] = null;
         if (isset($data['unlimited_sold'])    && $data['unlimited_sold'])       $data['total_quota']             = null;
         if (isset($data['always_available'])  && $data['always_available'])   { $data['available_from'] = null; $data['available_until'] = null; }
@@ -94,7 +95,7 @@ class MembershipPlanController extends Controller
     {
         $plan = MembershipPlan::findOrFail($id);
 
-        $activeMemberCount = $plan->memberBranches()->where('status', 'active')->count();
+        $activeMemberCount = $plan->memberships()->where('status', 'active')->count();
         if ($activeMemberCount > 0) {
             return ApiResponse::error(
                 "Cannot delete plan with {$activeMemberCount} active member(s). Deactivate instead.",
@@ -230,4 +231,6 @@ class MembershipPlanController extends Controller
 
         return ApiResponse::success(null, 'Class plan detached successfully');
     }
+
+    
 }

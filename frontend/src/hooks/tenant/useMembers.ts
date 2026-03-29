@@ -1,21 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { membersAPI } from "@/lib/api/tenant/members";
-import {
-    AssignMemberBranchRequest,
-    MemberCreateRequest,
-    MemberData,
-    MemberUpdateRequest,
-    UpdateMembershipRequest,
-} from "@/types/tenant/members";
+import { AssignMembershipRequest, MemberCreateRequest, MemberData, MemberUpdateRequest, UpdateMembershipRequest } from "@/types/tenant/members";
 
 export type MembersQueryParams = {
-    page?:             number;
-    per_page?:         number;
-    search?:           string;
-    status?:           string;
-    gender?:           string;
-    is_active?:        boolean;
-    expiring_in_days?: number;
+    page?: number;
+    per_page?: number;
+    search?: string;
+    status?: string;
+    is_active?: boolean;
+    home_branch_id?: string;
 };
 
 /* =====================
@@ -23,95 +16,71 @@ export type MembersQueryParams = {
  * ===================== */
 
 export const memberKeys = {
-    all:      ["members"] as const,
-    lists:    () => [...memberKeys.all, "list"] as const,
-    list:     (params?: MembersQueryParams) =>
-        [...memberKeys.lists(), params?.page ?? 1, params?.per_page ?? 15, params?.search ?? "", params?.status ?? ""] as const,
-    details:  () => [...memberKeys.all, "detail"] as const,
-    detail:   (id: string) => [...memberKeys.details(), id] as const,
-    branches: (id: string) => [...memberKeys.all, "branches", id] as const,
+    all: ["members"] as const,
+    lists: () => [...memberKeys.all, "list"] as const,
+    list: (params?: MembersQueryParams) => [...memberKeys.lists(), params?.page ?? 1, params?.per_page ?? 15, params?.search ?? "", params?.status ?? "", params?.home_branch_id ?? ""] as const,
+    details: () => [...memberKeys.all, "detail"] as const,
+    detail: (id: string) => [...memberKeys.details(), id] as const,
+    memberships: (id: string) => [...memberKeys.all, "memberships", id] as const,
 };
 
 /* =====================
- * GET ALL
+ * GET ALL & SINGLE
  * ===================== */
 
 export function useMembers(params?: MembersQueryParams) {
     return useQuery({
         queryKey: memberKeys.list(params),
-        queryFn:  () => membersAPI.getAll(params),
+        queryFn: () => membersAPI.getAll(params),
         staleTime: 300_000,
         placeholderData: (prev) => prev,
     });
 }
 
-/* =====================
- * GET SINGLE
- * ===================== */
-
 export function useMember(id?: string) {
     return useQuery<MemberData>({
         queryKey: memberKeys.detail(id as string),
-        queryFn:  () => membersAPI.getById(id as string),
-        enabled:  !!id,
+        queryFn: () => membersAPI.getById(id as string),
+        enabled: !!id,
         staleTime: 5 * 60 * 1000,
     });
 }
 
-/* =====================
- * GET MEMBER BRANCHES
- * ===================== */
-
-export function useMemberBranches(id?: string) {
+export function useMemberMemberships(id?: string) {
     return useQuery({
-        queryKey: memberKeys.branches(id as string),
-        queryFn:  () => membersAPI.getBranches(id as string),
-        enabled:  !!id,
+        queryKey: memberKeys.memberships(id as string),
+        queryFn: () => membersAPI.getMemberships(id as string),
+        enabled: !!id,
         staleTime: 5 * 60 * 1000,
     });
 }
 
 /* =====================
- * CREATE
+ * MUTATIONS
  * ===================== */
 
 export function useCreateMember() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload: MemberCreateRequest) => membersAPI.create(payload),
+        mutationFn: (payload: MemberCreateRequest | FormData) => membersAPI.create(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
         },
-        onError: (error) => {
-            console.error("Create member error:", error);
-        },
     });
 }
-
-/* =====================
- * UPDATE
- * ===================== */
 
 export function useUpdateMember() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, payload }: { id: string; payload: MemberUpdateRequest }) =>
-            membersAPI.update(id, payload),
+        mutationFn: ({ id, payload }: { id: string; payload: MemberUpdateRequest | FormData }) => membersAPI.update(id, payload),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: memberKeys.detail(id) });
             queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
         },
-        onError: (error) => {
-            console.error("Update member error:", error);
-        },
     });
 }
-
-/* =====================
- * DELETE
- * ===================== */
 
 export function useDeleteMember() {
     const queryClient = useQueryClient();
@@ -121,67 +90,45 @@ export function useDeleteMember() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
         },
-        onError: (error) => {
-            console.error("Delete member error:", error);
-        },
     });
 }
 
 /* =====================
- * ASSIGN BRANCH
+ * MEMBERSHIP MUTATIONS
  * ===================== */
 
-export function useAssignMemberBranch() {
+export function useAssignMembership() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ memberId, payload }: { memberId: string; payload: AssignMemberBranchRequest }) =>
-            membersAPI.assignBranch(memberId, payload),
+        mutationFn: ({ memberId, payload }: { memberId: string; payload: AssignMembershipRequest }) => membersAPI.assignMembership(memberId, payload),
         onSuccess: (_, { memberId }) => {
-            queryClient.invalidateQueries({ queryKey: memberKeys.branches(memberId) });
-            queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: memberKeys.memberships(memberId) });
+            queryClient.invalidateQueries({ queryKey: memberKeys.detail(memberId) });
         },
     });
 }
-
-/* =====================
- * UPDATE MEMBERSHIP
- * ===================== */
 
 export function useUpdateMembership() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            memberId,
-            branchId,
-            payload,
-        }: {
-            memberId: string;
-            branchId: string;
-            payload: UpdateMembershipRequest;
-        }) => membersAPI.updateMembership(memberId, branchId, payload),
+        mutationFn: ({ memberId, membershipId, payload }: { memberId: string; membershipId: string; payload: UpdateMembershipRequest }) => membersAPI.updateMembership(memberId, membershipId, payload),
         onSuccess: (_, { memberId }) => {
+            queryClient.invalidateQueries({ queryKey: memberKeys.memberships(memberId) });
             queryClient.invalidateQueries({ queryKey: memberKeys.detail(memberId) });
-            queryClient.invalidateQueries({ queryKey: memberKeys.branches(memberId) });
-            queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
         },
     });
 }
 
-/* =====================
- * REVOKE BRANCH
- * ===================== */
-
-export function useRevokeMemberBranch() {
+export function useCancelMembership() {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ memberId, branchId }: { memberId: string; branchId: string }) =>
-            membersAPI.revokeBranch(memberId, branchId),
+        mutationFn: ({ memberId, membershipId }: { memberId: string; membershipId: string }) => membersAPI.cancelMembership(memberId, membershipId),
         onSuccess: (_, { memberId }) => {
-            queryClient.invalidateQueries({ queryKey: memberKeys.branches(memberId) });
-            queryClient.invalidateQueries({ queryKey: memberKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: memberKeys.memberships(memberId) });
+            queryClient.invalidateQueries({ queryKey: memberKeys.detail(memberId) });
         },
     });
 }

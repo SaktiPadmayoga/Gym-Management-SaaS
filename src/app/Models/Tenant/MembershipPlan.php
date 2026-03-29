@@ -4,16 +4,20 @@ namespace App\Models\Tenant;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Branch;
+use App\Models\Tenant;
 
 class MembershipPlan extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
 
-    protected $table = 'membership_plans';
-
     protected $fillable = [
+        'branch_id',
         'name',
         'category',
         'description',
@@ -25,8 +29,8 @@ class MembershipPlan extends Model
         'duration_unit',
         'loyalty_points_reward',
         'max_sharing_members',
-        'branch_id',
         'access_type',
+        'approval_status',
         'unlimited_checkin',
         'checkin_quota_per_month',
         'unlimited_sold',
@@ -40,47 +44,46 @@ class MembershipPlan extends Model
     ];
 
     protected $casts = [
-        'price'                   => 'decimal:2',
-        'unlimited_checkin'       => 'boolean',
-        'unlimited_sold'          => 'boolean',
-        'always_available'        => 'boolean',
-        'is_active'               => 'boolean',
-        'available_from'          => 'date',
-        'available_until'         => 'date',
-        'checkin_schedule'        => 'array',
-        'duration'                => 'integer',
-        'sort_order'              => 'integer',
-        'loyalty_points_reward'   => 'integer',
-        'max_sharing_members'     => 'integer',
-        'checkin_quota_per_month' => 'integer',
-        'total_quota'             => 'integer',
+        'price' => 'decimal:2',
+        'checkin_schedule' => 'array', // Cast JSON otomatis ke array PHP
+        'available_from' => 'date',
+        'available_until' => 'date',
+        'is_active' => 'boolean',
+        'unlimited_checkin' => 'boolean',
+        'unlimited_sold' => 'boolean',
+        'always_available' => 'boolean',
     ];
 
-    // =============================================
-    // Relationships
-    // =============================================
-
-    public function branch()
+    public function tenant(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+        return $this->belongsTo(Tenant::class);
     }
 
-    public function memberBranches()
+    // Cabang yang MEMBUAT plan ini
+    public function branch(): BelongsTo
     {
-        return $this->hasMany(MemberBranch::class, 'plan_id');
+        return $this->belongsTo(Branch::class);
     }
 
-    /**
-     * Class plans yang termasuk dalam membership ini
-     * via pivot membership_plan_inclusions
-     */
+    // Cabang yang DIIZINKAN diakses oleh plan ini (Tabel Pivot)
+    public function accessibleBranches(): BelongsToMany
+    {
+        return $this->belongsToMany(Branch::class, 'plan_branch_access', 'plan_id', 'branch_id')
+                    ->withTimestamps();
+    }
+
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(Membership::class, 'plan_id');
+    }
+
     public function classPlans()
     {
         return $this->belongsToMany(
             ClassPlan::class,
             'membership_plan_class_plan',
-            'membership_plan_id',
-            'class_plan_id'
+            'class_plan_id',
+            'membership_plan_id'
         )->withPivot([
             'unlimited_session',
             'monthly_quota_override',
@@ -88,75 +91,31 @@ class MembershipPlan extends Model
         ])->withTimestamps();
     }
 
-    // =============================================
-    // Scopes
-    // =============================================
+    // ====================================================
+    // LOCAL SCOPES
+    // ====================================================
 
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeAvailable($query)
-    {
-        return $query->where('is_active', true)
-            ->where(function ($q) {
-                $q->where('always_available', true)
-                  ->orWhere(function ($q2) {
-                      $q2->where('available_from', '<=', now())
-                         ->where('available_until', '>=', now());
-                  });
-            });
-    }
-
-    public function scopeForBranch($query, string $branchId)
+    /**
+     * Filter plan yang berhak dilihat/dijual oleh sebuah cabang.
+     * Logika baru:
+     * 1. Cabang bisa melihat Plan buatannya sendiri (branch_id = $branchId).
+     * 2. Cabang bisa melihat Plan dari cabang lain JIKA access_type = 'cross_branch', 
+     * statusnya 'approved', DAN cabang tersebut ada di tabel pivot plan_branch_access.
+     */
+    public function scopeForBranch($query, $branchId)
     {
         return $query->where(function ($q) use ($branchId) {
-            $q->whereNull('branch_id')
-              ->orWhere('branch_id', $branchId);
+            // Kondisi 1: Milik cabang ini sendiri
+            $q->where('branch_id', $branchId)
+              // Kondisi 2: Milik cabang lain tapi cross-branch dan diizinkan
+              ->orWhere(function ($subQ) use ($branchId) {
+                  $subQ->where('access_type', 'cross_branch')
+                       ->where('approval_status', 'approved')
+                       ->whereHas('accessibleBranches', function ($pivotQ) use ($branchId) {
+                           // Memastikan branch ini ada di tabel pivot
+                           $pivotQ->where('plan_branch_access.branch_id', $branchId);
+                       });
+              });
         });
-    }
-
-    // =============================================
-    // Helpers
-    // =============================================
-
-    public function isAvailable(): bool
-    {
-        if (!$this->is_active) return false;
-        if ($this->always_available) return true;
-        return $this->available_from <= now() && $this->available_until >= now();
-    }
-
-    public function hasStock(): bool
-    {
-        if ($this->unlimited_sold || is_null($this->total_quota)) return true;
-        return $this->sold_count < $this->total_quota;
-    }
-
-    public function getSoldCountAttribute(): int
-    {
-        return $this->memberBranches()
-            ->whereNotIn('status', ['cancelled'])
-            ->count();
-    }
-
-    public function getRemainingQuotaAttribute(): ?int
-    {
-        if ($this->unlimited_sold || is_null($this->total_quota)) return null;
-        return max(0, $this->total_quota - $this->sold_count);
-    }
-
-    public function calculateExpiryDate(?\DateTime $startDate = null): \Carbon\Carbon
-    {
-        $start = $startDate ? \Carbon\Carbon::instance($startDate) : now();
-
-        return match ($this->duration_unit) {
-            'day'   => $start->addDays($this->duration),
-            'week'  => $start->addWeeks($this->duration),
-            'month' => $start->addMonths($this->duration),
-            'year'  => $start->addYears($this->duration),
-            default => $start->addMonths($this->duration),
-        };
     }
 }

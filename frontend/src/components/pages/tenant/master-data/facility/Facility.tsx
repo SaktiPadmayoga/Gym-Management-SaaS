@@ -43,7 +43,7 @@ export default function Facilities() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         params.set("page", String(page));
         params.set("per_page", String(perPage));
-        router.replace(`/facility?${params.toString()}`);
+        router.replace(`/facilities?${params.toString()}`);
     }, [debouncedSearch, page, perPage, router]);
 
     // Toast
@@ -89,7 +89,7 @@ export default function Facilities() {
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.color && <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />}
-                    <Link href={`/facility/${item.id}`} className="font-medium hover:underline">
+                    <Link href={`/facilities/${item.id}`} className="font-medium hover:underline">
                         {item.name}
                     </Link>
                 </div>
@@ -151,13 +151,13 @@ export default function Facilities() {
         {
             label: "View Detail",
             icon: "eye",
-            onClick: (row) => router.push(`/facility/${row.id}`),
+            onClick: (row) => router.push(`/facilities/${row.id}`),
         },
         {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/facility/${row.id}`),
+            onClick: (row) => router.push(`/facilities/${row.id}`),
         },
         {
             label: (row) => (row.is_active ? "Deactivate" : "Activate"),
@@ -195,21 +195,21 @@ export default function Facilities() {
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
                             <li>Master Data</li>
-                            <li className="text-aksen-secondary">Facility</li>
+                            <li className="text-aksen-secondary">Facilities</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Facility</h1>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Facilities</h1>
                             <p className="text-zinc-500">Manage facilities available for booking</p>
                         </div>
                         <div className="flex gap-3">
                             <div className="w-64 text-zinc-800">
                                 <SearchInput name="search" />
                             </div>
-                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/facility/create")}>
+                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/facilities/create")}>
                                 New Facility
                             </CustomButton>
                         </div>
@@ -224,7 +224,7 @@ export default function Facilities() {
                                 ))}
                             </div>
                         ) : (
-                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/facility/${row.id}`)} />
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/facilities/${row.id}`)} />
                         )}
                     </div>
 
