@@ -1,18 +1,17 @@
 "use client";
 
+// app/(tenant)/tenant-auth/callback/page.tsx
+
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { LoginBranchData } from "@/types/tenant/staff-auth";
+import type { StaffData } from "@/types/tenant/staffs";
 
-interface StaffData {
-    [key: string]: unknown;
-}
-
-function detectDomain(): "tenant" | "branch" {
-    if (typeof window === "undefined") return "tenant";
-    const parts = window.location.hostname.split(".");
-    return parts.length >= 3 ? "branch" : "tenant";
-}
+const TOKEN_KEY = "staff_token";
+const DATA_KEY = "staff_data";
+const BRANCH_KEY = "staff_branches";
+const ROLE_KEY = "staff_global_role";
+const SELECTED_KEY = "staff_selected_branch";
 
 export default function AuthCallbackPage() {
     const searchParams = useSearchParams();
@@ -45,41 +44,42 @@ export default function AuthCallbackPage() {
             const staffData: StaffData = JSON.parse(decodeURIComponent(staffRaw));
             const branches: LoginBranchData[] = JSON.parse(decodeURIComponent(branchesRaw));
             const role = decodeURIComponent(globalRole ?? "staff");
-            const currentDomain = detectDomain();
-            const currentSubdomain = window.location.hostname.split(".")[0];
 
-            // Simpan token & data ke localStorage + cookie
-            localStorage.setItem("staff_token", token);
-            localStorage.setItem("staff_data", JSON.stringify(staffData));
-            localStorage.setItem("staff_branches", JSON.stringify(branches));
-            localStorage.setItem("staff_global_role", role);
-            localStorage.setItem("staff_login_domain", currentDomain);
+            // Simpan ke localStorage + cookie
+            localStorage.setItem(TOKEN_KEY, token);
+            localStorage.setItem(DATA_KEY, JSON.stringify(staffData));
+            localStorage.setItem(BRANCH_KEY, JSON.stringify(branches));
+            localStorage.setItem(ROLE_KEY, role);
             document.cookie = `staff_token=${token}; path=/; max-age=${60 * 60 * 8}`;
 
-            // Owner dari tenant domain → langsung owner dashboard tanpa pilih branch
-            if (role === "owner" && currentDomain === "tenant") {
+            // Owner → langsung owner dashboard
+            if (role === "owner") {
                 router.replace("/owner/dashboard");
                 return;
             }
 
-            if (currentDomain === "branch") {
-                const matchedBranch = branches.find((b) => b.branch_code?.toLowerCase() === currentSubdomain.toLowerCase());
-
-                if (matchedBranch) {
-                    // auto select
-                    localStorage.setItem(`staff_selected_branch_${currentSubdomain}`, JSON.stringify(matchedBranch));
-                    localStorage.setItem(`current_branch_${currentSubdomain}`, JSON.stringify(matchedBranch));
-                    router.replace("/dashboard");
-                    return;
-                }
-
-                // ← PERUBAHAN UTAMA
-                alert(`Anda tidak memiliki akses ke cabang "${currentSubdomain}".\n\nSilakan login melalui subdomain cabang yang sesuai.`);
-                router.replace("/tenant-auth/login");
+            // Staff dengan 1 branch → auto-select
+            if (branches.length === 1) {
+                localStorage.setItem(SELECTED_KEY, JSON.stringify(branches[0]));
+                localStorage.setItem(
+                    "current_branch",
+                    JSON.stringify({
+                        id: branches[0].id,
+                        name: branches[0].name,
+                        address: branches[0].address ?? null,
+                    }),
+                );
+                router.replace("/dashboard");
                 return;
             }
 
-            // Tidak ada branch yang match → kembali ke login
+            // Staff dengan banyak branch → pilih dulu
+            if (branches.length > 1) {
+                router.replace("/tenant-auth/select-branch");
+                return;
+            }
+
+            // Tidak ada branch
             router.replace("/tenant-auth/login");
         } catch {
             router.replace("/tenant-auth/login");

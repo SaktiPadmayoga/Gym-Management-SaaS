@@ -1,5 +1,7 @@
 "use client";
 
+// app/(tenant)/tenant-auth/select-branch/page.tsx
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
@@ -15,13 +17,14 @@ const branchRoleColor: Record<string, string> = {
 
 export default function SelectBranchPage() {
     const router = useRouter();
-    const { branches, selectBranch, isReady, staff, isOwner } = useStaffAuth();
+    const { branches, selectBranch, isReady, staff } = useStaffAuth();
 
     useEffect(() => {
-        if (isReady && !staff) router.replace("/tenant-auth/login");
+        if (!isReady) return;
+        if (!staff) router.replace("/tenant-auth/login");
     }, [isReady, staff]);
 
-    if (!isReady) {
+    if (!isReady || !staff) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aksen-secondary" />
@@ -37,9 +40,7 @@ export default function SelectBranchPage() {
                         <span className="text-white font-bold text-xl">G</span>
                     </div>
                     <h1 className="text-2xl font-semibold text-zinc-800">Select Branch</h1>
-                    <p className="text-zinc-500 text-sm mt-1">
-                        Welcome, {staff?.name}. {isOwner ? "You have access to all branches." : "Choose your branch."}
-                    </p>
+                    <p className="text-zinc-500 text-sm mt-1">Welcome, {staff?.name}. Choose which branch to manage.</p>
                 </div>
 
                 <div className="bg-white rounded-2xl border border-gray-200 px-8 py-8 shadow-sm">
@@ -56,10 +57,7 @@ export default function SelectBranchPage() {
                                 >
                                     <div>
                                         <p className="font-medium text-zinc-800 group-hover:text-aksen-secondary">{branch.name}</p>
-                                        <p className="text-xs text-zinc-400 mt-0.5">
-                                            {branch.branch_code && <span className="mr-2">{branch.branch_code}</span>}
-                                            {branch.city}
-                                        </p>
+                                        {branch.city && <p className="text-xs text-zinc-400 mt-0.5">{branch.city}</p>}
                                     </div>
                                     <span className={`text-xs font-medium px-2 py-1 rounded-lg capitalize shrink-0 ${branchRoleColor[branch.role] ?? "bg-zinc-100 text-zinc-600"}`}>{branch.role.replace("_", " ")}</span>
                                 </button>

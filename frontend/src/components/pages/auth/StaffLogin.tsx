@@ -74,7 +74,7 @@ function LoginForm() {
  * ========================= */
 
 export default function StaffLoginPage() {
-    const { isReady, staff, selectedBranch, globalRole, loginDomain } = useStaffAuth();
+    const { isReady, staff, selectedBranch, globalRole } = useStaffAuth();
     const router = useRouter();
 
     useEffect(() => {
@@ -87,14 +87,14 @@ export default function StaffLoginPage() {
         if (!isReady) return;
         if (!staff) return;
 
-        if (globalRole === "owner" && loginDomain === "tenant") {
+        if (globalRole === "owner") {
             router.replace("/owner/dashboard");
         } else if (selectedBranch) {
             router.replace("/dashboard");
         }
-    }, [isReady, staff, selectedBranch, globalRole, loginDomain]);
+    }, [isReady, staff, selectedBranch, globalRole, router]);
 
-    if (!isReady || (staff && (selectedBranch || (globalRole === "owner" && loginDomain === "tenant")))) {
+    if (!isReady || (staff && (selectedBranch || globalRole === "owner"))) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aksen-secondary" />

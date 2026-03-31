@@ -9,33 +9,26 @@ import { BranchProvider } from "@/providers/BranchProvider";
 import { useRouter } from "next/navigation";
 
 function StaffGuard({ children }: { children: ReactNode }) {
-    const { staff, selectedBranch, isReady, isOwner, loginDomain } = useStaffAuth();
+    const { staff, selectedBranch, isReady, isOwner } = useStaffAuth();
     const router = useRouter();
 
     useEffect(() => {
         if (!isReady) return;
-
-        // Belum login → ke login page
         if (!staff) {
             router.replace("/tenant-auth/login");
             return;
         }
-
-        // Belum ada branch terpilih → kembali ke login
-        // (tidak ada select-branch page lagi)
-        if (!selectedBranch) {
-            router.replace("/tenant-auth/login");
-            return;
-        }
-
-        // Owner dari tenant domain → ke owner dashboard
-        if (isOwner && loginDomain === "tenant") {
+        if (isOwner) {
             router.replace("/owner/dashboard");
             return;
         }
-    }, [isReady, staff, selectedBranch, isOwner, loginDomain]);
+        if (!selectedBranch) {
+            router.replace("/tenant-auth/select-branch");
+            return;
+        }
+    }, [isReady, staff, selectedBranch, isOwner]);
 
-    if (!isReady || !staff || !selectedBranch || (isOwner && loginDomain === "tenant")) {
+    if (!isReady || !staff || isOwner || !selectedBranch) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aksen-secondary" />

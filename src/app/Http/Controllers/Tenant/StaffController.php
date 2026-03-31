@@ -70,6 +70,10 @@ class StaffController extends Controller
     {
         $data = $request->validated();
 
+        // ✅ PERBAIKAN: Prioritaskan branch_id dari payload form (dropdown). 
+        // Jika form tidak mengirim (null), baru fallback ke header.
+        $data['branch_id'] = $data['branch_id'] ?? $request->header('X-Branch-Id');
+
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $request->file('avatar')->store('staff/avatars', 'public');
         }
@@ -86,7 +90,7 @@ class StaffController extends Controller
         if (!empty($data['branch_id'])) {
             StaffBranch::create([
                 'staff_id'  => $staff->id,
-                'branch_id' => $data['branch_id'],
+                'branch_id' => $data['branch_id'], // Sekarang ini pasti sesuai pilihan dropdown!
                 'role'      => $data['branch_role'],
                 'joined_at' => now(),
             ]);

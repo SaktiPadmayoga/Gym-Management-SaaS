@@ -10,32 +10,22 @@ import { Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 
 function OwnerGuard({ children }: { children: ReactNode }) {
-    const { staff, isReady, isOwner, loginDomain } = useStaffAuth();
+    const { staff, isReady, isOwner } = useStaffAuth();
     const router = useRouter();
 
     useEffect(() => {
         if (!isReady) return;
-
-        // Belum login
         if (!staff) {
             router.replace("/tenant-auth/login");
             return;
         }
-
-        // Bukan owner
         if (!isOwner) {
             router.replace("/dashboard");
             return;
         }
+    }, [isReady, staff, isOwner]);
 
-        // Owner tapi login dari branch domain → ke branch dashboard
-        if (loginDomain === "branch") {
-            router.replace("/dashboard");
-            return;
-        }
-    }, [isReady, staff, isOwner, loginDomain]);
-
-    if (!isReady || !staff || !isOwner || loginDomain === "branch") {
+    if (!isReady || !staff || !isOwner) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aksen-secondary" />

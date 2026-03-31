@@ -221,6 +221,7 @@ export default function MemberDetail() {
     };
 
     return (
+        <>
         <FormProvider {...form}>
             <Toaster position="top-center" />
             <form>
@@ -435,9 +436,12 @@ export default function MemberDetail() {
                         )}
                     </div>
                 </div>
-                {/* TAMBAHKAN MODAL DI SINI */}
-                <AssignMembershipModal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} memberId={id} />
+                
+                
             </form>
         </FormProvider>
+        <AssignMembershipModal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} memberId={id} />
+        </>
+        
     );
 }
