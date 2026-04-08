@@ -18,7 +18,7 @@ class UpdateStaffRequest extends FormRequest
 
         return [
             'name'      => ['sometimes', 'string', 'max:100'],
-            'email'     => ['sometimes', 'email', "unique:staff,email,{$staffId}"],
+            'email'     => ['sometimes', 'email', "unique:staffs,email,{$staffId}"],
             'password'  => ['sometimes', Password::min(8)->mixedCase()->numbers()],
             'phone'     => ['nullable', 'string', 'max:20'],
             'avatar'    => ['nullable', 'image', 'max:2048'],

@@ -11,6 +11,7 @@ import CustomButton from "@/components/ui/button/CustomButton";
 import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
 import { useTenantBranches, useDeleteTenantBranch, useToggleActiveTenantBranch } from "@/hooks/useTenantBranches";
 import { useDebounce } from "@/hooks/useDebounce";
+import Link from "next/link";
 
 type BranchSearchForm = {
     search: string;
@@ -228,8 +229,11 @@ export default function BranchesPage() {
 
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
-                            <li className="text-aksen-secondary">Branches</li>
+                            <li>Tenant & Subscription</li>
+                            <li>
+                                <Link className="text-aksen-secondary" href="/owner/branches">Branches</Link>
+                            </li>
+
                         </ul>
                     </div>
 

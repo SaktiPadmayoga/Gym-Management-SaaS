@@ -47,7 +47,7 @@ interface PtSessionPlanFormData {
     is_active: boolean;
 }
 
-export default function PtSessionPlanDetailPage() {
+export default function PtSessionPlanDetail() {
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;

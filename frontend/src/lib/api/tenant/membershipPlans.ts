@@ -61,4 +61,30 @@ export const membershipPlansAPI = {
     detachClassPlan: async (id: string, classPlanId: string): Promise<void> => {
         await tenantApiClient.delete(`/membership-plans/${id}/class-plans/${classPlanId}`);
     },
+
+    getAvailablePlans: async (params?: { 
+        page?: number; 
+        per_page?: number; 
+        search?: string; 
+        category?: string; 
+        access_type?: string; 
+        is_active?: boolean; 
+        available_only?: boolean 
+    }): Promise<MembershipPlanData[]> => {
+        
+        const response = await tenantApiClient.get("/member/membershipAvailable", {
+            params: {
+                page: params?.page ?? 1,
+                per_page: params?.per_page ?? 15,
+                search: params?.search ?? "",
+                category: params?.category ?? "",
+                access_type: params?.access_type ?? "",
+                // ✅ Konversi boolean menjadi 1 atau 0 agar diterima Laravel
+                is_active: (params?.is_active ?? true) ? 1 : 0, 
+                available_only: (params?.available_only ?? true) ? 1 : 0,
+            },
+        });
+        
+        return response?.data.data ?? []; 
+    },
 };

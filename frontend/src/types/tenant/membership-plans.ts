@@ -4,7 +4,7 @@ import * as z from "zod";
  * ENUMS
  * ========================= */
 
-export const MembershipPlanAccessTypeEnum = z.enum(["all_branches", "single_branch"]);
+export const MembershipPlanAccessTypeEnum = z.enum(["cross_branch", "single_branch"]);
 export const DurationUnitEnum = z.enum(["day", "week", "month", "year"]);
 
 /* =========================

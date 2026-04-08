@@ -44,7 +44,7 @@ export default function ClassPlans() {
         if (debouncedSearch) params.set("search", debouncedSearch);
         params.set("page", String(page));
         params.set("per_page", String(perPage));
-        router.replace(`/class-plan?${params.toString()}`);
+        router.replace(`/class-plans?${params.toString()}`);
     }, [debouncedSearch, page, perPage, router]);
 
     // Toast
@@ -70,7 +70,7 @@ export default function ClassPlans() {
             hasShownToast.current = true;
         }
 
-        window.history.replaceState({}, "", "/class-plan");
+        window.history.replaceState({}, "", "/class-plans");
     }, [searchParams]);
 
     const entries: ClassPlanData[] = data ?? [];
@@ -90,7 +90,7 @@ export default function ClassPlans() {
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.color && <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />}
-                    <Link href={`/class-plan/${item.id}`} className="font-medium hover:underline">
+                    <Link href={`/class-plans/${item.id}`} className="font-medium hover:underline">
                         {item.name}
                     </Link>
                 </div>
@@ -159,13 +159,13 @@ export default function ClassPlans() {
         {
             label: "View Detail",
             icon: "eye",
-            onClick: (row) => router.push(`/class-plan/${row.id}`),
+            onClick: (row) => router.push(`/class-planss/${row.id}`),
         },
         {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/class-plan/${row.id}`),
+            onClick: (row) => router.push(`/class-plans/${row.id}`),
         },
         {
             label: (row) => (row.is_active ? "Deactivate" : "Activate"),
@@ -213,21 +213,22 @@ export default function ClassPlans() {
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
                             <li>Master Data</li>
-                            <li className="text-aksen-secondary">Class Plan</li>
+                            <li className="text-aksen-secondary">Class Plans</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Class Plan</h1>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Class Plans</h1>
                             <p className="text-zinc-500">Manage class plans available for members</p>
                         </div>
+                        s
                         <div className="flex gap-3">
                             <div className="w-64 text-zinc-800">
                                 <SearchInput name="search" />
                             </div>
-                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/class-plan/create")}>
+                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/class-planss/create")}>
                                 New Plan
                             </CustomButton>
                         </div>
@@ -242,7 +243,7 @@ export default function ClassPlans() {
                                 ))}
                             </div>
                         ) : (
-                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/class-plan/${row.id}`)} />
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/class-planss/${row.id}`)} />
                         )}
                     </div>
 

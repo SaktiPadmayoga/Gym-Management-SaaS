@@ -25,9 +25,10 @@ const durationUnitOptions: DropdownOption<string>[] = [
     { key: "year", label: "Year", value: "year" },
 ];
 
+// PERBAIKAN: Mengganti 'all_branches' menjadi 'cross_branch'
 const accessTypeOptions: DropdownOption<string>[] = [
     { key: "single_branch", label: "Single Branch", value: "single_branch" },
-    { key: "all_branches", label: "All Branches", value: "all_branches" },
+    { key: "cross_branch", label: "Cross Branch (Multiple)", value: "cross_branch" },
 ];
 
 const DAYS = [
@@ -54,7 +55,7 @@ interface CreateMembershipPlanFormData {
     duration_unit: "day" | "week" | "month" | "year";
     loyalty_points_reward: number;
     max_sharing_members: number;
-    access_type: "all_branches" | "single_branch";
+    access_type: "cross_branch" | "single_branch"; // PERBAIKAN TYPE
     unlimited_checkin: boolean;
     checkin_quota_per_month: number | undefined;
     unlimited_sold: boolean;
@@ -66,7 +67,7 @@ interface CreateMembershipPlanFormData {
     checkin_schedule: CheckinSchedule;
 }
 
-export default function CreateMembershipPlanPage() {
+export default function CreateMembershipPlan() {
     const router = useRouter();
     const createMutation = useCreateMembershipPlan();
     const { branchId } = useBranch();

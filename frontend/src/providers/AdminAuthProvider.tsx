@@ -90,7 +90,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
             clearToken();
             setToken(null);
             setAdmin(null);
-            router.push("/admin/login");
+            router.push("/admin/auth/login");
         }
     }, [router]);
 

@@ -88,10 +88,10 @@ export const sidebarData: SidebarItem[] = [
     // MASTER DATA
     { id: "header-master", title: "Master Data", isHeader: true },
     { id: "nav-member", title: "Members", path: "/members", Icon: UserIcon, IconSolid: UserIconSolid },
-    { id: "nav-membership-plan", title: "Membership Plans", path: "/membership-plan", Icon: UsersIcon, IconSolid: UsersIconSolid },
-    { id: "nav-class-plan", title: "Class Plans", path: "/class-plan", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
-    { id: "nav-pt-sessions-plan", title: "PT Sessions Plans", path: "/pt-sessions-plan", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
-    { id: "nav-facility", title: "Facility", path: "/facility", Icon: BuildingOffice2Icon, IconSolid: BuildingOffice2IconSolid },
+    { id: "nav-membership-plan", title: "Membership Plans", path: "/membership-plans", Icon: UsersIcon, IconSolid: UsersIconSolid },
+    { id: "nav-class-plan", title: "Class Plans", path: "/class-plans", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
+    { id: "nav-pt-sessions-plan", title: "PT Sessions Plans", path: "/pt-sessions-plans", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
+    { id: "nav-facility", title: "Facilities", path: "/facilities", Icon: BuildingOffice2Icon, IconSolid: BuildingOffice2IconSolid },
     { id: "nav-products", title: "Products", path: "/products", Icon: ArchiveBoxIcon, IconSolid: ArchiveBoxIconSolid },
     { id: "nav-staff", title: "Staffs", path: "/staffs", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
 

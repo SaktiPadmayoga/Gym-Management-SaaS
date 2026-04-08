@@ -57,12 +57,14 @@ export function useDomains(params?: DomainsQueryParams) {
         queryKey: domainKeys.list(params),
         queryFn: async () => {
             const res = await client.get("/domains", { params });
-            return res.data; // { success, data: [], meta, message }
+            return res.data;
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes
+        staleTime: 1000 * 60 * 5,
+        // ✅ Jangan fetch jika context-nya butuh tenant_id tapi belum tersedia 
+        // (Misalnya di halaman owner, jika tenant_id bernilai undefined, query ditahan dulu)
+        enabled: params?.tenant_id !== undefined || !window.location.pathname.includes('/owner'),
     });
 }
-
 // =============================================
 // GET SINGLE DOMAIN
 // =============================================

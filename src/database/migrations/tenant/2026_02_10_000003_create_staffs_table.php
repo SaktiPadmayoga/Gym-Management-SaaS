@@ -10,11 +10,13 @@ return new class extends Migration {
         Schema::create('staffs', function (Blueprint $table) {
             $table->uuid('id')->primary();
 
+            $table->uuid('branch_id')->nullable();
+
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
             $table->string('phone')->nullable();
-            $table->string('avatar')->nullable();
+            $table->text('avatar')->nullable();
 
             // Role global — hanya untuk identifikasi level tertinggi
             // Permission detail ditentukan di staff_branches per branch
@@ -28,12 +30,14 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
 
+            $table->foreign('branch_id')->references('id')->on('branches')->nullOnDelete();
+
             $table->index(['email', 'is_active']);
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('staff');
+        Schema::dropIfExists('staffs');
     }
 };

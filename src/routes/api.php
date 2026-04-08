@@ -13,6 +13,15 @@ use App\Http\Controllers\SubscriptionTenantController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Tenant\StaffController;
 use App\Http\Controllers\Auth\AdminAuthController;
+use App\Http\Controllers\Auth\StaffAuthController;
+  use App\Http\Controllers\Auth\MemberAuthController;
+
+Route::prefix('tenant-auth')->group(function () {
+    Route::get('/google/callback', [StaffAuthController::class, 'handleGoogleCallback']);
+// Pintu Gerbang Utama untuk menerima kembalian dari Google
+    Route::get('/member/google/callback', [MemberAuthController::class, 'handleGoogleCallback'])
+        ->name('member.google.callback');
+});
 
 
     
@@ -74,28 +83,27 @@ Route::prefix('admin/auth')->group(function () {
 // Semua route admin lainnya dilindungi auth:admin
 Route::middleware('auth:admin')->prefix('admin')->group(function () {
     Route::apiResource('admins', AdminController::class);
+    
 });
- 
-
-// Route::apiResource('admins', AdminController::class);
 
 // ============================================
 // TENANT-SCOPED ROUTES (tenant database)
 // Middleware InitializeTenancy resolve tenant dari X-Tenant header
 // ============================================
-// ✅ Pastikan domain-requests ada di dalam middleware InitializeTenancy
+
 Route::middleware([\App\Http\Middleware\InitializeTenancy::class])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::patch('branches/{branch}/toggle-active', [BranchController::class, 'toggleActive']);
 
     Route::apiResource('domains', DomainController::class);
 
-    // ✅ Pindahkan domain-requests ke sini
     Route::prefix('domain-requests')->group(function () {
         Route::get('/my', [DomainRequestController::class, 'myRequests']);
         Route::post('/', [DomainRequestController::class, 'store']);
         Route::delete('/{id}', [DomainRequestController::class, 'destroy']);
     });
+
+
 
      Route::get('/subscription/current', [SubscriptionTenantController::class, 'current']);
     Route::get('/subscription/history', [SubscriptionTenantController::class, 'history']);

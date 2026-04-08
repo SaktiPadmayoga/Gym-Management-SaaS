@@ -11,6 +11,8 @@ import CustomButton from "@/components/ui/button/CustomButton";
 import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
 import { useDomains, useDeleteDomain, useTogglePrimaryDomain } from "@/hooks/useDomains";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useTenantHeader } from "@/hooks/useTenantHeader";
+import Link from "next/link";
 
 type DomainSearchForm = {
     search: string;
@@ -20,6 +22,9 @@ export default function DomainsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
+
+    // ✅ Ambil data tenant aktif (seperti di TenantHeader)
+    const { data: tenantData, isLoading: isTenantLoading } = useTenantHeader();
 
     const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
     const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
@@ -33,12 +38,13 @@ export default function DomainsPage() {
     const searchValue = form.watch("search");
     const debouncedSearch = useDebounce(searchValue, 500);
 
-    // Fetch data - TIDAK kirim with_branch=1 (sesuai Opsi A, branch tidak di-load di list)
+    // ✅ Fetch data domain
+    // Pastikan hook useDomains di backend sudah memfilter berdasarkan tenant_id dari session/auth
     const { data, isLoading, isError } = useDomains({
         search: debouncedSearch,
         page,
         per_page: perPage,
-        // with_branch: false  // tidak perlu ditambahkan, default backend sudah tidak load branch
+        tenant_id: tenantData?.id, 
     });
 
     const deleteMutation = useDeleteDomain();
@@ -64,43 +70,31 @@ export default function DomainsPage() {
             return;
         }
 
-        if (success === "true" && !hasShownToast.current) {
-            toast.success("Domain created successfully");
-            hasShownToast.current = true;
-        }
+        const toastMessages: Record<string, string> = {
+            success: "Domain created successfully",
+            updated: "Domain updated successfully",
+            deleted: "Domain deleted successfully",
+        };
 
-        if (updated === "true" && !hasShownToast.current) {
-            toast.success("Domain updated successfully");
+        if ((success || updated || deleted) && !hasShownToast.current) {
+            const key = success ? "success" : updated ? "updated" : "deleted";
+            toast.success(toastMessages[key]);
             hasShownToast.current = true;
+            window.history.replaceState({}, "", "/owner/domains");
         }
-
-        if (deleted === "true" && !hasShownToast.current) {
-            toast.success("Domain deleted successfully");
-            hasShownToast.current = true;
-        }
-
-        window.history.replaceState({}, "", "/owner/domains");
     }, [searchParams]);
 
-    const entries: DomainData[] = data?.data ?? [];
-    const totalData = data?.meta?.total ?? entries.length;
-
     if (isError) {
-        toast.error("Error loading domains");
         return <div className="py-10 text-center text-red-500">Error loading domains. Please try again later.</div>;
     }
 
     const getTypeColor = (type: string) => {
-        switch (type) {
-            case "tenant":
-                return "text-blue-600 bg-blue-600/10";
-            case "branch":
-                return "text-green-600 bg-green-600/10";
-            case "custom":
-                return "text-purple-600 bg-purple-600/10";
-            default:
-                return "text-gray-600 bg-gray-600/10";
-        }
+        const colors: Record<string, string> = {
+            tenant: "text-blue-600 bg-blue-600/10",
+            branch: "text-green-600 bg-green-600/10",
+            custom: "text-purple-600 bg-purple-600/10",
+        };
+        return colors[type] ?? "text-gray-600 bg-gray-600/10";
     };
 
     const columns: Column<DomainData>[] = [
@@ -110,7 +104,7 @@ export default function DomainsPage() {
                 <div>
                     <div className="font-semibold text-zinc-800">{item.domain}</div>
                     {item.is_primary && (
-                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded mt-1 inline-block">
+                        <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase mt-1 inline-block">
                             Primary
                         </span>
                     )}
@@ -121,61 +115,42 @@ export default function DomainsPage() {
         {
             header: "Type",
             render: (item) => (
-                <span className={`inline-block rounded-lg px-3 py-1.5 text-sm font-medium capitalize ${getTypeColor(item.type)}`}>
+                <span className={`inline-block rounded-lg px-3 py-1 text-xs font-semibold capitalize ${getTypeColor(item.type)}`}>
                     {item.type}
                 </span>
             ),
             width: "w-28",
         },
         {
-            header: "Tenant",
+            header: "Target Entity",
             render: (item) => (
                 <div className="text-sm">
-                    <div className="text-zinc-700">{item.tenant?.name || "—"}</div>
-                    {item.tenant?.slug && <div className="text-xs text-zinc-500 mt-0.5">{item.tenant.slug}</div>}
+                    {item.type === "tenant" ? (
+                        <div className="flex flex-col">
+                            <span className="text-zinc-700 font-medium">{tenantData?.name}</span>
+                            <span className="text-xs text-zinc-400">Main Identity</span>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col">
+                            <span className="text-zinc-700 font-medium">{item.branch?.name || "Global"}</span>
+                            {item.branch?.branch_code && (
+                                <span className="text-xs text-zinc-400">{item.branch.branch_code}</span>
+                            )}
+                        </div>
+                    )}
                 </div>
             ),
-            width: "w-40",
+            width: "w-48",
         },
         {
-            header: "Branch",
-            render: (item) => {
-                // Penanganan jika branch null (karena backend tidak load branch di list)
-                if (!item.branch) {
-                    return <span className="text-zinc-400 text-sm">— (No branch assigned)</span>;
-                }
-                return (
-                    <div className="text-sm">
-                        <div className="text-zinc-700">{item.branch.name || item.branch.branch_code || "—"}</div>
-                        {item.branch.branch_code && (
-                            <div className="text-xs text-zinc-500 mt-0.5">{item.branch.branch_code}</div>
-                        )}
-                    </div>
-                );
-            },
-            width: "w-40",
-        },
-        {
-            header: "Created",
+            header: "Created At",
             render: (item) => (
-                <div className="text-sm">
-                    <div className="text-zinc-700">
-                        {item.created_at
-                            ? new Date(item.created_at).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                              })
-                            : "—"}
-                    </div>
-                    <div className="text-xs text-zinc-500 mt-1">
-                        {item.created_at
-                            ? new Date(item.created_at).toLocaleTimeString("en-US", {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                              })
-                            : ""}
-                    </div>
+                <div className="text-sm text-zinc-600">
+                    {item.created_at ? new Date(item.created_at).toLocaleDateString("en-GB", {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }) : "—"}
                 </div>
             ),
             width: "w-32",
@@ -184,81 +159,82 @@ export default function DomainsPage() {
 
     const actions: ActionItem<DomainData>[] = [
         {
-            label: "View Detail",
-            icon: "eye",
-            className: "text-zinc-800",
-            onClick: (row) => router.push(`/owner/domains/${row.id}`),
-        },
-        {
-            label: "Edit",
+            label: "Edit Domain",
             icon: "edit",
-            className: "text-blue-600 hover:bg-blue-50",
+            className: "text-blue-600",
             onClick: (row) => router.push(`/owner/domains/${row.id}/edit`),
-        },
-        {
-            label: "Toggle Primary",
-            icon: "archive",
-            className: "text-orange-600 hover:bg-orange-50",
-            onClick: (row) => {
-                togglePrimaryMutation.mutate(row.id);
-            },
         },
         {
             label: "Delete",
             icon: "trash",
-            className: "text-red-600 hover:bg-red-50",
+            className: "text-red-600",
             divider: true,
             onClick: (row) => {
-                if (confirm(`Are you sure you want to delete domain "${row.domain}"?`)) {
+                if (confirm(`Are you sure you want to delete "${row.domain}"?`)) {
                     deleteMutation.mutate(row.id);
                 }
             },
         },
     ];
 
+    const entries = data?.data ?? [];
+    const totalData = data?.meta?.total ?? 0;
+
     return (
         <FormProvider {...form}>
-            <div>
-                <div className="rounded-xl font-figtree bg-white border border-gray-500/20 px-6 py-4">
-                    <Toaster position="top-center" />
-
+            <div className="space-y-4">
+                <Toaster position="top-center" />
+                
+                <div className="rounded-xl font-figtree bg-white border border-zinc-200 px-6 py-5 shadow-sm">
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
-                            <li className="text-aksen-secondary">Domains</li>
+                            <li>Tenant & Subscription</li>
+                            <li>
+                                <Link className="text-aksen-secondary" href="/owner/domains">Domains</Link>
+                            </li>
                         </ul>
                     </div>
-
-                    <div className="mb-6 flex items-center justify-between">
+                    {/* Header Section */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Domains</h1>
-                            <p className="text-zinc-500">Manage your domain configurations</p>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h1 className="text-2xl font-bold text-zinc-900">Domains</h1>
+                                {tenantData && (
+                                    <span className="text-xs bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded">
+                                        ID: {tenantData.slug}
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-zinc-500 text-sm">
+                                Managing domains for <span className="font-medium text-zinc-700">{tenantData?.name || "your tenant"}</span>
+                            </p>
                         </div>
 
-                        <div className="flex gap-3">
-                            <div className="w-64 text-zinc-800">
-                                <SearchInput name="search" />
+                        <div className="flex flex-wrap gap-3">
+                            <div className="w-full md:w-64">
+                                <SearchInput name="search" placeholder="Search domains..." />
                             </div>
-                            <CustomButton
-                                iconName="plus"
-                                className="text-white px-3"
-                                onClick={() => router.push("/owner/domains/create")}
-                            >
-                                New Domain
-                            </CustomButton>
+                          
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        {isLoading ? (
-                            <div className="space-y-3">
-                                {[...Array(5)].map((_, i) => (
-                                    <div key={i} className="h-12 bg-gray-200 rounded animate-pulse" />
+                    {/* Table Section */}
+                    <div className="min-h-[400px]">
+                        {(isLoading || isTenantLoading) ? (
+                            <div className="space-y-4">
+                                {[...Array(perPage)].map((_, i) => (
+                                    <div key={i} className="h-14 bg-zinc-50 rounded-lg animate-pulse" />
                                 ))}
                             </div>
                         ) : entries.length === 0 ? (
-                            <div className="py-10 text-center text-zinc-500">
-                                No domains found. Try adjusting your search or create a new one.
+                            <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-zinc-100 rounded-xl">
+                                <p className="text-zinc-400">No domains found for this tenant.</p>
+                                <button 
+                                    onClick={() => router.push("/owner/domains/create")}
+                                    className="mt-2 text-sm text-blue-600 font-medium hover:underline"
+                                >
+                                    Add your first domain
+                                </button>
                             </div>
                         ) : (
                             <CustomTable
@@ -269,23 +245,20 @@ export default function DomainsPage() {
                             />
                         )}
                     </div>
-
-                    {entries.length > 0 && (
-                        <div className="mt-4 text-sm text-zinc-500">
-                            Showing {entries.length} of {totalData} domains
-                        </div>
-                    )}
                 </div>
 
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={data?.meta?.current_page && data?.meta?.last_page ? data.meta.current_page < data.meta.last_page : false}
-                        hasPrevPage={(data?.meta?.current_page ?? 0) > 1}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 15, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
-                </div>
+                {/* Footer / Pagination */}
+                {!isLoading && entries.length > 0 && (
+                    <div className="">
+                        <PaginationWithRows
+                            hasNextPage={data?.meta?.current_page! < data?.meta?.last_page!}
+                            hasPrevPage={data?.meta?.current_page! > 1}
+                            totalItems={totalData}
+                            rowOptions={[10, 15, 25, 50]}
+                            defaultRowsPerPage={perPage}
+                        />
+                    </div>
+                )}
             </div>
         </FormProvider>
     );

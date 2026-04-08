@@ -30,7 +30,7 @@ class Invoice extends Model
 
     public function memberProfile()
     {
-        return $this->belongsTo(MemberProfile::class);
+        return $this->belongsTo(Member::class);
     }
 
     public function cashier()

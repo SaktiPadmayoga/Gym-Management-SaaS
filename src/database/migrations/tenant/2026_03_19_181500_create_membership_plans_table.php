@@ -9,6 +9,12 @@ return new class extends Migration {
     {
         Schema::create('membership_plans', function (Blueprint $table) {
             $table->uuid('id')->primary();
+            $table->uuid('branch_id')->nullable(); // null = berlaku semua branch
+
+
+            $table->enum('access_type', ['single_branch', 'cross_branch'])->default('single_branch');
+
+            $table->enum('approval_status', ['draft', 'pending', 'approved', 'rejected'])->default('approved');
 
             // Identity
             $table->string('name');
@@ -27,10 +33,6 @@ return new class extends Migration {
             $table->integer('loyalty_points_reward')->default(0);
             $table->integer('max_sharing_members')->default(0);
 
-            // Branch Access
-            $table->uuid('branch_id')->nullable(); // null = berlaku semua branch
-            $table->enum('access_type', ['all_branches', 'single_branch'])->default('single_branch');
-
             // Class access → dikelola via pivot membership_plan_class_plan
             // Sehingga bisa assign class plan mana saja yang boleh diakses
 
@@ -47,8 +49,6 @@ return new class extends Migration {
             $table->date('available_from')->nullable();
             $table->date('available_until')->nullable();
 
-            // Check-in schedule per hari
-            // {"mon":{"open":"06:00","close":"22:00","is_open":true}, ...}
             $table->json('checkin_schedule')->nullable();
 
             $table->boolean('is_active')->default(true);
@@ -57,9 +57,17 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
 
+            $table->foreign('branch_id')
+                ->references('id')
+                ->after('id')
+                ->on('branches')
+                ->nullOnDelete();
+
             $table->index(['is_active', 'category']);
             $table->index(['branch_id', 'is_active']);
             $table->index(['access_type', 'is_active']);
+            $table->index(['approval_status', 'is_active']);
+
         });
     }
 

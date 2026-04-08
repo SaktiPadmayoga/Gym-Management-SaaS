@@ -68,17 +68,17 @@ export default function CreateBranch() {
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="font-figtree rounded-xl bg-white border px-6 py-4">
+                <div className="font-figtree rounded-xl bg-white border border-zinc-200 px-6 py-4">
                     <Toaster position="top-center" />
 
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Tenant & Subscription</li>
                             <li>
-                                <Link href="/owner/branches">Branches</Link>
+                                <Link  href="/owner/branches">Branches</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create New</li>
+                            <li className="text-aksen-secondary">Create New</li> 
                         </ul>
                     </div>
 
@@ -91,12 +91,12 @@ export default function CreateBranch() {
                             <h1 className="text-2xl font-semibold ">Create Branch</h1>
                         </div>
 
-                        <CustomButton type="submit" className="px-4 py-2" disabled={createMutation.isPending}>
+                        <CustomButton  type="submit" className="px-4 py-2 text-white" disabled={createMutation.isPending}>
                             {createMutation.isPending ? "Creating..." : "Create & Save"}
                         </CustomButton>
                     </div>
 
-                    <hr />
+                    <hr className="border-zinc-200" />
 
                     <div className="flex flex-col gap-6 mt-6">
                         {/* BRANCH INFO */}
@@ -129,7 +129,7 @@ export default function CreateBranch() {
                             </div>
                         </div>
 
-                        <hr />
+                    <hr className="border-zinc-200" />
 
                         {/* SETTINGS */}
                         <h2 className="text-lg font-semibold text-zinc-800">Settings</h2>

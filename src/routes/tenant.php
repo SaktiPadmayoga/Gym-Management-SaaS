@@ -6,28 +6,82 @@ use App\Http\Controllers\PlanController;
 use App\Http\Controllers\DomainRequestController;
 use App\Http\Controllers\Tenant\StaffController;
 use App\Http\Controllers\Tenant\BranchSettingController;
+use App\Http\Controllers\BranchController;
 use App\Http\Controllers\Tenant\MemberController;
 use App\Http\Controllers\Tenant\MembershipPlanController;
 use App\Http\Controllers\Tenant\ClassPlanController;
 use App\Http\Controllers\Tenant\PtSessionPlanController;
 use App\Http\Controllers\Tenant\FacilityController;
 use App\Http\Controllers\Tenant\ProductController;
+use App\Http\Controllers\Auth\MemberAuthController;
+use App\Http\Controllers\Auth\StaffAuthController;
+use App\Http\Controllers\SubscriptionTenantController;
 
-Route::prefix('auth')->group(function () {
+
+Route::prefix('tenant-auth')->group(function () {
     Route::post('/login',          [StaffAuthController::class, 'login']);
     Route::get('/google',          [StaffAuthController::class, 'redirectToGoogle']);
-    Route::get('/google/callback', [StaffAuthController::class, 'handleGoogleCallback']);
 });
- 
+
+
+// Prefix /api otomatis ditambahkan oleh konfigurasi RouteServiceProvider kamu
+Route::prefix('member')->group(function () {
+    
+    // 1. AUTH ROUTES (Sudah berada di dalam konteks Tenant)
+    Route::post('/auth/login', [MemberAuthController::class, 'login']);
+    
+    // Rute ini yang dipanggil tombol frontend Svelte untuk minta URL Google
+    // Aman di sini karena Controller tinggal membaca request()->getHost()
+    Route::get('/auth/google', [MemberAuthController::class, 'redirectToGoogle']);
+
+
+    // 2. PROTECTED MEMBER ROUTES
+    Route::middleware(['auth:member'])->group(function () {
+        Route::get('/auth/me', [MemberAuthController::class, 'me']);
+        Route::post('/auth/logout', [MemberAuthController::class, 'logout']);
+        Route::post('/auth/change-password', [MemberAuthController::class, 'changePassword']);
+    });
+});
+
+Route::prefix('member')->group(function() {
+    Route::get('/membershipAvailable', [MembershipPlanController::class, 'getAvailablePlans']);
+});
+
+// 3. PROTECTED STAFF ROUTES (Tetap di dalam routes/tenant.php)
+
+
+
 
 // API Routes
 Route::prefix('tenant')->group(function () {
     Route::get('/current', [TenantController::class, 'current']);
 });
 
+    Route::get('/branches/{branch}/settings/public', [BranchSettingController::class, 'public']);
+    // Ambil semua setting (bisa filter ?group=appearance)
+    Route::get('/branches/{branch}/settings', [BranchSettingController::class, 'index']);
+
+        // Update banyak setting sekaligus
+    Route::put('/branches/{branch}/settings', [BranchSettingController::class, 'update']);
+
+        // Update per group (lebih simpel untuk frontend per-tab)
+        // PUT /branches/{id}/settings/appearance
+        // PUT /branches/{id}/settings/operational
+        // dst
+    Route::put('/branches/{branch}/settings/{group}', [BranchSettingController::class, 'updateGroup']);
+
+        // Reset group ke default
+    Route::post('/branches/{branch}/settings/{group}/reset', [BranchSettingController::class, 'reset']);
+
+
+
+
 
 
 Route::middleware('auth:staff')->group(function () {
+
+    
+    Route::apiResource('members', MemberController::class);
  
     // Auth
     Route::prefix('auth')->group(function () {
@@ -39,9 +93,14 @@ Route::middleware('auth:staff')->group(function () {
     
     Route::post('/upgrade', [PlanController::class, 'upgrade']);
 
+    Route::get('/subscription/current', [SubscriptionTenantController::class,'current']);
+    Route::get('/subscription/history', [SubscriptionTenantController::class,'history']);
+
     // tenant.php — tambahkan ini
 
+    Route::apiResource('branches', BranchController::class);
 
+    Route::apiResource('domain-requests', DomainRequestController::class);
 
     // CRUD Staff
     Route::get('/staff',                                  [StaffController::class, 'index']);
@@ -54,29 +113,6 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/staff/{staff}/branches',                 [StaffController::class, 'branches']);
     Route::post('/staff/{staff}/branches',                [StaffController::class, 'assignBranch']);
     Route::delete('/staff/{staff}/branches/{branch}',     [StaffController::class, 'revokeBranch']);
-
-
-    Route::get('/branches/{branch}/settings/public', [BranchSettingController::class, 'public']);
-    // Route::middleware(['auth:sanctum'])->group(function () {
-
-    
-    // });
-    // Ambil semua setting (bisa filter ?group=appearance)
-        Route::get('/branches/{branch}/settings', [BranchSettingController::class, 'index']);
-
-        // Update banyak setting sekaligus
-        Route::put('/branches/{branch}/settings', [BranchSettingController::class, 'update']);
-
-        // Update per group (lebih simpel untuk frontend per-tab)
-        // PUT /branches/{id}/settings/appearance
-        // PUT /branches/{id}/settings/operational
-        // dst
-        Route::put('/branches/{branch}/settings/{group}', [BranchSettingController::class, 'updateGroup']);
-
-        // Reset group ke default
-        Route::post('/branches/{branch}/settings/{group}/reset', [BranchSettingController::class, 'reset']);
-
-
 
 
 
@@ -93,17 +129,10 @@ Route::middleware('auth:staff')->group(function () {
     // Branch Membership
     // -----------------------------------------------
 
-    // Semua branch membership milik member ini
-    Route::get('/members/{member}/branches',                          [MemberController::class, 'branches']);
-
-    // Assign member ke branch baru
-    Route::post('/members/{member}/branches',                         [MemberController::class, 'assignBranch']);
-
-    // Update status membership (freeze, unfreeze, renew, cancel)
-    Route::patch('/members/{member}/branches/{branch}/membership',    [MemberController::class, 'updateMembership']);
-
-    // Cabut membership dari branch
-    Route::delete('/members/{member}/branches/{branch}',              [MemberController::class, 'revokeBranch']);
+    Route::get('members/{member}/memberships', [MemberController::class, 'memberships']);
+    Route::post('members/{member}/memberships', [MemberController::class, 'assignMembership']);
+    Route::patch('members/{member}/memberships/{membership}', [MemberController::class, 'updateMembership']);
+    Route::delete('members/{member}/memberships/{membership}', [MemberController::class, 'cancelMembership']);
 
     // -----------------------------------------------
     // Membership Plans

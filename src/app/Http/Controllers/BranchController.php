@@ -80,18 +80,6 @@ class BranchController extends Controller
 
             $branch = Branch::create($validated);
 
-            // Auto-create domain di central DB
-            $tenant = tenant();
-
-            Domain::create([
-                'id' => (string) Str::uuid(),
-                'domain' => "{$branch->branch_code}.{$tenant->slug}.localhost",
-                'type' => 'branch',
-                'tenant_id' => $tenant->id,
-                'branch_id' => $branch->id,
-                'is_primary' => true,
-            ]);
-
             return ApiResponse::success(
                 new BranchResource($branch),
                 'Branch created successfully',

@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('members', function (Blueprint $table) {
             $table->uuid('id')->primary();
-
+            $table->uuid('home_branch_id')->nullable(); // null = member umum, bisa gabung di semua branch
             // Identity
             $table->string('name');
             $table->string('email')->unique()->nullable();
@@ -45,9 +45,15 @@ return new class extends Migration {
             $table->timestamps();
             $table->softDeletes();
 
+            $table->foreign('home_branch_id')
+                ->references('id')
+                ->on('branches')
+                ->nullOnDelete();
+
             $table->index(['email', 'is_active']);
             $table->index(['status', 'is_active']);
             $table->index('phone');
+            $table->index('home_branch_id');
         });
     }
 

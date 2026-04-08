@@ -22,9 +22,11 @@ const BranchContext = createContext<BranchContextValue | null>(null);
 // Key per tenant — mencegah branch bocor antar subdomain
 function getStorageKey(): string {
     if (typeof window === "undefined") return "current_branch";
-    const hostname = window.location.hostname;
-    const slug = hostname.split(".")[0]; // "main", "second", dst
-    return `current_branch_${slug}`;
+    const parts = window.location.hostname.split(".");
+    // atmagym.localhost → parts[0] = "atmagym" → key: current_branch_atmagym
+    // Tidak ada lagi 3-level domain, jadi parts[0] selalu tenant slug
+    const tenantSlug = parts[0];
+    return `current_branch_${tenantSlug}`;
 }
 
 function BranchInitializer({ children }: { children: ReactNode }) {

@@ -30,9 +30,7 @@ function getCurrentBranchId(): string | null {
 }
 
 const tenantApiClient: AxiosInstance = axios.create({
-    baseURL: typeof window !== "undefined"
-        ? `${window.location.origin}/api`
-        : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
+    baseURL: typeof window !== "undefined" ? `${window.location.origin}/api` : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
@@ -42,7 +40,7 @@ const tenantApiClient: AxiosInstance = axios.create({
 
 tenantApiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("staff_token");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -58,15 +56,12 @@ tenantApiClient.interceptors.request.use(
         }
 
         if (process.env.NODE_ENV === "development") {
-            console.log(
-                `[Tenant API] ${config.method?.toUpperCase()} ${config.url}`,
-                `(tenant: ${tenantSlug}, branch: ${branchId})`
-            );
+            console.log(`[Tenant API] ${config.method?.toUpperCase()} ${config.url}`, `(tenant: ${tenantSlug}, branch: ${branchId})`);
         }
 
         return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
 );
 
 tenantApiClient.interceptors.response.use(
@@ -75,23 +70,45 @@ tenantApiClient.interceptors.response.use(
             console.log(`[Tenant API] Response:`, response.data);
         }
 
-        if (
-            typeof response.data === "string" &&
-            response.data.includes("<!DOCTYPE html>")
-        ) {
+        if (typeof response.data === "string" && response.data.includes("<!DOCTYPE html>")) {
             throw new Error("API returned HTML instead of JSON");
         }
 
         return response;
     },
     (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            window.location.href = "/login";
+
+        const status = error.response?.status;
+        const originalRequest = error.config;
+
+        if (status === 401) {
+            // 1. CEK APAKAH INI ENDPOINT LOGIN
+            // Jika request-nya adalah proses login, JANGAN redirect. 
+            // Biarkan catch di LoginForm yang memunculkan toast error.
+            if (originalRequest?.url?.includes('/login')) {
+                return Promise.reject(error);
+            }
+
+            // 2. JIKA BUKAN LOGIN, BERARTI TOKEN EXPIRED. 
+            // Tentukan arah redirect berdasarkan halaman saat ini.
+            if (typeof window !== "undefined") {
+                const currentPath = window.location.pathname;
+                
+                // Jika user sedang di area member, lempar ke login member
+                if (currentPath.startsWith('/member')) {
+                    localStorage.removeItem("member_token");
+                    window.location.href = '/member/login'; // Sesuaikan dengan route login member Anda
+                } else {
+                    localStorage.removeItem("staff_token"); 
+                    // Default: lempar ke login staff
+                    window.location.href = '/tenant-auth/login';
+                }
+            }
         }
 
         console.error("[Tenant API Error]:", error.response?.data);
         return Promise.reject(error);
-    }
+    },
 );
 
 export default tenantApiClient;

@@ -151,3 +151,11 @@ export function useSyncClassPlans() {
         },
     });
 }
+
+export function useAvailableMembershipPlans(params?: MembershipPlansQueryParams) {
+    return useQuery({
+        queryKey: membershipPlanKeys.list(params),
+        queryFn: () => membershipPlansAPI.getAvailablePlans(params),
+        staleTime: 5 * 60 * 1000,
+    });
+}

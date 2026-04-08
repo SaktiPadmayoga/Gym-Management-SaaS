@@ -1,37 +1,25 @@
-// frontend/app/(tenant)/layout.tsx
-
 "use client";
 
-import { useTenant } from "@/hooks/useTenant";
-import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import { ReactNode } from "react";
+import { StaffAuthProvider } from "@/providers/StaffAuthProvider";
 import QueryProvider from "@/providers/QueryProvider";
-import { BranchProvider } from "@/providers/BranchProvider";
+import { useTenant } from "@/hooks/useTenant";
 
 export default function TenantLayout({ children }: { children: ReactNode }) {
     const { tenant, isLoading } = useTenant();
 
-    if (isLoading) {
-        return <div className="p-4">Loading tenant...</div>;
-    }
-
-    // Guard: Only accessible from tenant domain
-    if (!tenant) {
+    if (isLoading)
         return (
-            <div className="p-4 text-red-600">
-                <h1>Access Denied</h1>
-                <p>Please access from a tenant subdomain like gym_1.localhost</p>
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aksen-secondary" />
             </div>
         );
-    }
 
-    // If valid tenant, wrap with layout
+    if (!tenant) return <div className="p-4 text-red-600">Access Denied — please access from a tenant subdomain</div>;
+
     return (
         <QueryProvider>
-            <BranchProvider>
-                        <LayoutWrapper>{children}</LayoutWrapper>
-            </BranchProvider>    
-
+            <StaffAuthProvider>{children}</StaffAuthProvider>
         </QueryProvider>
     );
 }

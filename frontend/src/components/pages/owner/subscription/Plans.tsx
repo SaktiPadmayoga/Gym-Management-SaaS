@@ -7,6 +7,21 @@ import { useCurrentSubscription, usePlansForUpgrade } from "@/hooks/useSubscript
 import { useCreatePaymentToken } from "@/hooks/usePayments";
 import { useMidtransSnap } from "@/hooks/useMidtransSnap";
 
+interface Plan {
+    id: string;
+    name: string;
+    code: string;
+    pricing?: {
+        monthly?: number;
+        yearly?: number;
+        currency?: string;
+    };
+    limits?: {
+        max_branches?: number;
+    };
+    features?: string[];
+}
+
 /* =====================================
  * BILLING TOGGLE
  * ===================================== */
@@ -31,7 +46,7 @@ function BillingToggle({ value, onChange }: { value: "monthly" | "yearly"; onCha
 /* =====================================
  * PLAN CARD
  * ===================================== */
-function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { plan: any; billing: "monthly" | "yearly"; isCurrentPlan: boolean; isProcessing: boolean; onSelect: (plan: any) => void }) {
+function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { plan: Plan; billing: "monthly" | "yearly"; isCurrentPlan: boolean; isProcessing: boolean; onSelect: (plan: Plan) => void }) {
     const price = billing === "yearly" ? plan.pricing?.yearly : plan.pricing?.monthly;
     const maxBranches = plan.limits?.max_branches;
     const isPopular = plan.code === "PREMIUM" || plan.code === "PRO";
@@ -136,7 +151,7 @@ export default function PlansModal() {
 
     const handleClose = () => router.push("/owner/subscription");
 
-    const handleSelectPlan = async (plan: any) => {
+    const handleSelectPlan = async (plan: Plan) => {
         setProcessingPlanId(plan.id);
 
         try {
@@ -163,7 +178,7 @@ export default function PlansModal() {
                     setProcessingPlanId(null);
                 },
             });
-        } catch (err: unknown) {
+        } catch (err) {
             const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to initiate payment";
             toast.error(message);
             setProcessingPlanId(null);
@@ -206,7 +221,7 @@ export default function PlansModal() {
                         <div className="text-center py-10 text-zinc-400">No plans available.</div>
                     ) : (
                         <div className={`grid gap-8 ${plans.length === 1 ? "max-w-md mx-auto" : plans.length === 2 ? "max-w-4xl mx-auto md:grid-cols-2" : "grid-cols-1 md:grid-cols-3"}`}>
-                            {plans.map((plan: any) => (
+                            {plans.map((plan: Plan) => (
                                 <PlanCard key={plan.id} plan={plan} billing={billing} isCurrentPlan={current?.plan_id === plan.id} isProcessing={processingPlanId === plan.id} onSelect={handleSelectPlan} />
                             ))}
                         </div>

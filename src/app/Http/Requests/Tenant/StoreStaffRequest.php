@@ -16,7 +16,7 @@ class StoreStaffRequest extends FormRequest
     {
         return [
             'name'      => ['required', 'string', 'max:100'],
-            'email'     => ['required', 'email', 'unique:staff,email'],
+            'email'     => ['required', 'email', 'unique:staffs,email'],
             'password'  => ['required', Password::min(8)->mixedCase()->numbers()],
             'phone'     => ['nullable', 'string', 'max:20'],
             'avatar'    => ['nullable', 'image', 'max:2048'],

@@ -14,6 +14,8 @@ class Staff extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasUuids, Notifiable, SoftDeletes;
 
+    protected $connection = 'tenant';
+
     protected $table = 'staffs';
 
     protected $fillable = [
@@ -91,4 +93,5 @@ class Staff extends Authenticatable
     {
         return $this->isOwner() ? '/owner/dashboard' : '/dashboard';
     }
+
 }

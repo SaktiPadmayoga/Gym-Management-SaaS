@@ -90,7 +90,7 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     {
         id: "nav-subscription",
         title: "Subscription",
-        path: "/owner/subscriptions",
+        path: "/owner/subscription",
         Icon: IconCreditCard,
         IconSolid: IconCreditCardFilled,
     },
