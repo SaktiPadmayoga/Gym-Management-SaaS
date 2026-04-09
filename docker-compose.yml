@@ -70,6 +70,7 @@ services:
             dockerfile: ../docker/nextjs/Dockerfile
         container_name: gym-nextjs
         working_dir: /app
+        user: "1000:1000" # Mencegah error permission (root) di Linux
         environment:
             NODE_ENV: development
             NEXT_PUBLIC_API_BASE_URL: http://localhost/api
@@ -77,8 +78,8 @@ services:
             NEXT_PUBLIC_TENANT_DOMAIN: localhost
         volumes:
             - ./frontend:/app
-            - /app/node_modules
-            - /app/.next
+            - nextjs_node_modules:/app/node_modules # Menggunakan named volume
+            - nextjs_next_cache:/app/.next # Menggunakan named volume
         networks:
             - gym-network
         restart: unless-stopped
@@ -129,3 +130,5 @@ volumes:
         driver: local
     postgres_backups:
         driver: local
+    nextjs_node_modules: # Tambahkan ini
+    nextjs_next_cache: # Tambahkan ini

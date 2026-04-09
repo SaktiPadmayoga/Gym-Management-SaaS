@@ -137,16 +137,16 @@ export const TenantCreateRequestSchema = z.object({
     trial_ends_at: z.string().nullable().optional(),
     subscription_ends_at: z.string().nullable().optional(),
 
-    branch: {
+    branch: z.object({
         branch_code: z.string().min(1),
         name: z.string().min(1),
-        address: z.string().min(1),
+        address: z.string().optional(),
         city: z.string().min(1),
         phone: z.string().min(1),
-        email: z.string().email(),
+        email: z.string().email().optional(),
         timezone: z.string().min(1),
         opened_at: z.string().nullable().optional(),
-    },
+    }),
 });
 
 export type TenantCreateRequest = z.infer<typeof TenantCreateRequestSchema>;

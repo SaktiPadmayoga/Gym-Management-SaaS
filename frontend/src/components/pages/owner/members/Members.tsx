@@ -89,8 +89,8 @@ export default function Members() {
             header: "Name",
             render: (item) => (
                 <div className="flex items-center gap-2">
-                    {item.avatar ? (
-                        <img src={item.avatar} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
+                    {item.avatar_url     ? (
+                        <img src={item.avatar_url} alt={item.name} className="w-8 h-8 rounded-full object-cover" />
                     ) : (
                         <div className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 font-semibold text-sm">
                             {item.name.charAt(0).toUpperCase()}
@@ -100,8 +100,8 @@ export default function Members() {
                         <div className="font-medium text-zinc-800 hover:underline">
                             {item.name}
                         </div>
-                        {item.current_membership?.member_code && (
-                            <p className="text-xs text-zinc-400">{item.current_membership.member_code}</p>
+                        {item.home_branch?.name && (
+                            <p className="text-xs text-zinc-400">{item.home_branch.name}</p>
                         )}
                     </div>
                 </div>
@@ -130,17 +130,17 @@ export default function Members() {
         {
             header: "Membership",
             render: (item) => {
-                const mb = item.current_membership ?? item.branches?.[0];
+                const mb = item.memberships?.[0];
                 if (!mb) return <span className="text-zinc-400 text-sm">No membership</span>;
                 return (
                     <div>
                         <p className="text-sm text-zinc-700">
-                            {mb.expires_at ? new Date(mb.expires_at).toLocaleDateString() : "-"}
+                            {mb.start_date ? new Date(mb.start_date).toLocaleDateString() : "-"}
                         </p>
-                        {mb.days_until_expiry !== null && mb.days_until_expiry !== undefined && (
-                            <p className={`text-xs ${mb.days_until_expiry <= 7 ? "text-orange-500" : "text-zinc-400"}`}>
-                                {mb.days_until_expiry > 0
-                                    ? `${mb.days_until_expiry}d left`
+                        {mb.end_date !== null && mb.end_date !== undefined && (
+                            <p className={`text-xs ${mb.end_date <= "7" ? "text-orange-500" : "text-zinc-400"}`}>
+                                {mb.end_date > "0"
+                                    ? `${mb.end_date}d left`
                                     : "Expired"}
                             </p>
                         )}

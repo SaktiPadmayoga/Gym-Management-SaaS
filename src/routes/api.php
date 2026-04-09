@@ -11,7 +11,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DomainRequestController;
 use App\Http\Controllers\SubscriptionTenantController;
 use App\Http\Controllers\PaymentController;
-use App\Http\Controllers\Tenant\StaffController;
+use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\StaffAuthController;
   use App\Http\Controllers\Auth\MemberAuthController;
@@ -23,6 +23,10 @@ Route::prefix('tenant-auth')->group(function () {
         ->name('member.google.callback');
 });
 
+Route::prefix('auth')->group(function () {
+    Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);
+    Route::post('/register-paid', [TenantRegistrationController::class, 'registerPaid']);
+});
 
     
     Route::post('plans/{id}/restore', [PlanController::class, 'restore']);
@@ -92,6 +96,7 @@ Route::middleware('auth:admin')->prefix('admin')->group(function () {
 // ============================================
 
 Route::middleware([\App\Http\Middleware\InitializeTenancy::class])->group(function () {
+    
     Route::apiResource('branches', BranchController::class);
     Route::patch('branches/{branch}/toggle-active', [BranchController::class, 'toggleActive']);
 

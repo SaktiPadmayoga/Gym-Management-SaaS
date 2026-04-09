@@ -6,61 +6,61 @@ export function middleware(request: NextRequest) {
     const { pathname } = url;
 
     // -----------------------------------------------
-    // 1. EXTRACT HOSTNAME FOR MULTI-TENANT REWRITE
+    // 1. EXTRACT HOSTNAME FOR MULTI-TENANT
     // -----------------------------------------------
     let hostname = request.headers.get("host") || "";
-    hostname = hostname.split(":")[0]; // Hapus port jika di localhost (misal :3000)
+    hostname = hostname.split(":")[0]; 
     
-    // Ganti "saas.com" dengan domain utama aplikasi Anda di production
     const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost"; 
-    
     const isSubdomain = hostname !== mainDomain && hostname.endsWith(mainDomain);
     const tenantSlug = isSubdomain ? hostname.replace(`.${mainDomain}`, "") : null;
 
     // -----------------------------------------------
-    // 2. AUTHENTICATION LOGIC (Fungsional Lama)
+    // 2. DEFINE ROUTE CATEGORIES
     // -----------------------------------------------
-    const staffToken = request.cookies.get("staff_token")?.value;
-    const memberToken = request.cookies.get("member_token")?.value;
+    // A. Rute Central (HANYA boleh diakses di domain utama: localhost / fitnice.id)
+    const centralPaths = ["/admin", "/auth", "/register-tenant", "/pricing"];
+    const isCentralRoute = centralPaths.some((p) => pathname.startsWith(p));
 
-    // Admin routes
-    if (pathname.startsWith("/admin")) {
-        if (pathname !== "/auth/login") {
-            const token = request.cookies.get("admin_token")?.value;
-            if (!token) return NextResponse.redirect(new URL("/auth/login", request.url));
-        }
-    }
-
-    // Owner routes
-    if (pathname.startsWith("/owner")) {
-        if (!staffToken) return NextResponse.redirect(new URL("/tenant-auth/login", request.url));
-    }
-
-    // Staff/Branch dashboard routes & Members
-    const staffPaths = ["/dashboard", "/staff", "/products", "/membership-plan", "/class-plan", "/pt-sessions-plan", "/facility", "/settings", "/members"];
-    if (staffPaths.some((p) => pathname.startsWith(p))) {
-        if (!staffToken) return NextResponse.redirect(new URL("/tenant-auth/login", request.url));
-    }
-
-    // Member dashboard routes
-    if (pathname.startsWith("/member/dashboard") || pathname.startsWith("/member/profile")) {
-        if (!memberToken) return NextResponse.redirect(new URL("/member/login", request.url));
-    }
-
-    // -----------------------------------------------
-    // 3. MULTI-TENANT REWRITE LOGIC
-    // -----------------------------------------------
-    // Daftar path internal aplikasi yang TIDAK BOLEH di-rewrite ke /[tenantSlug]
-    const isAppRoute = [
-        "/admin", "/owner", "/dashboard", "/staff", "/members", "/products",
+    // B. Rute Aplikasi Tenant (HANYA boleh diakses di subdomain: namagym.localhost / namagym.fitnice.id)
+    const tenantAppPaths = [
+        "/owner", "/dashboard", "/staff", "/members", "/products",
         "/membership-plan", "/class-plan", "/pt-sessions-plan", "/facility",
-        "/settings", "/tenant-auth", "/member", "/auth"
-    ].some(p => pathname.startsWith(p));
+        "/settings", "/tenant-auth", "/member"
+    ];
+    const isTenantAppRoute = tenantAppPaths.some((p) => pathname.startsWith(p));
 
-    // Jika ini adalah subdomain dan user mengakses halaman publik (seperti "/", "/about")
-    if (isSubdomain && !isAppRoute) {
-        // Rewrite URL transparan ke app/(tenant)/(public)/[tenantSlug]/...
-        return NextResponse.rewrite(new URL(`/${tenantSlug}${pathname}`, request.url));
+    // -----------------------------------------------
+    // 3. MULTI-TENANT ISOLATION LOGIC
+    // -----------------------------------------------
+    if (isSubdomain) {
+        if (isCentralRoute) {
+            const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+            return NextResponse.redirect(new URL(pathname, `${protocol}://${mainDomain}`));
+        }
+
+        if (isTenantAppRoute) {
+            // Logika token staff Anda...
+            return NextResponse.next();
+        }
+
+        // PERUBAHAN DI SINI: Rewrite diarahkan ke folder /sites/
+        return NextResponse.rewrite(new URL(`/sites/${tenantSlug}${pathname}`, request.url));
+        
+    } else {
+        // --- BLOK DOMAIN UTAMA (localhost / fitnice.id) ---
+        
+        // Mencegah akses aplikasi Tenant dari Domain Utama (lempar ke login / register)
+        if (isTenantAppRoute) {
+            return NextResponse.redirect(new URL("/auth/login", request.url));
+        }
+
+        // --- Masukkan logika validasi Cookie/Token Anda di sini untuk central ---
+        if (pathname.startsWith("/admin") && pathname !== "/auth/login") {
+            const adminToken = request.cookies.get("admin_token")?.value;
+            if (!adminToken) return NextResponse.redirect(new URL("/auth/login", request.url));
+        }
+        // -----------------------------------------------------------------------
     }
 
     return NextResponse.next();
@@ -68,14 +68,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        /*
-         * Match semua request path KECUALI untuk:
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         * Ini wajib agar root "/" bisa ditangkap oleh middleware untuk di-rewrite
-         */
         "/((?!api|_next/static|_next/image|favicon.ico).*)",
     ],
 };

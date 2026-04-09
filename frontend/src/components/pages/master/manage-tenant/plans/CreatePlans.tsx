@@ -62,6 +62,7 @@ export default function CreatePlans() {
     const onSubmit = async (formData: CreatePlanFormData) => {
         try {
             const domainData: PlansData = {
+                
                 name: formData.name,
                 code: formData.code,
 

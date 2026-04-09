@@ -15,7 +15,6 @@ export default function TenantLayout({ children }: { children: ReactNode }) {
             </div>
         );
 
-    if (!tenant) return <div className="p-4 text-red-600">Access Denied — please access from a tenant subdomain</div>;
 
     return (
         <QueryProvider>

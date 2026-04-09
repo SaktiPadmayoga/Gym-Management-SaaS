@@ -101,9 +101,9 @@ class TenantController extends Controller
         'logo_url' => $validated['logo_url'] ?? null,
         'timezone' => $validated['timezone'],
         'locale' => $validated['locale'],
-        'max_branches' => 1,
+        'max_branches' => $validated['max_branches'] ?? 0,
         'current_branch_count' => 1,
-        'trial_ends_at' => $validated['trial_ends_at'] ?? now()->addDays(14),
+        'trial_ends_at' => $validated['trial_ends_at'] ?? now()->addDays(7),
         'subscription_ends_at' => $validated['subscription_ends_at'] ?? now()->addDays(14),
  0   ]);
 
@@ -141,17 +141,6 @@ class TenantController extends Controller
         ]);
     });
 
-    // =====================
-    // CREATE BRANCH DOMAIN (DI CENTRAL DATABASE)
-    // =====================
-    Domain::create([
-        'id' => (string) Str::uuid(),
-        'tenant_id' => $tenant->id,
-        'branch_id' => $branchId,
-        'domain' => "{$branchSlug}.{$slug}.localhost",
-        'type' => 'branch',
-        'is_primary' => true,
-    ]);
 
     return ApiResponse::success(
         new TenantResource($tenant->load(['domains'])),

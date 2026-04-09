@@ -10,15 +10,17 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import FaqSection from "@/components/landing/FaqSection";
 import CtaSection from "@/components/landing/CtaSection";
 import Footer from "@/components/landing/Footer";
+import DeviceShowcase from "@/components/landing/DeviceShowcase";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       <Navbar />
       <HeroSection />
-      <DashboardPreview />
       <LogoCloud />
+      <DashboardPreview />
       <FeaturesSection />
+      <DeviceShowcase />
       <HowItWorksSection />
       <MetricsSection />
       <PricingSection />
