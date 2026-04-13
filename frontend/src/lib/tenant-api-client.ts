@@ -1,6 +1,7 @@
 // lib/tenant-api-client.ts
 import axios, { AxiosInstance, AxiosError } from "axios";
 
+
 function getTenantSlug(): string | null {
     if (typeof window === "undefined") return null;
     const hostname = window.location.hostname;
@@ -11,22 +12,13 @@ function getTenantSlug(): string | null {
     return null;
 }
 
-function getCurrentBranchId(): string | null {
+export function getCurrentBranchId(): string | null {
     if (typeof window === "undefined") return null;
-
-    // Key per tenant — sama dengan yang dipakai BranchProvider
-    const slug = getTenantSlug();
-    const storageKey = slug ? `current_branch_${slug}` : "current_branch";
-
-    const stored = localStorage.getItem(storageKey);
+    const stored = localStorage.getItem("staff_selected_branch");
     if (!stored) return null;
-
     try {
-        const branch = JSON.parse(stored);
-        return branch?.id ?? null;
-    } catch {
-        return null;
-    }
+        return JSON.parse(stored)?.id ?? null;
+    } catch { return null; }
 }
 
 const tenantApiClient: AxiosInstance = axios.create({

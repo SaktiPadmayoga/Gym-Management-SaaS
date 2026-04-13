@@ -89,11 +89,12 @@ class MemberController extends Controller
             $data['password'] = Hash::make('password123');
         }
 
-        $data['branch_id'] = $request->header('X-Branch-Id');
+        $data['home_branch_id'] = $request->header('X-Branch-Id');
 
         $data['member_since'] = now()->toDateString();
         // Default inactive karena belum assign paket (membership)
         $data['status'] = 'inactive'; 
+        $data['qr_token'] = Str::uuid()->toString();
 
         $member = Member::create($data);
         $member->load('homeBranch');
@@ -183,7 +184,7 @@ class MemberController extends Controller
     $membership = Membership::create([
         'member_id'               => $member->id,
         'membership_plan_id'      => $plan->id, // ✅ FIX DISINI
-        'home_branch_id'           => $request->header('X-Branch-Id'),
+        'branch_id'           => $request->header('X-Branch-Id'),
         'start_date'              => $startDate,
         'end_date'                => $endDate,
         'unlimited_checkin'       => $plan->unlimited_checkin ?? false,

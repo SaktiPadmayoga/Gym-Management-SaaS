@@ -51,6 +51,7 @@ export const MemberSchema = z.object({
     avatar_url: z.string().nullable().optional(), // Diubah menyesuaikan resource backend
     address: z.string().nullable().optional(),
     id_card_number: z.string().nullable().optional(),
+    qr_token: z.string().nullable().optional(),
     status: MemberStatusEnum,
     is_active: z.boolean(),
     member_since: z.string().nullable().optional(),

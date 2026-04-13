@@ -95,13 +95,8 @@ function getTenantSlug(): string {
 }
 
 function saveBranchToStorage(branch: SelectedBranch) {
-    const slug = getTenantSlug();
     localStorage.setItem(SELECTED_KEY, JSON.stringify(branch));
-    localStorage.setItem(`current_branch_${slug}`, JSON.stringify({
-        id:      branch.id,
-        name:    branch.name,
-        address: branch.address ?? null,
-    }));
+
 }
 
 function clearAuth() {
@@ -169,7 +164,20 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
                 // -----------------------------------------------
 
                 if (global_role === "owner") {
-                    // Owner → langsung owner dashboard, tidak perlu pilih branch
+                    // ✅ Auto-select branch pertama untuk owner
+                    if (staffBranches.length > 0) {
+                        const branch = staffBranches[0];
+                        const branchToSelect: SelectedBranch = {
+                            id: branch.id,
+                            name: branch.name,
+                            branch_code: branch.branch_code,
+                            address: branch.address ?? null,
+                            city: branch.city ?? null,
+                            role: branch.role,
+                        };
+                        dispatch({ type: "SELECT_BRANCH", payload: branchToSelect });
+                        saveBranchToStorage(branchToSelect);
+                    }
                     router.push("/owner/dashboard");
                     return;
                 }

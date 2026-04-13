@@ -13,6 +13,7 @@ export interface Member {
     phone?: string | null;
     avatar_url?: string | null; // ✅ Sesuaikan dengan backend
     status?: string;
+    qr_token?: string | null;
     member_since?: string | null;
     active_membership?: any;    // ✅ Ubah dari any[] menjadi any (karena ini hasOne/objek)
     home_branch?: any;

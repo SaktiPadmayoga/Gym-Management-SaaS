@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { useTenantHeader } from "@/hooks/useTenantHeader";
 
 export interface CurrentBranch {
     id: string;
@@ -33,9 +32,6 @@ function BranchInitializer({ children }: { children: ReactNode }) {
     const [currentBranch, setCurrentBranch] = useState<CurrentBranch | null>(null);
     const [isReady, setIsReady] = useState(false);
 
-    // TODO: hapus setelah auth diterapkan
-    const { data: tenantData, isSuccess } = useTenantHeader();
-
     const storageKey = getStorageKey();
 
     // Step 1: cek localStorage per tenant
@@ -60,21 +56,8 @@ function BranchInitializer({ children }: { children: ReactNode }) {
     // TODO: hapus setelah auth diterapkan
     useEffect(() => {
         if (isReady) return;
-        if (!isSuccess) return;
-
-        const branch = tenantData?.current_branch;
-        if (branch?.id) {
-            const b: CurrentBranch = {
-                id:      branch.id,
-                name:    branch.name,
-                address: branch.address ?? null,
-            };
-            setCurrentBranch(b);
-            localStorage.setItem(storageKey, JSON.stringify(b));
-        }
-
-        setIsReady(true);
-    }, [isSuccess, tenantData, isReady, storageKey]);
+        setIsReady(true); // langsung ready, biarkan kosong sampai staff login
+    }, [isReady]);
 
     const setBranch = (branch: CurrentBranch) => {
         setCurrentBranch(branch);

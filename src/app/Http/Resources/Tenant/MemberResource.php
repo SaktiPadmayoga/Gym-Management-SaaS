@@ -23,6 +23,7 @@ class MemberResource extends JsonResource
             
             'address'           => $this->address,
             'id_card_number'    => $this->id_card_number,
+            'qr_token'          => $this->qr_token,
             'status'            => $this->status,
             'is_active'         => $this->is_active,
             'member_since'      => $this->member_since?->format('Y-m-d'),
@@ -31,7 +32,7 @@ class MemberResource extends JsonResource
             'created_at'        => $this->created_at->toIso8601String(),
 
             // Load Relasi Home Branch
-            'branch'       => $this->whenLoaded('branch', function () {
+            'home_branch'       => $this->whenLoaded('branch', function () {
                 return [
                     'id'   => $this->branch->id,
                     'name' => $this->branch->name,

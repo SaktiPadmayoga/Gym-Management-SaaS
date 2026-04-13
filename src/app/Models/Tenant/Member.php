@@ -18,8 +18,11 @@ class Member extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasUuids, SoftDeletes, Notifiable;
 
+    protected $connection = 'tenant';
+    protected $table = 'members';
+
     protected $fillable = [
-        'branch_id',
+        'home_branch_id',
         'name',
         'email',
         'phone',
@@ -29,6 +32,7 @@ class Member extends Authenticatable
         'avatar',
         'address',
         'id_card_number',
+        'qr_token',
         'status',
         'is_active',
         'last_checkin_at',
@@ -72,4 +76,7 @@ class Member extends Authenticatable
     {
         return $this->hasOne(Membership::class)->where('status', 'active');
     }
+
+
+    
 }

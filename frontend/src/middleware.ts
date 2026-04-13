@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
     const tenantAppPaths = [
         "/owner", "/dashboard", "/staff", "/members", "/products",
         "/membership-plan", "/class-plan", "/pt-sessions-plan", "/facility",
-        "/settings", "/tenant-auth", "/member"
+        "/settings", "/tenant-auth", "/member", "/check-ins"
     ];
     const isTenantAppRoute = tenantAppPaths.some((p) => pathname.startsWith(p));
 
@@ -45,7 +45,7 @@ export function middleware(request: NextRequest) {
         }
 
         // PERUBAHAN DI SINI: Rewrite diarahkan ke folder /sites/
-        return NextResponse.rewrite(new URL(`/sites/${tenantSlug}${pathname}`, request.url));
+        return NextResponse.rewrite(new URL(`/${tenantSlug}${pathname}`, request.url));
         
     } else {
         // --- BLOK DOMAIN UTAMA (localhost / fitnice.id) ---

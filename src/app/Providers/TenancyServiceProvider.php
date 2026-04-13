@@ -133,6 +133,8 @@ class TenancyServiceProvider extends ServiceProvider
                     ->prefix('api')
                     ->namespace(static::$controllerNamespace)
                     ->group(base_path('routes/tenant.php'));
+
+                    
             }
         });
     }

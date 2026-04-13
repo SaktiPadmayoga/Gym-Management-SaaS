@@ -60,10 +60,15 @@ class Membership extends Model
     /**
      * Cabang tempat pendaftaran / pembelian paket ini.
      */
-    public function branch()
+    public function homeBranch()
     {
         return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
     }
+
+    public function branch()
+{
+    return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+}
 
     // =============================================
     // Helpers

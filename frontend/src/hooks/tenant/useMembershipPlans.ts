@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { membershipPlansAPI } from "@/lib/api/tenant/membershipPlans";
 import { MembershipPlanCreateRequest, MembershipPlanData, MembershipPlanUpdateRequest } from "@/types/tenant/membership-plans";
+import { getCurrentBranchId } from "@/lib/tenant-api-client"; // export fungsi ini dulu
+
 
 export type MembershipPlansQueryParams = {
     page?: number;
@@ -29,9 +31,12 @@ export const membershipPlanKeys = {
  * ===================== */
 
 export function useMembershipPlans(params?: MembershipPlansQueryParams) {
+    const branchId = getCurrentBranchId(); // baca dari localStorage
+
     return useQuery({
-        queryKey: membershipPlanKeys.list(params),
+        queryKey: [...membershipPlanKeys.list(params), branchId], // ✅ branch masuk query key
         queryFn: () => membershipPlansAPI.getAll(params),
+        enabled: !!branchId, // ✅ tunggu branch tersedia
         staleTime: 300_000,
         placeholderData: (prev) => prev,
     });

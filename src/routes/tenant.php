@@ -16,7 +16,7 @@ use App\Http\Controllers\Tenant\ProductController;
 use App\Http\Controllers\Auth\MemberAuthController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\SubscriptionTenantController;
-
+use App\Http\Controllers\Tenant\CheckInController;
 
 Route::prefix('tenant-auth')->group(function () {
     Route::post('/login',          [StaffAuthController::class, 'login']);
@@ -46,6 +46,17 @@ Route::prefix('member')->group(function () {
 Route::prefix('member')->group(function() {
     Route::get('/membershipAvailable', [MembershipPlanController::class, 'getAvailablePlans']);
 });
+
+Route::middleware(['auth:member'])->group(function () {
+    Route::post('/check-ins', [CheckInController::class, 'store']);
+});
+
+Route::middleware('auth:staff')->group(function () {
+    // ... route staff lainnya ...
+    Route::post('/check-ins', [CheckInController::class, 'store']);
+    Route::get('/check-ins', [CheckInController::class, 'index']);
+});
+
 
 // 3. PROTECTED STAFF ROUTES (Tetap di dalam routes/tenant.php)
 
