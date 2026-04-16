@@ -203,7 +203,7 @@ function RegisterTenantContent() {
             </div>
 
             {/* --- RIGHT SIDE: FORM MULTI-STEP --- */}
-            <div className="flex-1 flex items-center justify-center p-6 sm:p-2 min-h-full">
+            <div className="flex-1 flex items-center justify-center p-6 sm:p-2 min-h-full overflow-auto ">
                 <div className="w-full max-w-2xl ">
                     <div className=" p-2 sm:p-12 min-h-[300px] flex flex-col">
                         

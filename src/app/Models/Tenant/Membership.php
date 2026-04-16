@@ -18,7 +18,7 @@ class Membership extends Model
     protected $fillable = [
         'member_id',
         'membership_plan_id',
-        'home_branch_id',
+        'branch_id',
         'last_transaction_id',
         'start_date',
         'end_date',
@@ -60,15 +60,15 @@ class Membership extends Model
     /**
      * Cabang tempat pendaftaran / pembelian paket ini.
      */
-    public function homeBranch()
+    public function branch()
     {
         return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
     }
 
-    public function branch()
-{
-    return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
-}
+    public function homeBranch()
+    {
+        return $this->belongsTo(\App\Models\Branch::class, 'branch_id');
+    }
 
     // =============================================
     // Helpers
@@ -126,4 +126,15 @@ class Membership extends Model
                   ->where('end_date', '<', now()->toDateString());
             });
     }
+
+    // Di Membership.php
+public function scopeHistory($query)
+{
+    return $query->withTrashed();
+}
+
+public function scopeByPeriod($query, $startDate, $endDate)
+{
+    return $query->whereBetween('created_at', [$startDate, $endDate]);
+}
 }

@@ -291,4 +291,119 @@ class MemberController extends Controller
             $member->update(['status' => $hasExpired ? 'expired' : 'inactive']);
         }
     }
+
+    /**
+ * GET /api/memberships/active
+ * Menampilkan SEMUA membership yang sedang aktif di tenant ini
+ * Cocok untuk Dashboard Tenant (Ringkasan aktif, expiring soon, dll)
+ */
+    public function activeMemberships(Request $request)
+    {
+        $query = Membership::query()
+            ->with([
+                'member:id,name,email,phone,avatar,home_branch_id',
+                'plan:id,name,duration,duration_unit,price,unlimited_checkin',
+                'branch:id,name'
+            ])
+            ->where('status', 'active')
+            ->where('end_date', '>=', now()->toDateString());
+
+        // Filter cabang (jika diperlukan)
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        // Filter yang akan expired dalam X hari (default 30 hari)
+        if ($request->filled('expiring_in_days')) {
+            $days = (int) $request->expiring_in_days;
+            $query->where('end_date', '<=', now()->addDays($days)->toDateString());
+        }
+
+        // Search berdasarkan nama member
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('member', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        $perPage = $request->get('per_page', 20);
+
+        $memberships = $query->orderBy('end_date')  // yang paling dekat expired duluan
+                            ->paginate($perPage);
+
+        return ApiResponse::success([
+            'data' => MembershipResource::collection($memberships->items()),
+            'meta' => [
+                'total' => $memberships->total(),
+                'per_page' => $memberships->perPage(),
+                'current_page' => $memberships->currentPage(),
+            ],
+        ], 'Active memberships retrieved successfully');
+    }
+
+    /**
+ * GET /api/membership-history
+ * Menampilkan SEMUA riwayat membership di tenant ini (History)
+ * Cocok untuk halaman "Riwayat Paket" di dashboard atau laporan
+ */
+    public function membershipHistory(Request $request)
+    {
+        $query = Membership::query()
+            ->with([
+                'member:id,name,email,phone,avatar',
+                'plan:id,name,duration,duration_unit,price',
+                'branch:id,name'
+            ])
+            ->withTrashed(); // Agar cancelled & soft deleted tetap muncul
+
+        // Filter berdasarkan status (optional)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Filter berdasarkan cabang
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        // Filter berdasarkan periode waktu
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->start_date . ' 00:00:00',
+                $request->end_date . ' 23:59:59'
+            ]);
+        }
+
+        // Search berdasarkan nama member
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('member', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDirection = $request->get('sort_direction', 'desc');
+
+        $query->orderBy($sortBy, $sortDirection);
+
+        $perPage = $request->get('per_page', 20);
+
+        $history = $query->paginate($perPage);
+
+        return ApiResponse::success([
+            'data' => MembershipResource::collection($history->items()),
+            'meta' => [
+                'total' => $history->total(),
+                'per_page' => $history->perPage(),
+                'current_page' => $history->currentPage(),
+            ],
+        ], 'Membership history retrieved successfully');
+    }
 }

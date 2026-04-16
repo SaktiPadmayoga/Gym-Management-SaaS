@@ -15,6 +15,8 @@ use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\StaffAuthController;
   use App\Http\Controllers\Auth\MemberAuthController;
+use App\Http\Controllers\Tenant\MemberRegistrationController;
+
 
 Route::prefix('tenant-auth')->group(function () {
     Route::get('/google/callback', [StaffAuthController::class, 'handleGoogleCallback']);
@@ -22,6 +24,11 @@ Route::prefix('tenant-auth')->group(function () {
     Route::get('/member/google/callback', [MemberAuthController::class, 'handleGoogleCallback'])
         ->name('member.google.callback');
 });
+    
+    
+    // Rute Webhook Midtrans khusus Tenant (Bypass CSRF & Auth)
+    Route::post('/payment/member-webhook', [MemberRegistrationController::class, 'webhook']);
+
 
 Route::prefix('auth')->group(function () {
     Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);

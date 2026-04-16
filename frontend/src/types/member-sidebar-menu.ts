@@ -3,41 +3,16 @@ import {
     IconLayoutDashboardFilled,
     IconUser,
     IconUserFilled,
-    IconUsers,
-    IconUsersGroup,
-    IconDatabase,
-    IconDatabaseSmile,
-    IconHierarchy,
-    IconCherryFilled,
-    IconCalendarCheck,
-    IconCalendarFilled,
-    IconHistory,
     IconFileInvoice,
     IconFileInvoiceFilled,
-    IconCoin,
-    IconCoinFilled,
     IconCreditCard,
     IconCreditCardFilled,
-    IconRefresh,
-    IconSettings,
-    IconSettingsFilled,
     IconClock,
     IconClockFilled,
-    IconShieldLock,
-    IconBarbell,
-    IconBarbellFilled,
-    IconCards,
-    IconCardsFilled,
-    IconDeviceIpadDollar,
-    IconKey,
-    IconKeyFilled,
-    IconLink,
+    IconCalendar,
+    IconCalendarFilled,
 } from "@tabler/icons-react";
-import { OwnerSidebarItem } from "./owner-sidebar-menu";
 
-/**
- * Icon type helper
- */
 export type IconType = typeof IconLayoutDashboard;
 
 export interface MemberSidebarItem {
@@ -51,9 +26,6 @@ export interface MemberSidebarItem {
 }
 
 export const memberSidebarData: MemberSidebarItem[] = [
-    // =========================
-    // MAIN MENU
-    // =========================
     { id: "header-main", title: "Main Menu", isHeader: true },
     {
         id: "nav-dashboard",
@@ -69,7 +41,13 @@ export const memberSidebarData: MemberSidebarItem[] = [
         Icon: IconFileInvoice,
         IconSolid: IconFileInvoiceFilled,
     },
-
+    {
+        id: "nav-class-schedule",
+        title: "Class Schedule",
+        path: "/member/class-schedule",
+        Icon: IconCalendar,
+        IconSolid: IconCalendarFilled,
+    },
     {
         id: "nav-subscription",
         title: "Subscription",
@@ -83,5 +61,12 @@ export const memberSidebarData: MemberSidebarItem[] = [
         path: "/member/profile",
         Icon: IconUser,
         IconSolid: IconUserFilled,
+    },
+    {
+        id: "nav-check-ins",
+        title: "Check-in",
+        path: "/member/check-ins",
+        Icon: IconClock,
+        IconSolid: IconClockFilled,
     },
 ];

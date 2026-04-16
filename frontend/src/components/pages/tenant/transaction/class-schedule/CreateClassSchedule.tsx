@@ -1,148 +1,155 @@
 "use client";
 
-import { Icon } from "@/components/icon";
-import CustomButton from "@/components/ui/button/CustomButton";
-import { SearchableDropdown, DropdownOption } from "@/components/ui/input/CustomDropdown";
-import { NumberInput, TextInput } from "@/components/ui/input/Input";
-import { ClassScheduleData } from "@/types/class-schedule";
-// import { profileData } from "@/types/profile";
-// import { ProfileData } from "@/lib/dummy/profileDummy";
-import { DUMMY_CLASS_PLANS } from "@/lib/dummy/classPlanDummy";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
-import { ClassPlanData } from "@/types/class-plan";
+import { toast, Toaster } from "sonner";
+import Link from "next/link";
+import { Icon } from "@/components/icon";
+import CustomButton from "@/components/ui/button/CustomButton";
+import { TextInput } from "@/components/ui/input/Input";
+import { SearchableDropdown, DropdownOption } from "@/components/ui/input/CustomDropdown";
+import { useCreateClassSchedule } from "@/hooks/tenant/useClassSchedules";
+import { useClassPlans } from "@/hooks/tenant/useClassPlans";
+import { useStaff } from "@/hooks/tenant/useStaffs";
+import {
+    ClassScheduleCreateRequest,
+    ClassScheduleCreateRequestSchema,
+} from "@/types/tenant/class-schedules";
+
+const classTypeOptions: DropdownOption<string>[] = [
+    { key: "membership_only", label: "Member Only", value: "membership_only" },
+    { key: "public",          label: "Publik",      value: "public" },
+    { key: "private",         label: "Private",     value: "private" },
+];
 
 export default function CreateClassSchedule() {
     const router = useRouter();
+    const createMutation = useCreateClassSchedule();
 
-    const form = useForm<ClassScheduleData>({
-        mode: "onChange",
+    const { data: classPlansData } = useClassPlans({ per_page: 100 });
+    const { data: staffData }      = useStaff({ per_page: 100 });
+
+    const classPlans = classPlansData ?? [];
+    const staffList  = Array.isArray(staffData) ? staffData : staffData?.data ?? [];
+
+    const classPlansOptions: DropdownOption<string>[] = classPlans.map((p: any) => ({
+        key:   p.id,
+        label: p.name,
+        value: p.id,
+        subtitle: p.category ?? undefined,
+    }));
+
+    const instructorOptions: DropdownOption<string>[] = staffList.map((s: any) => ({
+        key:   s.id,
+        label: s.name,
+        value: s.id,
+        subtitle: s.role ?? undefined,
+    }));
+
+    const form = useForm<ClassScheduleCreateRequest>({
         defaultValues: {
-            id: "",
-
-            planId: "",
-            instructorId: "",
-
-            date: "",
-            startAt: "",
-
-            classType: "Membership Only",
-            access: "PUBLIC",
-
-            totalManualCheckin: 0,
-            note: "",
-
-            status: "Scheduled",
+            class_type: "membership_only",
         },
     });
 
-    /** 🔽 Dropdown Options */
-    // const instructorOptions: DropdownOption<string>[] = ProfileData.map((profile: profileData) => ({
-    //     key: profile.id,
-    //     label: `${profile.name} (${profile.id})`,
-    //     value: profile.id,
-    // }));
-
-    const planOptions: DropdownOption<string>[] = DUMMY_CLASS_PLANS.map((plan: ClassPlanData) => ({
-        key: plan.id,
-        label: `${plan.name} - Rp ${plan.price.toLocaleString("id-ID")}`,
-        value: plan.id,
-    }));
-
-    const classTypeOptions: DropdownOption<string>[] = [
-        { key: "membership", label: "Membership Only", value: "Membership Only" },
-        { key: "public", label: "Public", value: "Public" },
-        { key: "private", label: "Private", value: "Private" },
-    ];
-
-    const accessOptions: DropdownOption<string>[] = [
-        { key: "public", label: "PUBLIC | Visible on mobile app", value: "PUBLIC" },
-        { key: "member", label: "MEMBER ONLY | Member only", value: "MEMBER_ONLY" },
-        { key: "private", label: "PRIVATE | Hidden", value: "PRIVATE" },
-    ];
-
-    const onSubmit = (data: ClassScheduleData) => {
-        console.log("Class Schedule Data:", data);
-        router.push("/class-schedule?success=true");
+    const onSubmit = async (data: ClassScheduleCreateRequest) => {
+        try {
+            await createMutation.mutateAsync(data);
+            toast.success("Jadwal berhasil dibuat");
+            router.push("/class-schedules?success=true");
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message ?? "Gagal membuat jadwal");
+        }
     };
 
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
-                    {/* Breadcrumb */}
+                    <Toaster position="top-center" />
+
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Class</li>
-                            <li>
-                                <Link href="/class-schedule">Schedule</Link>
-                            </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li>Management</li>
+                            <li><Link href="/class-schedules">Jadwal Kelas</Link></li>
+                            <li className="text-aksen-secondary">Buat Jadwal</li>
                         </ul>
                     </div>
 
-                    {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/class-schedule")}>
+                            <button type="button" onClick={() => router.push("/class-schedules")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
-                            <h1 className="text-2xl font-semibold">Create Class</h1>
+                            <div>
+                                <h1 className="text-2xl font-semibold">Buat Jadwal Kelas</h1>
+                                <p className="text-sm text-zinc-500">Tambahkan jadwal kelas baru</p>
+                            </div>
                         </div>
-
-                        <CustomButton type="submit" className="bg-aksen-secondary text-white px-4 py-2.5">
-                            Create and save
+                        <CustomButton
+                            type="submit"
+                            disabled={createMutation.isPending}
+                            className="bg-aksen-secondary text-white px-6 py-2.5 disabled:opacity-50"
+                        >
+                            {createMutation.isPending ? "Menyimpan..." : "Simpan Jadwal"}
                         </CustomButton>
                     </div>
 
                     <hr />
 
                     <div className="flex flex-col gap-6 mt-6">
-                        {/* Plan & Instructor */}
-                        <div className="grid grid-cols-12 gap-3">
+                        <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="planId" label="Plan" options={planOptions} />
+                                <SearchableDropdown
+                                    name="class_plan_id"
+                                    label="Kelas *"
+                                    options={classPlansOptions}
+                                    placeholder="Pilih kelas..."
+                                />
                             </div>
-
-                            {/* <div className="col-span-6">
-                                <SearchableDropdown name="instructorId" label="Instructor" options={instructorOptions} />
-                            </div> */}
-                        </div>
-
-                        {/* Date & Start At */}
-                        <div className="grid grid-cols-12 gap-3">
-                            <div className="col-span-4">
-                                <TextInput name="date" label="Date" type="date" />
-                            </div>
-
-                            <div className="col-span-4">
-                                <TextInput name="startAt" label="Start At" type="time" />
-                            </div>
-                        </div>
-
-                        {/* Class Type & Access */}
-                        <div className="grid grid-cols-12 gap-3">
-                            <div className="col-span-4">
-                                <SearchableDropdown name="classType" label="Class Type" options={classTypeOptions} />
-                            </div>
-
                             <div className="col-span-6">
-                                <SearchableDropdown name="access" label="Access" options={accessOptions} />
+                                <SearchableDropdown
+                                    name="instructor_id"
+                                    label="Instruktur *"
+                                    options={instructorOptions}
+                                    placeholder="Pilih instruktur..."
+                                />
                             </div>
                         </div>
 
-                        {/* Manual Check-in */}
-                        <div className="grid grid-cols-12 gap-3">
+                        <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <NumberInput name="totalManualCheckin" label="Total Manual Checkin" />
+                                <TextInput name="date" label="Tanggal *" type="date" />
+                            </div>
+                            <div className="col-span-4">
+                                <TextInput name="start_at" label="Jam Mulai *" type="time" />
+                            </div>
+                            <div className="col-span-4">
+                                <TextInput name="end_at" label="Jam Selesai *" type="time" />
                             </div>
                         </div>
 
-                        {/* Note */}
-                        <div className="grid grid-cols-12 gap-3">
-                            <div className="col-span-6">
-                                <TextInput name="note" label="Note" placeholder="Optional note" />
+                        <div className="grid grid-cols-12 gap-4">
+                            <div className="col-span-4">
+                                <SearchableDropdown
+                                    name="class_type"
+                                    label="Tipe Kelas"
+                                    options={classTypeOptions}
+                                />
+                            </div>
+                            <div className="col-span-4">
+                                <TextInput
+                                    name="max_capacity"
+                                    label="Kapasitas (kosongkan = ikut plan)"
+                                    type="number"
+                                    placeholder="Contoh: 20"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-12 gap-4">
+                            <div className="col-span-12">
+                                <TextInput name="notes" label="Catatan (opsional)" placeholder="Catatan tambahan..." />
                             </div>
                         </div>
                     </div>

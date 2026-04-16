@@ -4,8 +4,6 @@ import { createContext, useContext, useEffect, useReducer, ReactNode, useCallbac
 import { useRouter } from "next/navigation";
 import { memberAuthAPI } from "@/lib/api/tenant/memberAuth"; 
 
-
-// --- TYPES ---
 export interface Member {
     id: string;
     name: string;

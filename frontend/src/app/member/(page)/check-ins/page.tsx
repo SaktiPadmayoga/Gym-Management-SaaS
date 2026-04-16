@@ -6,23 +6,21 @@ import { QRCodeSVG } from "qrcode.react";
 import { toast, Toaster } from "sonner";
 import { RefreshCw, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 
-// Hook React Query yang baru kita buat
-import { useMemberMe } from "@/hooks/tenant/useMemberAuth"; 
+// ⬇️ GANTI: pakai provider auth (sama seperti profile)
+import { useMemberAuth } from "@/providers/MemberAuthProvider";
 
 export default function MemberQRCheckInPage() {
-    // Gunakan React Query untuk ambil data, auto-polling, dan status loading
-    const { 
-        data: member, 
-        isLoading, 
-        isFetching, 
-        refetch, 
-        dataUpdatedAt 
-    } = useMemberMe();
+    // ⬇️ Ambil member dari auth (bukan React Query)
+    const { member } = useMemberAuth();
 
-    // State untuk melacak token sebelumnya (untuk mendeteksi perubahan/sukses scan)
+    // State untuk melacak token sebelumnya
     const [previousToken, setPreviousToken] = useState<string | null>(null);
 
-    // Deteksi jika qr_token berubah (berarti sukses check-in di meja kasir)
+    // State manual untuk refresh indicator (karena tidak ada isFetching lagi)
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [lastUpdatedDate, setLastUpdatedDate] = useState<Date>(new Date());
+
+    // Deteksi perubahan QR token
     useEffect(() => {
         if (member?.qr_token) {
             if (previousToken && previousToken !== member.qr_token) {
@@ -32,8 +30,8 @@ export default function MemberQRCheckInPage() {
         }
     }, [member?.qr_token, previousToken]);
 
-    // Tampilan Loading Awal (hanya saat pertama kali buka halaman)
-    if (isLoading || !member) {
+    // Loading state (sama seperti profile)
+    if (!member) {
         return (
             <div className="min-h-[60vh] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
@@ -41,11 +39,18 @@ export default function MemberQRCheckInPage() {
         );
     }
 
-    const activeMembership = member.memberships?.find(m => m.status === 'active');
+    // ⬇️ Samakan dengan profile
+    const activeMembership = member.active_membership;
     const isExpired = activeMembership ? new Date(activeMembership.end_date) < new Date() : true;
-    
-    // Konversi timestamp React Query ke format Jam
-    const lastUpdatedDate = dataUpdatedAt ? new Date(dataUpdatedAt) : new Date();
+
+    // Dummy refresh (karena tidak ada refetch dari React Query)
+    const handleRefresh = () => {
+        setIsRefreshing(true);
+        setTimeout(() => {
+            setLastUpdatedDate(new Date());
+            setIsRefreshing(false);
+        }, 500);
+    };
 
     return (
         <div className="max-w-md mx-auto py-8 px-4 font-figtree">
@@ -59,7 +64,7 @@ export default function MemberQRCheckInPage() {
             {/* KARTU QR CODE UTAMA */}
             <div className="bg-white rounded-[2rem] border border-zinc-200 p-8 shadow-xl shadow-blue-900/5 relative overflow-hidden flex flex-col items-center">
                 
-                {/* Status Lencana di Atas Card */}
+                {/* Status Lencana */}
                 <div className="absolute top-0 left-0 w-full p-4 flex justify-center">
                     {activeMembership && !isExpired ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase tracking-widest">
@@ -73,7 +78,6 @@ export default function MemberQRCheckInPage() {
                 </div>
 
                 <div className="mt-10 mb-8 p-4 bg-white rounded-3xl shadow-sm border-2 border-zinc-100">
-                    {/* Komponen QRCode */}
                     {member.qr_token ? (
                         <QRCodeSVG 
                             value={member.qr_token} 
@@ -112,19 +116,19 @@ export default function MemberQRCheckInPage() {
                     )}
                 </div>
 
-                {/* Indikator Refresh (Di-handle otomatis oleh React Query isFetching) */}
+                {/* Refresh Indicator */}
                 <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
                         <Clock size={14} />
                         Diperbarui: {lastUpdatedDate.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </div>
                     <button 
-                        onClick={() => refetch()} 
-                        disabled={isFetching}
+                        onClick={handleRefresh} 
+                        disabled={isRefreshing}
                         className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition-colors disabled:opacity-50"
                     >
-                        <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} />
-                        {isFetching ? "Memperbarui..." : "Refresh QR"}
+                        <RefreshCw size={14} className={isRefreshing ? "animate-spin" : ""} />
+                        {isRefreshing ? "Memperbarui..." : "Refresh QR"}
                     </button>
                 </div>
             </div>

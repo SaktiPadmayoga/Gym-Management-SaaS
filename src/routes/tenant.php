@@ -17,11 +17,18 @@ use App\Http\Controllers\Auth\MemberAuthController;
 use App\Http\Controllers\Auth\StaffAuthController;
 use App\Http\Controllers\SubscriptionTenantController;
 use App\Http\Controllers\Tenant\CheckInController;
+use App\Http\Controllers\Tenant\ClassScheduleController;
+use App\Http\Controllers\Tenant\MemberClassController;
+use App\Http\Controllers\Tenant\MemberRegistrationController;
 
 Route::prefix('tenant-auth')->group(function () {
     Route::post('/login',          [StaffAuthController::class, 'login']);
     Route::get('/google',          [StaffAuthController::class, 'redirectToGoogle']);
 });
+
+// --- RUTE PUBLIC MEMBER ---
+Route::post('/member/register', [MemberRegistrationController::class, 'register']);
+
 
 
 // Prefix /api otomatis ditambahkan oleh konfigurasi RouteServiceProvider kamu
@@ -41,6 +48,13 @@ Route::prefix('member')->group(function () {
         Route::post('/auth/logout', [MemberAuthController::class, 'logout']);
         Route::post('/auth/change-password', [MemberAuthController::class, 'changePassword']);
     });
+});
+
+Route::prefix('member')->middleware('auth:member')->group(function () {
+    Route::get('/class-schedules',              [MemberClassController::class, 'index']);
+    Route::post('/class-schedules/{id}/book',   [MemberClassController::class, 'book']);
+    Route::delete('/class-schedules/{id}/book', [MemberClassController::class, 'cancelBook']);
+    Route::get('/my-classes',                   [MemberClassController::class, 'myClasses']);
 });
 
 Route::prefix('member')->group(function() {
@@ -91,8 +105,22 @@ Route::prefix('tenant')->group(function () {
 
 Route::middleware('auth:staff')->group(function () {
 
+    Route::prefix('class-schedules')->group(function () {
+    Route::get('/',                                          [ClassScheduleController::class, 'index']);
+    Route::post('/',                                         [ClassScheduleController::class, 'store']);
+    Route::get('/{id}',                                      [ClassScheduleController::class, 'show']);
+    Route::put('/{id}',                                      [ClassScheduleController::class, 'update']);
+    Route::delete('/{id}',                                   [ClassScheduleController::class, 'destroy']);
+    Route::patch('/{id}/cancel',                             [ClassScheduleController::class, 'cancel']);
+    Route::get('/{id}/attendances',                          [ClassScheduleController::class, 'attendances']);
+    Route::post('/{id}/attendances',                         [ClassScheduleController::class, 'addAttendance']);
+    Route::patch('/{id}/attendances/{attendanceId}/checkin', [ClassScheduleController::class, 'markAttended']);
+    Route::patch('/{id}/attendances/{attendanceId}/cancel',  [ClassScheduleController::class, 'cancelAttendance']);
+});
     
     Route::apiResource('members', MemberController::class);
+    Route::get('/memberships/active',  [MemberController::class, 'activeMemberships']);
+Route::get('/memberships/history', [MemberController::class, 'membershipHistory']);
  
     // Auth
     Route::prefix('auth')->group(function () {

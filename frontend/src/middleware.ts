@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
     const tenantAppPaths = [
         "/owner", "/dashboard", "/staff", "/members", "/products",
         "/membership-plan", "/class-plan", "/pt-sessions-plan", "/facility",
-        "/settings", "/tenant-auth", "/member", "/check-ins"
+        "/settings", "/tenant-auth", "/member", "/check-ins", "/memberships", "/class-schedules"
     ];
     const isTenantAppRoute = tenantAppPaths.some((p) => pathname.startsWith(p));
 

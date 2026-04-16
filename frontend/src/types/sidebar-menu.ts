@@ -66,23 +66,16 @@ export const sidebarData: SidebarItem[] = [
 
     // TRANSACTION
     { id: "header-transaction", title: "Transaction", isHeader: true },
-    { id: "nav-membership", title: "Membership", path: "/membership", Icon: UserIcon, IconSolid: UserIconSolid },
-    { id: "nav-class", title: "Class Schedule", path: "/class-schedule", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
+    { id: "nav-membership", title: "Memberships", path: "/memberships", Icon: UserIcon, IconSolid: UserIconSolid },
+    { id: "nav-class", title: "Class Schedules", path: "/class-schedules", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
     { id: "nav-pt-sessions", title: "PT Sessions", path: "/pt-sessions", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
     { id: "nav-pos", title: "POS", path: "/pos", Icon: CurrencyDollarIcon, IconSolid: CurrencyDollarIconSolid },
     {
         id: "nav-checkinout",
-        title: "Check in/out",
-        path: "/check-in-out",
+        title: "Check Ins",
+        path: "/check-ins",
         Icon: ClockIcon,
         IconSolid: ClockIconSolid,
-        children: [
-            { id: "checkin-history", title: "History", path: "/check-in-out/history", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
-            { id: "checkin-manual", title: "Check in Manual", path: "/check-in-out/check-in/manual", Icon: PencilSquareIcon, IconSolid: PencilSquareIconSolid },
-            { id: "checkin-qr", title: "Check in QR", path: "/check-in-out/check-in/qr", Icon: QrCodeIcon, IconSolid: QrCodeIconSolid },
-            { id: "checkout-manual", title: "Check out Manual", path: "/check-in-out/check-out/manual", Icon: ArrowRightOnRectangleIcon, IconSolid: ArrowRightOnRectangleIconSolid },
-            { id: "checkout-qr", title: "Check out QR", path: "/check-in-out/check-out/qr", Icon: QrCodeIcon, IconSolid: QrCodeIconSolid },
-        ],
     },
 
     // MASTER DATA

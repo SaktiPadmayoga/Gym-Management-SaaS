@@ -16,7 +16,8 @@ use Illuminate\Database\Eloquent\Builder;
 class MembershipPlan extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
-
+    protected $connection = 'tenant';
+    protected $table = 'membership_plans';
     protected $fillable = [
         'branch_id',
         'name',
@@ -65,6 +66,8 @@ class MembershipPlan extends Model
     {
         return $this->belongsTo(Branch::class);
     }
+
+    
 
     // Cabang yang DIIZINKAN diakses oleh plan ini (Tabel Pivot)
     public function accessibleBranches(): BelongsToMany
