@@ -11,11 +11,16 @@ use App\Http\Requests\Tenant\StoreClassAttendanceRequest;
 use App\Http\Responses\ApiResponse;
 use App\Models\Tenant\ClassSchedule;
 use App\Models\Tenant\ClassAttendance;
+use App\Services\ClassBookingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ClassScheduleController extends Controller
 {
+    public function __construct(
+        protected ClassBookingService $bookingService
+    ) {}
+
     // GET /class-schedules
     public function index(Request $request)
     {
@@ -165,49 +170,46 @@ class ClassScheduleController extends Controller
     {
         $schedule = ClassSchedule::with('classPlan')->findOrFail($id);
 
-        if ($schedule->isCancelled()) {
-            return ApiResponse::error('Jadwal sudah dibatalkan.', null, 422);
-        }
-
-        if (!$schedule->hasAvailableSlot()) {
-            return ApiResponse::error('Kapasitas kelas sudah penuh.', null, 422);
-        }
-
-        $alreadyBooked = ClassAttendance::where('class_schedule_id', $id)
-            ->where('member_id', $request->member_id)
-            ->whereNotIn('status', ['cancelled'])
-            ->exists();
-
-        if ($alreadyBooked) {
-            return ApiResponse::error('Member sudah terdaftar di kelas ini.', null, 422);
-        }
+        // Lazy-load member dari request
+        $member = \App\Models\Tenant\Member::findOrFail($request->member_id);
 
         try {
-            DB::beginTransaction();
+            $result = $this->bookingService->book(
+                schedule: $schedule,
+                member:   $member,
+                staffId:  $request->user('staff')?->id,
+                notes:    $request->notes,
+            );
+        } catch (\InvalidArgumentException $e) {
+            return ApiResponse::error($e->getMessage(), null, 422);
+        } catch (\Exception $e) {
+            return ApiResponse::error('Gagal mendaftarkan member.', null, 500);
+        }
 
-            $attendance = ClassAttendance::create([
-                'class_schedule_id' => $id,
-                'member_id'         => $request->member_id,
-                'checked_in_by'     => $request->user('staff')?->id,
-                'status'            => 'booked',
-                'booked_at'         => now(),
-                'notes'             => $request->notes,
-            ]);
-
-            $schedule->increment('total_booked');
-
-            DB::commit();
-
-            $attendance->load(['member', 'checkedInBy']);
+        // Kelas gratis — attendance langsung confirmed
+        if ($result['snap_token'] === null) {
             return ApiResponse::success(
-                new ClassAttendanceResource($attendance),
+                new ClassAttendanceResource($result['attendance']),
                 'Member berhasil didaftarkan ke kelas',
                 201
             );
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return ApiResponse::error('Gagal mendaftarkan member.', null, 500);
         }
+
+        // Kelas berbayar — kembalikan snap_token untuk pembayaran
+        return ApiResponse::success(
+            [
+                'attendance' => new ClassAttendanceResource($result['attendance']),
+                'invoice'    => [
+                    'id'             => $result['invoice']->id,
+                    'invoice_number' => $result['invoice']->invoice_number,
+                    'total_amount'   => $result['invoice']->total_amount,
+                    'due_date'       => $result['invoice']->due_date,
+                ],
+                'snap_token' => $result['snap_token'],
+            ],
+            'Silakan selesaikan pembayaran',
+            201
+        );
     }
 
     // PATCH /class-schedules/:id/attendances/:attendanceId/checkin
@@ -223,6 +225,11 @@ class ClassScheduleController extends Controller
 
         if ($attendance->status === 'cancelled') {
             return ApiResponse::error('Attendance sudah dibatalkan.', null, 422);
+        }
+
+        // Untuk kelas berbayar, pastikan pembayaran sudah confirmed
+        if ($attendance->payment_status === 'pending') {
+            return ApiResponse::error('Pembayaran belum dikonfirmasi.', null, 422);
         }
 
         try {
@@ -267,8 +274,8 @@ class ClassScheduleController extends Controller
                 'cancelled_at' => now(),
             ]);
 
-            // Kembalikan slot
-            if (in_array($attendance->status, ['booked'])) {
+            // Kembalikan slot HANYA jika sudah paid/free (sudah dihitung ke total_booked)
+            if ($attendance->payment_status !== 'pending') {
                 $attendance->schedule->decrement('total_booked');
             }
 
@@ -278,6 +285,46 @@ class ClassScheduleController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return ApiResponse::error('Gagal membatalkan attendance.', null, 500);
+        }
+    }
+
+    /**
+     * POST /api/class-schedules/{id}/book-by-staff
+     * Endpoint khusus Staff/POS untuk mendaftarkan member dan bayar di tempat.
+     */
+    public function bookByStaff(Request $request, $id, \App\Services\ClassBookingService $bookingService)
+    {
+        $request->validate([
+            'member_id'      => 'required|uuid|exists:members,id',
+            'payment_method' => 'nullable|in:cash,midtrans', // Frontend kirim ini
+        ]);
+
+        try {
+            $schedule = \App\Models\Tenant\ClassSchedule::with('classPlan')->findOrFail($id);
+            $member   = \App\Models\Tenant\Member::findOrFail($request->member_id);
+            
+            // Ambil ID staff yang sedang login (sesuaikan dengan guard auth kamu)
+            $staffId  = auth('staff')->id(); 
+            
+            $paymentMethod = $request->payment_method ?? 'cash';
+
+            // Panggil service yang sudah kita update
+            $result = $bookingService->book($schedule, $member, $staffId, 'Booked via Staff POS', $paymentMethod);
+
+            return \App\Http\Responses\ApiResponse::success([
+                'attendance' => $result['attendance'],
+                'invoice'    => $result['invoice'],
+                'snap_token' => $result['snap_token'], // Frontend butuh ini untuk memunculkan popup
+            ], 'Pendaftaran kelas berhasil diproses.', 201);
+
+        } catch (\InvalidArgumentException $e) {
+            return \App\Http\Responses\ApiResponse::error($e->getMessage(), null, 422);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('[StaffClassBooking] Gagal', [
+                'schedule_id' => $id,
+                'error'       => $e->getMessage()
+            ]);
+            return \App\Http\Responses\ApiResponse::error('Gagal memproses pendaftaran. Silakan coba lagi.', null, 500);
         }
     }
 }

@@ -20,15 +20,26 @@ use App\Http\Controllers\Tenant\CheckInController;
 use App\Http\Controllers\Tenant\ClassScheduleController;
 use App\Http\Controllers\Tenant\MemberClassController;
 use App\Http\Controllers\Tenant\MemberRegistrationController;
+use App\Http\Controllers\Tenant\MemberClassBookingController;
+use App\Http\Controllers\Tenant\MemberPtController;
+use App\Http\Controllers\Tenant\PtSessionController;
+use App\Http\Controllers\Tenant\PtPackageController;
+use App\Http\Controllers\Tenant\POSController;
+
+ 
+// ============================================================================
+// PUBLIC — Tidak butuh autentikasi
+// ============================================================================
+Route::prefix('member')->group(function () {
+    Route::post('/register', [MemberRegistrationController::class, 'register'])
+        ->name('tenant.member.register');
+});
+
 
 Route::prefix('tenant-auth')->group(function () {
     Route::post('/login',          [StaffAuthController::class, 'login']);
     Route::get('/google',          [StaffAuthController::class, 'redirectToGoogle']);
 });
-
-// --- RUTE PUBLIC MEMBER ---
-Route::post('/member/register', [MemberRegistrationController::class, 'register']);
-
 
 
 // Prefix /api otomatis ditambahkan oleh konfigurasi RouteServiceProvider kamu
@@ -55,6 +66,14 @@ Route::prefix('member')->middleware('auth:member')->group(function () {
     Route::post('/class-schedules/{id}/book',   [MemberClassController::class, 'book']);
     Route::delete('/class-schedules/{id}/book', [MemberClassController::class, 'cancelBook']);
     Route::get('/my-classes',                   [MemberClassController::class, 'myClasses']);
+
+    Route::get('pt-plans', [MemberPtController::class, 'availablePlans']);
+        
+        // Proses Pembelian Paket PT
+        Route::post('pt-packages/purchase', [MemberPtController::class, 'purchase']);
+        
+        // Daftar Paket PT milik Member (untuk cek sisa kuota)
+        Route::get('my-pt-packages', [MemberPtController::class, 'myPackages']);
 });
 
 Route::prefix('member')->group(function() {
@@ -63,6 +82,12 @@ Route::prefix('member')->group(function() {
 
 Route::middleware(['auth:member'])->group(function () {
     Route::post('/check-ins', [CheckInController::class, 'store']);
+
+    // routes/member.php (atau sesuai struktur kamu)
+    Route::post('/memberships/upgrade', [\App\Http\Controllers\Tenant\MemberMembershipController::class, 'upgrade']);
+
+    Route::post('/member/class-schedules/{id}/book',    [MemberClassBookingController::class, 'book']);
+    Route::delete('/member/class-schedules/{id}/book',  [MemberClassBookingController::class, 'cancel']);
 });
 
 Route::middleware('auth:staff')->group(function () {
@@ -106,21 +131,29 @@ Route::prefix('tenant')->group(function () {
 Route::middleware('auth:staff')->group(function () {
 
     Route::prefix('class-schedules')->group(function () {
-    Route::get('/',                                          [ClassScheduleController::class, 'index']);
-    Route::post('/',                                         [ClassScheduleController::class, 'store']);
-    Route::get('/{id}',                                      [ClassScheduleController::class, 'show']);
-    Route::put('/{id}',                                      [ClassScheduleController::class, 'update']);
-    Route::delete('/{id}',                                   [ClassScheduleController::class, 'destroy']);
-    Route::patch('/{id}/cancel',                             [ClassScheduleController::class, 'cancel']);
-    Route::get('/{id}/attendances',                          [ClassScheduleController::class, 'attendances']);
-    Route::post('/{id}/attendances',                         [ClassScheduleController::class, 'addAttendance']);
-    Route::patch('/{id}/attendances/{attendanceId}/checkin', [ClassScheduleController::class, 'markAttended']);
-    Route::patch('/{id}/attendances/{attendanceId}/cancel',  [ClassScheduleController::class, 'cancelAttendance']);
-});
+        Route::get('/',                                          [ClassScheduleController::class, 'index']);
+        Route::post('/',                                         [ClassScheduleController::class, 'store']);
+        Route::get('/{id}',                                      [ClassScheduleController::class, 'show']);
+        Route::put('/{id}',                                      [ClassScheduleController::class, 'update']);
+        Route::delete('/{id}',                                   [ClassScheduleController::class, 'destroy']);
+        Route::patch('/{id}/cancel',                             [ClassScheduleController::class, 'cancel']);
+        Route::get('/{id}/attendances',                          [ClassScheduleController::class, 'attendances']);
+        Route::post('/{id}/attendances',                         [ClassScheduleController::class, 'addAttendance']);
+        Route::patch('/{id}/attendances/{attendanceId}/checkin', [ClassScheduleController::class, 'markAttended']);
+        Route::patch('/{id}/attendances/{attendanceId}/cancel',  [ClassScheduleController::class, 'cancelAttendance']);
+    });
+
+    Route::post('class-schedules/{id}/book-by-staff', [ClassScheduleController::class, 'bookByStaff']);
+
+    Route::post('facility-bookings', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'store']);
+    Route::get('facility-bookings', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'index']);
+    Route::get('facility-bookings/{id}', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'show']);
+    Route::put('facility-bookings/{id}', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'update']);
+    Route::delete('facility-bookings/{id}', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'destroy']);
     
     Route::apiResource('members', MemberController::class);
     Route::get('/memberships/active',  [MemberController::class, 'activeMemberships']);
-Route::get('/memberships/history', [MemberController::class, 'membershipHistory']);
+    Route::get('/memberships/history', [MemberController::class, 'membershipHistory']);
  
     // Auth
     Route::prefix('auth')->group(function () {
@@ -129,6 +162,22 @@ Route::get('/memberships/history', [MemberController::class, 'membershipHistory'
         Route::post('/change-password', [StaffAuthController::class, 'changePassword']);
     });
  
+    Route::get('/pt-sessions', [PtSessionController::class, 'index']);
+    Route::post('/pt-sessions', [PtSessionController::class, 'store']);
+    Route::get('/pt-sessions/{id}', [PtSessionController::class, 'show']);
+    Route::put('/pt-sessions/{id}', [PtSessionController::class, 'update']);
+    Route::patch('/pt-sessions/{id}/cancel', [PtSessionController::class, 'cancel']);
+
+    // Manajemen PT Packages (Sisi Staff)
+    Route::get('pt-packages', [PtPackageController::class, 'index']);
+    Route::get('pt-packages/{id}', [PtPackageController::class, 'show']);
+
+
+    Route::prefix('pos')->group(function () {
+        Route::post('/checkout', [POSController::class, 'checkout']);
+        Route::get('/history',   [POSController::class, 'history']);
+    });
+
     
     Route::post('/upgrade', [PlanController::class, 'upgrade']);
 

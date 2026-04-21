@@ -35,6 +35,7 @@ class ClassScheduleResource extends JsonResource
                 'color'              => $this->classPlan->color,
                 'minutes_per_session'=> $this->classPlan->minutes_per_session,
                 'duration_label'     => $this->classPlan->duration_label,
+                'price'              => (float) $this->classPlan->price,
             ]),
 
             'instructor' => $this->whenLoaded('instructor', fn() => [

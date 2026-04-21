@@ -8,10 +8,12 @@ import { RefreshCw, ShieldCheck, AlertCircle, Clock } from "lucide-react";
 
 // ⬇️ GANTI: pakai provider auth (sama seperti profile)
 import { useMemberAuth } from "@/providers/MemberAuthProvider";
+import { useMemberMe } from "@/hooks/tenant/useMemberAuth";
 
 export default function MemberQRCheckInPage() {
     // ⬇️ Ambil member dari auth (bukan React Query)
     const { member } = useMemberAuth();
+    const { data: profile } = useMemberMe();
 
     // State untuk melacak token sebelumnya
     const [previousToken, setPreviousToken] = useState<string | null>(null);
@@ -66,13 +68,13 @@ export default function MemberQRCheckInPage() {
                 
                 {/* Status Lencana */}
                 <div className="absolute top-0 left-0 w-full p-4 flex justify-center">
-                    {activeMembership && !isExpired ? (
+                    {profile?.active_membership && !isExpired ? (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full uppercase tracking-widest">
                             <ShieldCheck size={14} /> Keanggotaan Aktif
                         </span>
                     ) : (
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full uppercase tracking-widest">
-                            <AlertCircle size={14} /> {activeMembership ? "Paket Expired" : "Belum Ada Paket"}
+                            <AlertCircle size={14} /> {profile?.active_membership ? "Paket Expired" : "Belum Ada Paket"}
                         </span>
                     )}
                 </div>
@@ -98,18 +100,18 @@ export default function MemberQRCheckInPage() {
                 <div className="w-full bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-3 mb-6">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-zinc-500 font-medium">Nama Member</span>
-                        <span className="font-bold text-zinc-900">{member.name}</span>
+                        <span className="font-bold text-zinc-900">{profile?.name}</span>
                     </div>
-                    {activeMembership && (
+                    {profile?.active_membership && (
                         <>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-zinc-500 font-medium">Paket</span>
-                                <span className="font-bold text-zinc-900">{activeMembership.plan?.name || "Premium Plan"}</span>
+                                <span className="font-bold text-zinc-900">{profile?.active_membership.plan?.name || "Premium Plan"}</span>
                             </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-zinc-500 font-medium">Sisa Kuota</span>
                                 <span className="font-bold text-blue-600">
-                                    {activeMembership.unlimited_checkin ? "Unlimited" : `${activeMembership.remaining_checkin_quota} Visit`}
+                                    {profile?.active_membership.unlimited_checkin ? "Unlimited" : `${profile?.active_membership.remaining_checkin_quota} Visit`}
                                 </span>
                             </div>
                         </>

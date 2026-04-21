@@ -14,6 +14,8 @@ class ClassAttendance extends Model
     protected $table = 'class_attendances';
 
     protected $fillable = [
+        'tenant_invoice_id',
+    'payment_status',
         'class_schedule_id',
         'member_id',
         'checked_in_by',
@@ -33,6 +35,11 @@ class ClassAttendance extends Model
     // =============================================
     // Relationships
     // =============================================
+
+    public function invoice()
+    {
+        return $this->belongsTo(TenantInvoice::class, 'tenant_invoice_id');
+    }
 
     public function schedule()
     {

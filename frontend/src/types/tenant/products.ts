@@ -32,7 +32,7 @@ export type StockMovementData = z.infer<typeof StockMovementSchema>;
 export const ProductSchema = z.object({
     id:              z.string(),
     name:            z.string(),
-    sku:             z.string().nullable().optional(),
+    code:            z.string().nullable().optional(),
     category:        z.string(),
     description:     z.string().nullable().optional(),
     color:           z.string().nullable().optional(),
@@ -69,7 +69,7 @@ export type ProductDataWithKeyword = ProductData & { search: string };
 
 export const ProductCreateRequestSchema = z.object({
     name:          z.string().min(1),
-    sku:           z.string().optional(),
+    code:          z.string().optional(),
     category:      z.string().min(1),
     description:   z.string().optional(),
     color:         z.string().optional(),

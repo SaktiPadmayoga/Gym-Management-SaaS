@@ -28,7 +28,7 @@ class ProductController extends Controller
         if ($request->filled('search')) {
             $query->where(fn($q) =>
                 $q->where('name', 'like', "%{$request->search}%")
-                  ->orWhere('sku', 'like', "%{$request->search}%")
+                  ->orWhere('code', 'like', "%{$request->search}%")
                   ->orWhere('category', 'like', "%{$request->search}%")
             );
         }

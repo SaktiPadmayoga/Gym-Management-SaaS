@@ -8,9 +8,11 @@ import { toast, Toaster } from "sonner";
 import { memberAuthAPI } from "@/lib/api/tenant/memberAuth";
 import { TextInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
+import { useMemberMe } from "@/hooks/tenant/useMemberAuth";
 
 export default function MemberProfilePage() {
-    const { member, logout } = useMemberAuth();
+    const { logout } = useMemberAuth();
+    const { data: member } = useMemberMe();
     const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     // Konfigurasi React Hook Form untuk ubah password
@@ -122,7 +124,7 @@ export default function MemberProfilePage() {
                                 </div>
                                 <div>
                                     <p className="text-xs text-zinc-500">Home Branch</p>
-                                    <p className="font-medium text-zinc-800">{activeMembership?.branch_id?.name || "Global"}</p>
+                                    <p className="font-medium text-zinc-800">{homeBranch?.name || "Global"}</p>
                                 </div>
                                 <div className="pt-2">
                                     <p className="text-xs text-zinc-500">Expires On</p>

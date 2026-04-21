@@ -134,8 +134,7 @@ export default function Members() {
             header: "Membership",
             render: (item) => {
                 // Cari membership yang sedang aktif, atau ambil yang paling pertama jika tidak ada yang aktif
-                const mb = item.memberships?.find((m) => m.status === "active") ?? item.memberships?.[0];
-
+                const mb = item.active_membership ?? item.memberships?.find((m) => m.status === "active");
                 if (!mb) return <span className="text-zinc-400 text-sm">No membership</span>;
 
                 // Kalkulasi sisa hari

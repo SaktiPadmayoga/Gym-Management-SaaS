@@ -63,11 +63,6 @@ class Staff extends Authenticatable
     // Helpers
     // =============================================
 
-    public function isOwner(): bool
-    {
-        return $this->role === 'owner';
-    }
-
     /**
      * Cek apakah staff punya akses ke branch tertentu
      */
@@ -81,18 +76,45 @@ class Staff extends Authenticatable
             ->exists();
     }
 
-    /**
-     * Ambil role staff di branch tertentu
-     */
-    public function getRoleInBranch(string $branchId): ?string
-    {
-        if ($this->isOwner()) return 'owner';
-        return $this->staffBranches()->where('branch_id', $branchId)->where('is_active', true)->value('role');
-    }
  
     public function getDashboardPath(): string
     {
         return $this->isOwner() ? '/owner/dashboard' : '/dashboard';
+    }
+
+    // Tambah di Staff model
+
+    public function getRoleInBranch(string $branchId): ?string
+    {
+        return $this->staffBranches()
+            ->where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->value('role');
+    }
+
+    public function getPermissionsInBranch(string $branchId): array
+    {
+        if ($this->isOwner()) return ['*'];
+
+        $role = $this->getRoleInBranch($branchId);
+        if (!$role) return [];
+
+        return RolePermission::whereHas('role', fn($q) => $q->where('name', $role))
+            ->pluck('permission')
+            ->toArray();
+    }
+
+    public function hasPermissionInBranch(string $permission, string $branchId): bool
+    {
+        if ($this->isOwner()) return true;
+
+        $permissions = $this->getPermissionsInBranch($branchId);
+        return in_array($permission, $permissions);
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
     }
 
 }

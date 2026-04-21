@@ -14,6 +14,9 @@ use Laravel\Sanctum\HasApiTokens;
 use App\Models\Branch;
 use App\Models\Tenant;
 
+/**
+ * @property string|null $home_branch_id
+ */
 class Member extends Authenticatable
 {
     use HasApiTokens, HasFactory, HasUuids, SoftDeletes, Notifiable;
@@ -74,9 +77,19 @@ class Member extends Authenticatable
     // Helper untuk mengambil membership yang sedang aktif saat ini
     public function activeMembership()
     {
-        return $this->hasOne(Membership::class)->where('status', 'active');
+        return $this->hasOne(Membership::class)
+            ->where('status', 'active')
+            ->orderByDesc('created_at');
     }
 
+    public function ptPackages(): HasMany
+    {
+        return $this->hasMany(PtPackage::class);
+    }
 
-    
+    public function ptSessions(): HasMany
+    {
+        return $this->hasMany(PtSession::class);
+    }
+
 }

@@ -112,7 +112,7 @@ export default function Products() {
                     <Link href={`/products/${item.id}`} className="font-medium text-zinc-800 hover:underline">
                         {item.name}
                     </Link>
-                    {item.sku && <p className="text-xs text-zinc-400">{item.sku}</p>}
+                    {item.code && <p className="text-xs text-zinc-400">{item.code}</p>}
                 </div>
             ),
             width: "w-52",

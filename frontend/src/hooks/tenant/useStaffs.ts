@@ -20,7 +20,8 @@ export const staffKeys = {
 
     lists: () => [...staffKeys.all, "list"] as const,
 
-    list: (params?: StaffQueryParams) => [...staffKeys.lists(), params?.page ?? 1, params?.per_page ?? 15, params?.search ?? "", params?.branch_id ?? "", params?.role ?? ""] as const,
+    // [PERBAIKAN]: Langsung masukkan object params agar React Query otomatis men-track semua perubahannya (termasuk is_active)
+    list: (params?: StaffQueryParams) => [...staffKeys.lists(), params] as const,
 
     details: () => [...staffKeys.all, "detail"] as const,
 
@@ -37,6 +38,22 @@ export function useStaff(params?: StaffQueryParams) {
     return useQuery({
         queryKey: staffKeys.list(params),
         queryFn: () => staffAPI.getAll(params),
+        staleTime: 300_000,
+        placeholderData: (prev) => prev,
+    });
+}
+
+/* =====================
+ * GET TRAINERS ONLY (NEW)
+ * ===================== */
+
+// Hook khusus untuk memanggil Staff dengan role Trainer
+export function useTrainers(params?: Omit<StaffQueryParams, 'role'>) {
+    const trainerParams = { ...params, role: "trainer" };
+    
+    return useQuery({
+        queryKey: staffKeys.list(trainerParams),
+        queryFn: () => staffAPI.getAll(trainerParams),
         staleTime: 300_000,
         placeholderData: (prev) => prev,
     });

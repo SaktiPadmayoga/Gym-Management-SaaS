@@ -54,6 +54,7 @@ export const ClassScheduleSchema = z.object({
         color: z.string().nullable().optional(),
         minutes_per_session: z.number(),
         duration_label: z.string().optional(),
+        price: z.number().nullable().optional(),
     }).optional(),
     instructor: z.object({
         id: z.string(),
@@ -64,6 +65,7 @@ export const ClassScheduleSchema = z.object({
         name: z.string(),
     }).optional(),
     attendances: z.array(ClassAttendanceSchema).optional(),
+    price: z.number().nullable().optional(),
     created_at: z.string().optional(),
 });
 
@@ -98,4 +100,18 @@ export type ClassScheduleQueryParams = {
     status?: string;
     class_plan_id?: string;
     instructor_id?: string;
+};
+
+export type MemberBookResponse = {
+    data: {
+        attendance?: any;
+        invoice?: {
+            id: string;
+            invoice_number: string;
+            total_amount: number;
+            due_date: string;
+        };
+        snap_token?: string;
+    };
+    message?: string;
 };

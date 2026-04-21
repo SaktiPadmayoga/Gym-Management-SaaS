@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\Models\Branch;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+
 
 class MembershipPlan extends Model
 {
@@ -135,4 +137,15 @@ class MembershipPlan extends Model
             });
         });
     }
+
+    public function getEndDate(Carbon $startDate): Carbon
+{
+    return match ($this->duration_unit) {
+        'day'   => $startDate->copy()->addDays($this->duration),
+        'week'  => $startDate->copy()->addWeeks($this->duration),
+        'month' => $startDate->copy()->addMonths($this->duration),
+        'year'  => $startDate->copy()->addYears($this->duration),
+        default => $startDate->copy()->addDays($this->duration), // fallback aman
+    };
+}
 }

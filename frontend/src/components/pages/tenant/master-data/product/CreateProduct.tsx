@@ -22,7 +22,7 @@ import { ProductUpdateRequest } from "@/types/tenant/products";
 
 interface CreateProductFormData {
     name:          string;
-    sku:           string;
+    code:           string;
     category:      string;
     description:   string;
     selling_price: number;
@@ -54,7 +54,7 @@ export default function CreateProduct() {
         mode: "onChange",
         defaultValues: {
             name:          "",
-            sku:           "",
+            code:           "",
             category:      "",
             description:   "",
             selling_price: 0,
@@ -78,7 +78,7 @@ export default function CreateProduct() {
         try {
             const payload: ProductUpdateRequest = {
                 name:          formData.name,
-                sku:           formData.sku           || undefined,
+                code:          formData.code           || undefined,
                 category:      formData.category,
                 description:   formData.description   || undefined,
                 selling_price: formData.selling_price,

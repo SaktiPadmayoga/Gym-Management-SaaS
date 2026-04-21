@@ -68,6 +68,7 @@ export const sidebarData: SidebarItem[] = [
     { id: "header-transaction", title: "Transaction", isHeader: true },
     { id: "nav-membership", title: "Memberships", path: "/memberships", Icon: UserIcon, IconSolid: UserIconSolid },
     { id: "nav-class", title: "Class Schedules", path: "/class-schedules", Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
+    { id: "nav-facility-bookings", title: "Facility Bookings", path: "/facility-bookings", Icon: BuildingOffice2Icon, IconSolid: BuildingOffice2IconSolid },
     { id: "nav-pt-sessions", title: "PT Sessions", path: "/pt-sessions", Icon: UserGroupIcon, IconSolid: UserGroupIconSolid },
     { id: "nav-pos", title: "POS", path: "/pos", Icon: CurrencyDollarIcon, IconSolid: CurrencyDollarIconSolid },
     {

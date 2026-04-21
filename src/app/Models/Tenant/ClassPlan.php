@@ -121,4 +121,9 @@ class ClassPlan extends Model
     {
         return $this->minutes_per_session . ' min';
     }
+
+    public function requiresPayment(): bool
+    {
+        return $this->price > 0;
+    }
 }

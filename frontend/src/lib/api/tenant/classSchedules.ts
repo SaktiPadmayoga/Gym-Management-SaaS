@@ -112,14 +112,18 @@ export const classSchedulesAPI = {
             },
         });
         return {
-            data: response.data.data.data ?? [],
-            meta: response.data.data.meta ?? null,
+            data: response.data.data?.data ?? [],
+            meta: response.data.data?.meta ?? null,
         };
     },
 
-    memberBook: async (scheduleId: string): Promise<ClassAttendanceData> => {
+    /**
+     * Booking Kelas oleh Member
+     * Bisa mengembalikan snap_token jika kelas berbayar
+     */
+    memberBook: async (scheduleId: string) => {
         const response = await memberApiClient.post(`/member/class-schedules/${scheduleId}/book`);
-        return response.data.data;
+        return response.data;   // Kembalikan full response agar bisa ambil snap_token
     },
 
     memberCancelBook: async (scheduleId: string): Promise<void> => {
@@ -139,8 +143,8 @@ export const classSchedulesAPI = {
             },
         });
         return {
-            data: response.data.data.data ?? [],
-            meta: response.data.data.meta ?? null,
+            data: response.data.data?.data ?? [],
+            meta: response.data.data?.meta ?? null,
         };
     },
 };

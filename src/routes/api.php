@@ -14,8 +14,10 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\TenantRegistrationController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\StaffAuthController;
-  use App\Http\Controllers\Auth\MemberAuthController;
+use App\Http\Controllers\Auth\MemberAuthController;
 use App\Http\Controllers\Tenant\MemberRegistrationController;
+use App\Http\Controllers\Tenant\MidtransWebhookController;
+
 
 
 Route::prefix('tenant-auth')->group(function () {
@@ -141,6 +143,7 @@ Route::prefix('domain-requests')->group(function () {
 
 // Webhook — tanpa middleware, Midtrans yang call ini
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
+
 
 // Central routes (admin)
 Route::prefix('payments')->group(function () {

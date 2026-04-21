@@ -34,15 +34,6 @@ class Branch extends Model
         'data' => 'array',
     ];
 
-    public function users()
-    {
-        return $this->belongsToMany(
-            TenantUser::class,
-            'tenant_user_branches',
-            'branch_id',
-            'tenant_user_id'
-        )->withPivot(['role', 'is_active'])->withTimestamps();
-    }
 
     public function domains()
     {

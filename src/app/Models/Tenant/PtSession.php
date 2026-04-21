@@ -2,49 +2,64 @@
 
 namespace App\Models\Tenant;
 
+use App\Models\Branch;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class PtSession extends Model
 {
-    use HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
+
+    protected $connection = 'tenant';
+    protected $table = 'pt_sessions';
 
     protected $fillable = [
-        'pt_session_plan_id', 'member_profile_id', 'pt_id', 'additional_fee_id',
-        'join_date', 'start_date', 'end_date',
-        'original_price', 'final_price', 'discount_amount', 'discount_percent',
-        'extra_duration_days', 'extra_session',
-        'referral_sales_id', 'sales_type',
-        'total_sessions', 'used_sessions', 'remaining_sessions',
-        'status', 'notes'
+        'pt_package_id',
+        'member_id',
+        'trainer_id',
+        'branch_id',
+        'date',
+        'start_at',
+        'end_at',
+        'status',
+        'notes',
+        'cancelled_reason',
     ];
 
     protected $casts = [
-        'join_date' => 'date',
-        'start_date' => 'date',
-        'end_date' => 'date',
-        'original_price' => 'decimal:2',
-        'final_price' => 'decimal:2',
+        'date' => 'date',
+        // start_at & end_at umumnya dibiarkan string 'H:i:s' oleh Laravel, 
+        // tapi bisa kamu format di Resource nanti.
     ];
 
-    public function ptSessionPlan()
+    // Relasi
+    public function package(): BelongsTo
     {
-        return $this->belongsTo(PtSessionPlan::class);
+        return $this->belongsTo(PtPackage::class, 'pt_package_id');
     }
 
-    public function memberProfile()
+    public function member(): BelongsTo
     {
-        return $this->belongsTo(MemberProfile::class);
+        return $this->belongsTo(Member::class);
     }
 
-    public function trainer()
+    // Asumsi kamu menggunakan model Staff untuk trainer
+    public function trainer(): BelongsTo
     {
-        return $this->belongsTo(Staff::class, 'pt_id');
+        return $this->belongsTo(Staff::class, 'trainer_id'); 
     }
 
-    public function schedules()
+    public function branch(): BelongsTo
     {
-        return $this->hasMany(PtSessionSchedule::class);
+        return $this->belongsTo(Branch::class);
+    }
+
+    public function attendance(): HasOne
+    {
+        return $this->hasOne(PtSessionAttendance::class);
     }
 }

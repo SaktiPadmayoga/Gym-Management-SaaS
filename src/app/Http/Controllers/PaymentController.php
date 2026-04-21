@@ -10,6 +10,7 @@ use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Notification;
+use App\Http\Controllers\Tenant\MidtransWebhookController;
 
 class PaymentController extends Controller
 {
@@ -180,6 +181,17 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
+
+        $payload = $request->all();
+        $orderId = $payload['order_id'] ?? null;
+
+        // Routing berdasarkan prefix order_id
+        if (!str_starts_with($orderId, 'ORD-')) {
+            return app(MidtransWebhookController::class)->handle($request);
+        }
+
+
+
         try {
             Config::$serverKey    = config('midtrans.server_key');
             Config::$isProduction = config('midtrans.is_production');

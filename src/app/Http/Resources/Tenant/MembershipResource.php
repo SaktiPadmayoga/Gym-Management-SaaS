@@ -5,6 +5,7 @@ namespace App\Http\Resources\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class MembershipResource extends JsonResource
 {
@@ -96,4 +97,22 @@ class MembershipResource extends JsonResource
             default     => 'info',
         };
     }
+        public function daysUntilExpiry()
+    {
+        if (!$this->end_date) return null;
+        
+        $end = Carbon::parse($this->end_date)->startOfDay();
+        $today = Carbon::now()->startOfDay();
+        
+        return (int) $today->diffInDays($end, false); // false agar bisa menghasilkan angka negatif jika sudah lewat
+    }
+    public function isExpired()
+    {
+        if (!$this->end_date) return false;
+        return Carbon::parse($this->end_date)->isPast();
+    }   
+    public function isFrozen()
+    {
+        return $this->status === 'frozen';
+    }   
 }

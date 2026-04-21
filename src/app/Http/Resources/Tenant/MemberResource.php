@@ -32,17 +32,17 @@ class MemberResource extends JsonResource
             'created_at'        => $this->created_at->toIso8601String(),
 
             // Load Relasi Home Branch
-            'home_branch'       => $this->whenLoaded('branch', function () {
-                return [
-                    'id'   => $this->branch->id,
-                    'name' => $this->branch->name,
-                ];
-            }),
+           'home_branch'  => [
+                'id'   => $this->homeBranch->id ?? null,
+                'name' => $this->homeBranch->name ?? null,
+            ],
 
-            // ✅ PERBAIKAN: Gunakan `new MembershipResource` karena ini hasOne (objek tunggal), bukan collection
-            'active_membership' => $this->whenLoaded('activeMembership', function () {
-                return new MembershipResource($this->activeMembership);
-            }),
+            // SINKRONISASI DISINI:
+            // Frontend mengharapkan 'memberships' sebagai array
+            'memberships' => MembershipResource::collection($this->whenLoaded('memberships')),
+            
+            // Atau jika hanya ingin yang aktif saja (sesuaikan Zod-nya nanti)
+            'active_membership' => new MembershipResource($this->whenLoaded('activeMembership')),
         ];
     }
 }

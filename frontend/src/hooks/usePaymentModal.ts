@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 import { Payment } from "@/types/payment";
-import { POSSession } from "@/types/pos";
+import { POSSession } from "@/types/tenant/pos";
 
 interface PaymentModalState {
     isOpen: boolean;

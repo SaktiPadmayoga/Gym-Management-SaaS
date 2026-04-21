@@ -87,7 +87,7 @@ class MemberAuthController extends Controller
 
     public function me(Request $request)
     {
-        $member = $request->user()->load(['activeMembership.homeBranch', 'activeMembership.plan']);
+        $member = $request->user()->load(['activeMembership.branch', 'activeMembership.plan']);
         return ApiResponse::success(new MemberResource($member));
     }
 
@@ -123,8 +123,10 @@ class MemberAuthController extends Controller
             'user_type'    => 'member' // Opsional untuk verifikasi ekstra
         ]));
 
-        $url = Socialite::driver('google')
-            ->stateless()
+        /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+        $driver = Socialite::driver('google');
+
+        $url = $driver->stateless()
             ->with(['state' => $state])
             ->redirectUrl($this->getCallbackUrl())
             ->redirect()
@@ -141,8 +143,10 @@ class MemberAuthController extends Controller
         $frontendUrl = $state['frontend_url'] ?? env('FRONTEND_URL', 'http://localhost') . '/member/login';
 
         try {
-            $googleUser = Socialite::driver('google')
-                ->stateless()
+            /** @var \Laravel\Socialite\Two\GoogleProvider $driver */
+            $driver = Socialite::driver('google');
+
+            $googleUser = $driver->stateless()
                 ->redirectUrl($this->getCallbackUrl())
                 ->user();
         } catch (\Exception $e) {

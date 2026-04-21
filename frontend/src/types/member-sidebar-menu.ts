@@ -11,6 +11,7 @@ import {
     IconClockFilled,
     IconCalendar,
     IconCalendarFilled,
+    IconBarbell,
 } from "@tabler/icons-react";
 
 export type IconType = typeof IconLayoutDashboard;
@@ -42,6 +43,13 @@ export const memberSidebarData: MemberSidebarItem[] = [
         IconSolid: IconFileInvoiceFilled,
     },
     {
+        id: "nav-membership",
+        title: "Membership",
+        path: "/member/membership",
+        Icon: IconCreditCard,
+        IconSolid: IconCreditCardFilled,
+    },
+    {
         id: "nav-class-schedule",
         title: "Class Schedule",
         path: "/member/class-schedule",
@@ -49,11 +57,11 @@ export const memberSidebarData: MemberSidebarItem[] = [
         IconSolid: IconCalendarFilled,
     },
     {
-        id: "nav-subscription",
-        title: "Subscription",
-        path: "/member/subscription",
-        Icon: IconCreditCard,
-        IconSolid: IconCreditCardFilled,
+        id: "nav-pt-session",
+        title: "PT Session",
+        path: "/member/pt-session",
+        Icon: IconBarbell,
+        IconSolid: IconBarbell,
     },
     {
         id: "nav-profile",

@@ -22,6 +22,8 @@ import {
     useMemberCancelBook 
 } from "@/hooks/tenant/useClassSchedules";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useMidtransSnap } from "@/hooks/useMidtransSnap";
+import { useQueryClient } from "@tanstack/react-query";
 
 type TabKey = "browse" | "my_classes";
 type TimeFilter = "all" | "today" | "custom";
@@ -32,9 +34,12 @@ const TABS = [
 ] as const;
 
 // =============================================
-// TAB 1: BROWSE CLASSES (CARI KELAS)
+// TAB 1: BROWSE CLASSES (DENGAN PEMBAYARAN)
 // =============================================
 function BrowseClassesTab() {
+    const queryClient = useQueryClient();
+    const { pay } = useMidtransSnap();
+
     // Filter States
     const [timeFilter, setTimeFilter] = useState<TimeFilter>("today");
     const [customDate, setCustomDate] = useState(() => new Date().toISOString().split("T")[0]);
@@ -42,35 +47,62 @@ function BrowseClassesTab() {
     
     const debouncedSearch = useDebounce(searchQuery, 500);
 
-    // Menentukan parameter tanggal berdasarkan filter yang dipilih
     let queryDate = "";
     if (timeFilter === "today") {
         queryDate = new Date().toISOString().split("T")[0];
     } else if (timeFilter === "custom") {
         queryDate = customDate;
-    } // Jika "all", queryDate tetap kosong ("")
+    }
 
-    // Fetch API
     const { data, isLoading, isError } = useMemberClassSchedules({ 
         date: queryDate,
-        // Asumsi API Anda menerima parameter search (tambahkan di hooks backend jika diperlukan)
-        // search: debouncedSearch 
     });
     
     const bookMutation = useMemberBookClass();
 
-    const handleBook = (scheduleId: string) => {
-        bookMutation.mutate(scheduleId, {
-            onSuccess: () => {
+    // ✅ PERBAIKAN: Andalkan snap_token dari response saja, bukan needsPayment
+    const handleBook = (schedule: any) => {
+        bookMutation.mutate(schedule.id, {
+            onSuccess: (response) => {
+                // Normalisasi response — cek di kedua level
+                console.log("RAW RESPONSE:", JSON.stringify(response, null, 2));
+
+                const resData = response?.data?.data ?? response?.data ?? {};
+
+                const snapToken = resData.snap_token ?? null;
+
+                // Kelas BERBAYAR — snap_token ada di response
+                if (snapToken) {
+                    pay(snapToken, {
+                        onSuccess: () => {
+                            toast.success("Pembayaran berhasil!", {
+                                description: "Kelas telah dibooking. Cek di 'Kelas Saya'.",
+                            });
+                            queryClient.invalidateQueries({ queryKey: ["member-my-classes"] });
+                            queryClient.invalidateQueries({ queryKey: ["member-class-schedules"] });
+                        },
+                        onPending: () => toast.info("Menunggu pembayaran Anda..."),
+                        onError: () => toast.error("Pembayaran gagal."),
+                        onClose: () => toast.warning("Popup pembayaran ditutup. Anda bisa melanjutkan nanti."),
+                    });
+                    return; // ← PENTING: stop di sini
+                }
+
+                // Kelas GRATIS — tidak ada snap_token
                 toast.success("Berhasil booking kelas!");
+                queryClient.invalidateQueries({ queryKey: ["member-my-classes"] });
+                queryClient.invalidateQueries({ queryKey: ["member-class-schedules"] });
             },
+
             onError: (error: any) => {
-                toast.error(error?.response?.data?.message || "Gagal melakukan booking. Kuota mungkin penuh atau Anda sudah terdaftar.");
-            }
+                const message = error?.response?.data?.message
+                    || "Gagal melakukan booking.";
+                toast.error(message);
+            },
         });
     };
 
-    // Filter lokal berdasarkan nama kelas (jika backend tidak menghandle search param)
+    // Filter lokal berdasarkan search
     let schedules = data?.data ?? [];
     if (debouncedSearch) {
         schedules = schedules.filter((s: any) => 
@@ -86,9 +118,8 @@ function BrowseClassesTab() {
             transition={{ duration: 0.3 }}
             className="py-4"
         >
-            {/* --- FILTER SECTION --- */}
+            {/* FILTER SECTION */}
             <div className="flex flex-col md:flex-row gap-4 mb-8 bg-zinc-50/80 p-4 rounded-2xl border border-zinc-200 shadow-sm">
-                
                 {/* Search Input */}
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
@@ -131,7 +162,6 @@ function BrowseClassesTab() {
                         </button>
                     </div>
 
-                    {/* Custom Date Input (Hanya muncul jika timeFilter === 'custom') */}
                     <AnimatePresence>
                         {timeFilter === "custom" && (
                             <motion.div
@@ -152,7 +182,7 @@ function BrowseClassesTab() {
                 </div>
             </div>
 
-            {/* --- LIST KELAS --- */}
+            {/* LIST KELAS */}
             {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {[1, 2, 3, 4].map((i) => (
@@ -175,10 +205,12 @@ function BrowseClassesTab() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {schedules.map((schedule: any) => {
-                        const isFull = schedule.is_full || (schedule.total_booked >= schedule.max_capacity);
+                        const classPlan = schedule.class_plan;
+                        const price = parseFloat(classPlan?.price || "0");
+                        const needsPayment = price > 0;
+                        const isFull = schedule.is_full || (schedule.total_booked >= (schedule.max_capacity ?? Infinity));
                         const isPending = bookMutation.isPending && bookMutation.variables === schedule.id;
 
-                        // Format tanggal jika "Semua Waktu" dipilih agar member tahu kapan kelasnya
                         const displayDate = new Date(schedule.date).toLocaleDateString('id-ID', { 
                             weekday: 'short', day: 'numeric', month: 'short' 
                         });
@@ -188,13 +220,21 @@ function BrowseClassesTab() {
                                 <div>
                                     <div className="flex justify-between items-start mb-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner" style={{ backgroundColor: `${schedule.class_plan?.color || '#0f766e'}15`, color: schedule.class_plan?.color || '#0f766e' }}>
+                                            <div 
+                                                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner" 
+                                                style={{ 
+                                                    backgroundColor: `${classPlan?.color || '#0f766e'}15`, 
+                                                    color: classPlan?.color || '#0f766e' 
+                                                }}
+                                            >
                                                 <Dumbbell className="w-6 h-6" />
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-zinc-900 leading-tight group-hover:text-teal-700 transition-colors">{schedule.class_plan?.name}</h3>
+                                                <h3 className="font-bold text-zinc-900 leading-tight group-hover:text-teal-700 transition-colors">
+                                                    {classPlan?.name}
+                                                </h3>
                                                 <p className="text-[10px] uppercase tracking-widest text-zinc-400 font-bold mt-1">
-                                                    {schedule.class_plan?.category}
+                                                    {classPlan?.category}
                                                 </p>
                                             </div>
                                         </div>
@@ -226,16 +266,25 @@ function BrowseClassesTab() {
                                             {schedule.total_booked} / {schedule.max_capacity ?? "∞"}
                                         </span>
                                     </div>
+
                                     <button
-                                        onClick={() => handleBook(schedule.id)}
+                                        onClick={() => handleBook(schedule)}
                                         disabled={isFull || isPending}
                                         className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
                                             isFull 
                                                 ? "bg-zinc-100 text-zinc-400 cursor-not-allowed" 
-                                                : "bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20 active:scale-95"
+                                                : needsPayment 
+                                                    ? "bg-amber-600 hover:bg-amber-700 text-white shadow-lg shadow-amber-500/20" 
+                                                    : "bg-teal-600 hover:bg-teal-700 text-white shadow-lg shadow-teal-500/20"
                                         }`}
                                     >
-                                        {isPending ? "Proses..." : isFull ? "Penuh" : "Booking"}
+                                        {isPending 
+                                            ? "Memproses..." 
+                                            : isFull 
+                                                ? "Penuh" 
+                                                : needsPayment 
+                                                    ? `Bayar Rp ${price.toLocaleString('id-ID')}` 
+                                                    : "Booking Gratis"}
                                     </button>
                                 </div>
                             </div>
@@ -256,7 +305,7 @@ function MyClassesTab() {
     const cancelMutation = useMemberCancelBook();
 
     const handleCancel = (scheduleId: string) => {
-        if(confirm("Apakah Anda yakin ingin membatalkan kehadiran di kelas ini?")) {
+        if (confirm("Apakah Anda yakin ingin membatalkan kehadiran di kelas ini?")) {
             cancelMutation.mutate(scheduleId, {
                 onSuccess: () => toast.success("Booking berhasil dibatalkan."),
                 onError: () => toast.error("Gagal membatalkan booking.")
@@ -318,7 +367,6 @@ function MyClassesTab() {
                         return (
                             <div key={booking.id} className="bg-white border border-zinc-200 rounded-2xl p-4 md:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:border-teal-200 transition-colors">
                                 <div className="flex items-start gap-5">
-                                    {/* Date Block */}
                                     <div className="hidden md:flex flex-col items-center justify-center w-16 h-16 bg-slate-950 rounded-2xl border border-slate-800 shrink-0 text-white shadow-inner">
                                         <span className="text-[10px] text-teal-400 uppercase font-black tracking-widest mb-0.5">
                                             {new Date(schedule.date).toLocaleDateString('id-ID', { month: 'short' })}
@@ -330,7 +378,9 @@ function MyClassesTab() {
                                     
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <h3 className="font-black text-zinc-900 text-lg uppercase tracking-tight">{schedule.class_plan?.name}</h3>
+                                            <h3 className="font-black text-zinc-900 text-lg uppercase tracking-tight">
+                                                {schedule.class_plan?.name}
+                                            </h3>
                                             {statusFilter === "completed" && <CheckCircle2 className="w-5 h-5 text-green-500" />}
                                             {statusFilter === "cancelled" && <XCircle className="w-5 h-5 text-red-400" />}
                                         </div>
@@ -376,42 +426,43 @@ function MyClassesTab() {
 }
 
 // =============================================
-// MAIN PAGE
+// MAIN COMPONENT
 // =============================================
 export default function MemberClassBooking() {
     const [activeTab, setActiveTab] = useState<TabKey>("browse");
 
     return (
         <div className="font-sans min-h-screen bg-[#FAFAFA] pb-12">
-            <Toaster position="top-center" />
-            
+            <Toaster position="top-center" richColors />
+
             <div className="max-w-6xl mx-auto px-4 md:px-6 pt-8">
-                {/* Header App-like */}
                 <div className="bg-white rounded-[2rem] border border-zinc-200 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
                     
-                    {/* Hero Title */}
+                    {/* Header */}
                     <div className="p-6 md:p-10 border-b border-zinc-100 bg-white shrink-0">
                         <div className="flex items-center gap-4 mb-2">
                             <div className="w-12 h-12 bg-slate-950 rounded-xl flex items-center justify-center shadow-inner">
                                 <CalendarIcon className="w-6 h-6 text-teal-400" />
                             </div>
                             <div>
-                                <h1 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter uppercase">Booking <span className="text-teal-500">Kelas.</span></h1>
-                                <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 mt-1">Atur jadwal latihan Anda dengan mudah.</p>
+                                <h1 className="text-3xl md:text-4xl font-black text-zinc-900 tracking-tighter uppercase">
+                                    Booking <span className="text-teal-500">Kelas.</span>
+                                </h1>
+                                <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 mt-1">
+                                    Atur jadwal latihan Anda dengan mudah.
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    {/* Navigation Tabs */}
+                    {/* Tabs */}
                     <div className="px-6 md:px-10 bg-zinc-50 border-b border-zinc-200 flex gap-8 shrink-0">
                         {TABS.map((tab) => (
                             <button
                                 key={tab.key}
                                 onClick={() => setActiveTab(tab.key)}
                                 className={`relative py-5 text-xs font-black uppercase tracking-widest transition-colors ${
-                                    activeTab === tab.key
-                                        ? "text-teal-600"
-                                        : "text-zinc-400 hover:text-zinc-700"
+                                    activeTab === tab.key ? "text-teal-600" : "text-zinc-400 hover:text-zinc-700"
                                 }`}
                             >
                                 {tab.label}
@@ -425,14 +476,13 @@ export default function MemberClassBooking() {
                         ))}
                     </div>
 
-                    {/* Dynamic Content Area */}
+                    {/* Content */}
                     <div className="p-6 md:p-10 flex-1 bg-white">
                         <AnimatePresence mode="wait">
                             {activeTab === "browse" && <BrowseClassesTab key="browse" />}
                             {activeTab === "my_classes" && <MyClassesTab key="my_classes" />}
                         </AnimatePresence>
                     </div>
-
                 </div>
             </div>
         </div>

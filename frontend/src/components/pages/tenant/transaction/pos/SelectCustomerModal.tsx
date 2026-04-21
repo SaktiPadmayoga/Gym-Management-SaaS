@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from "react";
 import { DEFAULT_WALK_IN_CUSTOMER } from "@/lib/constans/pos";
-// import { ProfileData } from "@/lib/dummy/profileDummy"; // Import profile data
+import { useMembers } from "@/hooks/tenant/useMembers"; // Import hook useMembers
 
 interface SimpleCustomer {
     id: string;
@@ -22,26 +22,32 @@ interface SelectCustomerModalProps {
 export const SelectCustomerModal: React.FC<SelectCustomerModalProps> = ({ isOpen, onClose, onSelect }) => {
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Convert ProfileData to SimpleCustomer format
-    // const profileCustomers: SimpleCustomer[] = ProfileData.map((profile) => ({
-    //     id: profile.id,
-    //     name: profile.name,
-    //     email: profile.email,
-    //     phone: profile.phone.toString(),
-    //     type: "registered" as const,
-    // }));
+    // Fetch data member dari backend
+    const { data: membersResponse } = useMembers({ per_page: 100, is_active: true });
 
-    // Combine profile customers with walk-in option
-    const allCustomers: SimpleCustomer[] = [
-        {
+    // Gabungkan data Walk-In Default dengan data Member dari API
+    const allCustomers: SimpleCustomer[] = useMemo(() => {
+        const walkInCustomer: SimpleCustomer = {
             id: DEFAULT_WALK_IN_CUSTOMER.id,
             name: DEFAULT_WALK_IN_CUSTOMER.name,
             email: DEFAULT_WALK_IN_CUSTOMER.email,
             phone: DEFAULT_WALK_IN_CUSTOMER.phone,
             type: "walk-in",
-        },
-        // ...profileCustomers,
-    ];
+        };
+
+        const rawMembers = membersResponse ?? [];
+        const membersList = Array.isArray(rawMembers) ? rawMembers : [];
+
+        const registeredCustomers: SimpleCustomer[] = membersList.map((m: any) => ({
+            id: m.id,
+            name: m.name,
+            email: m.email || "-",
+            phone: m.phone || "-",
+            type: "registered",
+        }));
+
+        return [walkInCustomer, ...registeredCustomers];
+    }, [membersResponse]);
 
     // Filter customers based on search
     const filteredCustomers = useMemo(() => {
@@ -50,8 +56,12 @@ export const SelectCustomerModal: React.FC<SelectCustomerModalProps> = ({ isOpen
         }
 
         const query = searchQuery.toLowerCase();
-        return allCustomers.filter((customer) => customer.name.toLowerCase().includes(query) || customer.email.toLowerCase().includes(query) || customer.phone.includes(query));
-    }, [searchQuery]);
+        return allCustomers.filter((customer) => 
+            customer.name.toLowerCase().includes(query) || 
+            customer.email.toLowerCase().includes(query) || 
+            customer.phone.includes(query)
+        );
+    }, [searchQuery, allCustomers]);
 
     const handleSelectCustomer = (customer: SimpleCustomer) => {
         onSelect(customer);

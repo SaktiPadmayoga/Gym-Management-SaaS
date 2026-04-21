@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { toast, Toaster } from "sonner";
-import { CheckCircle2, XCircle, UserPlus } from "lucide-react";
+import { toast, Toaster as SonnerToaster } from "sonner";
 import CustomButton from "@/components/ui/button/CustomButton";
 import CustomTable, { ActionItem, Column } from "@/components/ui/table/CustomTable";
 import {
@@ -13,10 +12,10 @@ import {
     useCancelAttendance,
     useAddAttendance,
     useCancelClassSchedule,
+    useStaffBookClass, // <--- HOOK BARU YANG AKAN KITA BUAT
 } from "@/hooks/tenant/useClassSchedules";
 import { useMembers } from "@/hooks/tenant/useMembers";
 import { ClassAttendanceData } from "@/types/tenant/class-schedules";
-import { Toaster as SonnerToaster } from "sonner";
 
 const attendanceStatusColor: Record<string, string> = {
     booked:    "bg-blue-100 text-blue-700",
@@ -39,9 +38,10 @@ export default function ClassScheduleDetail() {
     const [showAddMember, setShowAddMember] = useState(false);
     const [searchMember, setSearchMember]   = useState("");
     const [selectedMember, setSelectedMember] = useState<string | null>(null);
+    const [paymentMethod, setPaymentMethod] = useState<"cash" | "midtrans">("cash");
 
     const { data: schedule, isLoading } = useClassSchedule(id);
-    const { data: attendances = [], isLoading: isLoadingAttendances } =
+    const { data: attendances = [], isLoading: isLoadingAttendances, refetch: refetchAttendances } =
         useClassScheduleAttendances(id);
 
     const { data: membersData } = useMembers({ search: searchMember, per_page: 20 });
@@ -49,8 +49,23 @@ export default function ClassScheduleDetail() {
 
     const markAttendedMutation   = useMarkAttended();
     const cancelAttendanceMutation = useCancelAttendance();
-    const addAttendanceMutation  = useAddAttendance();
+    const addAttendanceMutation  = useAddAttendance(); // Untuk kelas gratis
     const cancelScheduleMutation = useCancelClassSchedule();
+    const staffBookClassMutation = useStaffBookClass(); // Untuk kelas berbayar
+
+    // Load Midtrans Snap Script
+    useEffect(() => {
+        const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js"; // Ganti ke production jika live
+        const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || "";
+        
+        if (!document.querySelector(`script[src="${snapScript}"]`)) {
+            const script = document.createElement("script");
+            script.src = snapScript;
+            script.setAttribute("data-client-key", clientKey);
+            script.async = true;
+            document.body.appendChild(script);
+        }
+    }, []);
 
     if (isLoading || !schedule) {
         return (
@@ -61,6 +76,75 @@ export default function ClassScheduleDetail() {
     }
 
     const isCancelled = schedule.status === "cancelled";
+    
+    // Deteksi apakah kelas ini berbayar
+    const classPrice = Number(schedule.price ?? schedule.class_plan?.price ?? 0);
+    const isPaidClass = classPrice > 0;
+
+    const handleRegisterMember = () => {
+        if (!selectedMember) return;
+
+        // ALUR KELAS BERBAYAR
+        if (isPaidClass) {
+            staffBookClassMutation.mutate(
+                { scheduleId: id, memberId: selectedMember, paymentMethod },
+                {
+                    onSuccess: (res: any) => {
+                        if (paymentMethod === "midtrans" && res.snap_token) {
+                            // Buka Popup Midtrans
+                            (window as any).snap.pay(res.snap_token, {
+                                onSuccess: function (result: any) {
+                                    toast.success("Pembayaran berhasil!");
+                                    resetModal();
+                                },
+                                onPending: function (result: any) {
+                                    toast.info("Menunggu pembayaran diselesaikan oleh member.");
+                                    resetModal();
+                                },
+                                onError: function (result: any) {
+                                    toast.error("Pembayaran gagal diproses.");
+                                },
+                                onClose: function () {
+                                    toast.warning("Popup ditutup tanpa menyelesaikan pembayaran.");
+                                    resetModal();
+                                },
+                            });
+                        } else {
+                            // Alur Cash
+                            toast.success("Member berhasil didaftarkan (Pembayaran Tunai)");
+                            resetModal();
+                        }
+                    },
+                    onError: (err: any) => {
+                        toast.error(err?.response?.data?.message ?? "Gagal memproses pendaftaran/pembayaran");
+                    },
+                }
+            );
+        } 
+        // ALUR KELAS GRATIS
+        else {
+            addAttendanceMutation.mutate(
+                { scheduleId: id, memberId: selectedMember },
+                {
+                    onSuccess: () => {
+                        toast.success("Member berhasil didaftarkan");
+                        resetModal();
+                    },
+                    onError: (err: any) => {
+                        toast.error(err?.response?.data?.message ?? "Gagal mendaftarkan member");
+                    },
+                }
+            );
+        }
+    };
+
+    const resetModal = () => {
+        setShowAddMember(false);
+        setSelectedMember(null);
+        setSearchMember("");
+        setPaymentMethod("cash");
+        refetchAttendances();
+    };
 
     const columns: Column<ClassAttendanceData>[] = [
         {
@@ -206,6 +290,7 @@ export default function ClassScheduleDetail() {
                                   })
                                 : "—"}{" "}
                             · {schedule.start_at} – {schedule.end_at}
+                            {isPaidClass && ` · Rp ${Number(classPrice).toLocaleString('id-ID')}`}
                         </p>
                     </div>
 
@@ -285,18 +370,19 @@ export default function ClassScheduleDetail() {
 
                 {/* Add Member Modal */}
                 {showAddMember && (
-                    <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-4 mb-4">
-                        <p className="text-sm font-semibold text-zinc-700 mb-3">Cari & Tambah Member</p>
+                    <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 mb-4 max-w-2xl">
+                        <p className="text-sm font-bold text-zinc-800 mb-3">1. Cari & Pilih Member</p>
                         <div className="flex gap-2 mb-3">
                             <input
                                 type="text"
                                 value={searchMember}
                                 onChange={(e) => setSearchMember(e.target.value)}
-                                placeholder="Cari nama member..."
+                                placeholder="Ketik nama member..."
                                 className="flex-1 px-3 py-2 text-sm border border-zinc-200 rounded-lg bg-white focus:outline-none focus:border-zinc-400"
                             />
                         </div>
-                        <div className="space-y-1 max-h-48 overflow-y-auto mb-3">
+                        
+                        <div className="space-y-1 max-h-40 overflow-y-auto mb-4 border border-zinc-100 rounded-lg bg-white p-1">
                             {members.map((m: any) => (
                                 <button
                                     key={m.id}
@@ -305,7 +391,7 @@ export default function ClassScheduleDetail() {
                                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition ${
                                         selectedMember === m.id
                                             ? "bg-aksen-secondary/10 border border-aksen-secondary/30"
-                                            : "hover:bg-zinc-100"
+                                            : "hover:bg-zinc-50"
                                     }`}
                                 >
                                     <div className="w-7 h-7 rounded-full bg-zinc-200 flex items-center justify-center text-xs font-semibold text-zinc-600 shrink-0">
@@ -318,39 +404,52 @@ export default function ClassScheduleDetail() {
                                 </button>
                             ))}
                         </div>
+
+                        {/* Tampilkan Pilihan Pembayaran JIKA Kelas Berbayar & Member Sudah Dipilih */}
+                        {isPaidClass && selectedMember && (
+                            <div className="mb-6 p-4 border border-amber-200 bg-amber-50 rounded-lg">
+                                <p className="text-sm font-bold text-amber-900 mb-1">2. Pilih Metode Pembayaran</p>
+                                <p className="text-xs text-amber-700 mb-3">
+                                    Biaya kelas: <strong className="text-lg">Rp {Number(classPrice).toLocaleString('id-ID')}</strong>
+                                </p>
+                                <div className="flex gap-4">
+                                    <label className="flex items-center gap-2 text-sm font-medium text-zinc-800 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            value="cash"
+                                            checked={paymentMethod === "cash"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                            className="w-4 h-4 text-aksen-secondary"
+                                        />
+                                        Tunai (Cash di Kasir)
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm font-medium text-zinc-800 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            value="midtrans"
+                                            checked={paymentMethod === "midtrans"}
+                                            onChange={(e) => setPaymentMethod(e.target.value as any)}
+                                            className="w-4 h-4 text-aksen-secondary"
+                                        />
+                                        Midtrans (Online / QRIS)
+                                    </label>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex gap-2">
                             <CustomButton
                                 className="bg-aksen-secondary text-white px-4 disabled:opacity-50"
-                                disabled={!selectedMember || addAttendanceMutation.isPending}
-                                onClick={() => {
-                                    if (!selectedMember) return;
-                                    addAttendanceMutation.mutate(
-                                        { scheduleId: id, memberId: selectedMember },
-                                        {
-                                            onSuccess: () => {
-                                                toast.success("Member berhasil didaftarkan");
-                                                setShowAddMember(false);
-                                                setSelectedMember(null);
-                                                setSearchMember("");
-                                            },
-                                            onError: (err: any) => {
-                                                toast.error(
-                                                    err?.response?.data?.message ?? "Gagal mendaftarkan member"
-                                                );
-                                            },
-                                        }
-                                    );
-                                }}
+                                disabled={!selectedMember || staffBookClassMutation.isPending || addAttendanceMutation.isPending}
+                                onClick={handleRegisterMember}
                             >
-                                {addAttendanceMutation.isPending ? "Mendaftarkan..." : "Daftarkan"}
+                                {staffBookClassMutation.isPending || addAttendanceMutation.isPending
+                                    ? "Memproses..." 
+                                    : isPaidClass ? "Proses Pembayaran & Daftarkan" : "Daftarkan"}
                             </CustomButton>
                             <CustomButton
                                 className="border border-zinc-200 text-zinc-600 px-4"
-                                onClick={() => {
-                                    setShowAddMember(false);
-                                    setSelectedMember(null);
-                                    setSearchMember("");
-                                }}
+                                onClick={resetModal}
                             >
                                 Batal
                             </CustomButton>

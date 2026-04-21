@@ -69,6 +69,7 @@ export const MemberSchema = z.object({
         .optional(),
 
     memberships: z.array(MembershipSchema).optional(),
+    active_membership: MembershipSchema.nullable().optional(),
 });
 
 export type MemberData = z.infer<typeof MemberSchema>;

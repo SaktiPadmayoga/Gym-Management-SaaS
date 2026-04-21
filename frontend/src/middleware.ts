@@ -25,8 +25,8 @@ export function middleware(request: NextRequest) {
     // B. Rute Aplikasi Tenant (HANYA boleh diakses di subdomain: namagym.localhost / namagym.fitnice.id)
     const tenantAppPaths = [
         "/owner", "/dashboard", "/staff", "/members", "/products",
-        "/membership-plan", "/class-plan", "/pt-sessions-plan", "/facility",
-        "/settings", "/tenant-auth", "/member", "/check-ins", "/memberships", "/class-schedules"
+        "/membership-plan", "/class-plan", "/pt-sessions-plan", "/facilities",
+        "/settings", "/tenant-auth", "/member", "/check-ins", "/memberships", "/class-schedules", "/pt-sessions", "/facility-bookings", "/pos"
     ];
     const isTenantAppRoute = tenantAppPaths.some((p) => pathname.startsWith(p));
 

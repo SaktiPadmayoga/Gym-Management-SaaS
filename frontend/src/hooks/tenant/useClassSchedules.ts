@@ -5,6 +5,7 @@ import {
     ClassScheduleQueryParams,
     ClassScheduleUpdateRequest,
 } from "@/types/tenant/class-schedules";
+import tenantApiClient from "@/lib/tenant-api-client";
 
 export const classScheduleKeys = {
     all: ["class-schedules"] as const,
@@ -133,8 +134,27 @@ export function useCancelAttendance() {
     });
 }
 
+// Tambahkan di dalam hooks/tenant/useClassSchedules.ts
+export function useStaffBookClass() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ scheduleId, memberId, paymentMethod }: { scheduleId: string, memberId: string, paymentMethod: string }) => {
+            const response = await tenantApiClient.post(`/class-schedules/${scheduleId}/book-by-staff`, {
+                member_id: memberId,
+                payment_method: paymentMethod, // 'cash' atau 'midtrans'
+            });
+            return response.data.data; // Harus return snap_token jika midtrans
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: classScheduleKeys.attendances(variables.scheduleId) });
+        },
+    });
+}
+
+
 // =============================================
-// MEMBER QUERIES & MUTATIONS
+// MEMBER QUERIES & MUTATIONS (YANG DIPERBAIKI)
 // =============================================
 
 export function useMemberClassSchedules(params?: {
@@ -160,11 +180,18 @@ export function useMyClasses(params?: { page?: number; per_page?: number; status
     });
 }
 
+/** 
+ * Mutation Booking Kelas Member (Support Snap Token) 
+ */
 export function useMemberBookClass() {
     const queryClient = useQueryClient();
+
     return useMutation({
-        mutationFn: (scheduleId: string) => classSchedulesAPI.memberBook(scheduleId),
+        mutationFn: (scheduleId: string) => 
+            classSchedulesAPI.memberBook(scheduleId),
+        
         onSuccess: () => {
+            // Invalidate setelah berhasil (baik gratis maupun berbayar)
             queryClient.invalidateQueries({ queryKey: ["member-class-schedules"] });
             queryClient.invalidateQueries({ queryKey: ["member-my-classes"] });
         },

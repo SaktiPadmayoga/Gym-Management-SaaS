@@ -4,12 +4,10 @@ import { TenantCreateRequest, TenantsData } from "@/types/central/tenants";
 import { TenantsPaginatedResponse } from "@/types/central/tenants";
 
 export const tenantsAPI = {
-        getAll: async (params?: TenantsQueryParams): Promise<TenantsPaginatedResponse> => {
+    getAll: async (params?: TenantsQueryParams): Promise<TenantsPaginatedResponse> => {
         const res = await apiClient.get("/tenants", { params });
         return res.data;
     },
-
-    
 
     getById: async (id: string): Promise<TenantsData> => {
         const res = await apiClient.get(`/tenants/${id}`);

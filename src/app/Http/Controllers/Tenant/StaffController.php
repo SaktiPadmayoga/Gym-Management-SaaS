@@ -38,8 +38,17 @@ class StaffController extends Controller
             });
         }
 
+        // ✅ PERBAIKAN: Cari role di tabel global ATAU di relasi cabang
         if ($request->filled('role')) {
-            $query->where('role', $request->role);
+            $role = $request->role;
+            $query->where(function ($q) use ($role) {
+                // 1. Cek apakah cocok dengan role global di tabel staffs
+                $q->where('role', $role)
+                  // 2. ATAU cek apakah cocok dengan role di tabel staff_branches
+                  ->orWhereHas('staffBranches', function ($sq) use ($role) {
+                      $sq->where('role', $role)->where('is_active', true);
+                  });
+            });
         }
 
         if ($request->filled('is_active')) {
@@ -70,7 +79,7 @@ class StaffController extends Controller
     {
         $data = $request->validated();
 
-        // ✅ PERBAIKAN: Prioritaskan branch_id dari payload form (dropdown). 
+        // Prioritaskan branch_id dari payload form (dropdown). 
         // Jika form tidak mengirim (null), baru fallback ke header.
         $data['branch_id'] = $data['branch_id'] ?? $request->header('X-Branch-Id');
 
@@ -90,7 +99,7 @@ class StaffController extends Controller
         if (!empty($data['branch_id'])) {
             StaffBranch::create([
                 'staff_id'  => $staff->id,
-                'branch_id' => $data['branch_id'], // Sekarang ini pasti sesuai pilihan dropdown!
+                'branch_id' => $data['branch_id'], 
                 'role'      => $data['branch_role'],
                 'joined_at' => now(),
             ]);
