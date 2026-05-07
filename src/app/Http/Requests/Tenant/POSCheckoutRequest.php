@@ -8,7 +8,7 @@ class POSCheckoutRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true; // Sesuaikan dengan gate/policy nanti
+        return true; 
     }
 
     public function rules(): array

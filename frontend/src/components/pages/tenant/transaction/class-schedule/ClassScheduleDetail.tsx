@@ -16,6 +16,7 @@ import {
 } from "@/hooks/tenant/useClassSchedules";
 import { useMembers } from "@/hooks/tenant/useMembers";
 import { ClassAttendanceData } from "@/types/tenant/class-schedules";
+import { Icon } from "@/components/icon";
 
 const attendanceStatusColor: Record<string, string> = {
     booked:    "bg-blue-100 text-blue-700",
@@ -249,7 +250,7 @@ export default function ClassScheduleDetail() {
         <div className="font-figtree">
             <SonnerToaster position="top-center" />
 
-            <div className="rounded-xl bg-white border border-gray-500/20 px-6 py-4">
+            <div className="rounded-xl bg-white border border-gray-500/20 px-6 py-4 min-h-[86vh]">
                 {/* Breadcrumb */}
                 <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                     <ul>
@@ -268,6 +269,9 @@ export default function ClassScheduleDetail() {
                 <div className="mb-6 flex items-start justify-between">
                     <div>
                         <div className="flex items-center gap-3 mb-1">
+                            <button type="button" onClick={() => router.push(`/class-schedules`)}>
+                                <Icon name="back" className="h-7 w-7 cursor-pointer text-zinc-900" />
+                            </button>
                             {schedule.class_plan?.color && (
                                 <div
                                     className="w-4 h-4 rounded-full"
@@ -297,23 +301,62 @@ export default function ClassScheduleDetail() {
                     {!isCancelled && (
                         <div className="flex gap-2">
                             <CustomButton
-                                className="border border-zinc-200 text-zinc-700 px-4"
-                                onClick={() => router.push(`/class-schedules/${id}/edit`)}
-                            >
-                                Edit
-                            </CustomButton>
-                            <CustomButton
-                                className="border border-red-200 text-red-600 px-4"
+                                className="border-none bg-red-600 text-white px-4 py-2"
                                 onClick={() => {
-                                    const reason = prompt("Alasan pembatalan:");
-                                    if (reason === null) return;
-                                    cancelScheduleMutation.mutate(
-                                        { id, reason },
-                                        {
-                                            onSuccess: () => toast.success("Jadwal dibatalkan"),
-                                            onError:   () => toast.error("Gagal membatalkan"),
-                                        }
-                                    );
+                                    let reason = "";
+
+                                    toast.custom((t) => (
+                                        <div className="flex flex-col justify-center bg-white border p-4 rounded-lg shadow-lg w-[40vh] h-fit space-y-3">
+                                            <p className="font-semibold text-zinc-900">Alasan pembatalan</p>
+
+                                            <input
+                                                autoFocus
+                                                className="w-full border px-2 py-1 rounded text-sm"
+                                                placeholder="Tulis alasan..."
+                                                onChange={(e) => (reason = e.target.value)}
+                                            />
+
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    className="text-sm px-3 py-1 border text-zinc-900 rounded"
+                                                    onClick={() => toast.dismiss(t)}
+                                                >
+                                                    Batal
+                                                </button>
+
+                                                <button
+                                                    className="text-sm px-3 py-1 bg-red-600 text-white rounded"
+                                                    onClick={() => {
+                                                        if (!reason) {
+                                                            toast.error("Alasan wajib diisi");
+                                                            return;
+                                                        }
+
+                                                        toast.loading("Membatalkan...");
+
+                                                        cancelScheduleMutation.mutate(
+                                                            { id, reason },
+                                                            {
+                                                                onSuccess: () => {
+                                                                    toast.dismiss();
+                                                                    toast.success("Jadwal dibatalkan");
+                                                                },
+                                                                onError: (err: any) => {
+                                                                    toast.dismiss();
+                                                                    toast.error(
+                                                                        err?.response?.data?.message ||
+                                                                            "Gagal membatalkan"
+                                                                    );
+                                                                },
+                                                            }
+                                                        );
+                                                    }}
+                                                >
+                                                    Konfirmasi
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ));
                                 }}
                             >
                                 Batalkan Jadwal
@@ -360,7 +403,7 @@ export default function ClassScheduleDetail() {
                     {!isCancelled && (
                         <CustomButton
                             iconName="plus"
-                            className="text-white px-3 text-sm"
+                            className="text-white px-3 py-2 text-sm"
                             onClick={() => setShowAddMember(true)}
                         >
                             Tambah Member
@@ -378,7 +421,7 @@ export default function ClassScheduleDetail() {
                                 value={searchMember}
                                 onChange={(e) => setSearchMember(e.target.value)}
                                 placeholder="Ketik nama member..."
-                                className="flex-1 px-3 py-2 text-sm border border-zinc-200 rounded-lg bg-white focus:outline-none focus:border-zinc-400"
+                                className="flex-1 px-3 py-2 text-sm border border-zinc-200 rounded-lg bg-white focus:outline-none focus:border-zinc-400 placeholder:text-zinc-400"
                             />
                         </div>
                         
@@ -439,7 +482,7 @@ export default function ClassScheduleDetail() {
 
                         <div className="flex gap-2">
                             <CustomButton
-                                className="bg-aksen-secondary text-white px-4 disabled:opacity-50"
+                                className="bg-aksen-secondary text-white px-4 py-2 disabled:opacity-50"
                                 disabled={!selectedMember || staffBookClassMutation.isPending || addAttendanceMutation.isPending}
                                 onClick={handleRegisterMember}
                             >
@@ -448,7 +491,7 @@ export default function ClassScheduleDetail() {
                                     : isPaidClass ? "Proses Pembayaran & Daftarkan" : "Daftarkan"}
                             </CustomButton>
                             <CustomButton
-                                className="border border-zinc-200 text-zinc-600 px-4"
+                                className="border-none bg-aksen-secondary text-white px-4 py-2"
                                 onClick={resetModal}
                             >
                                 Batal

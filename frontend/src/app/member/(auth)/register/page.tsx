@@ -1,19 +1,37 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { memberRegistrationAPI, RegisterMemberRequest } from "@/lib/api/tenant/memberRegistration";
 
-// Hook Midtrans Snap (disarankan dibuat terpisah)
-import { useMidtransSnap } from "@/hooks/useMidtransSnap";
+import { MidtransResult, useMidtransSnap } from "@/hooks/useMidtransSnap";
 import CustomButton from "@/components/ui/button/CustomButton";
 
-declare global {
-    interface Window {
-        snap: any;
+type ApiValidationError = {
+    response?: {
+        data?: {
+            message?: string;
+            errors?: string[] | Record<string, string[]>;
+        };
+    };
+};
+
+function getApiErrorMessage(error: unknown): string {
+    const apiError = error as ApiValidationError;
+    const errors = apiError.response?.data?.errors;
+
+    if (Array.isArray(errors)) {
+        return errors[0] || "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
     }
+
+    if (errors && typeof errors === "object") {
+        const firstError = Object.values(errors).flat()[0];
+        if (firstError) return firstError;
+    }
+
+    return apiError.response?.data?.message || "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
 }
 
 function RegisterForm() {
@@ -23,46 +41,23 @@ function RegisterForm() {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const { pay } = useMidtransSnap();
+    const { isReady: isSnapReady, pay } = useMidtransSnap();
 
-    const { register, handleSubmit, formState: { errors }, watch } = useForm<RegisterMemberRequest>({
+    const { register, handleSubmit, formState: { errors } } = useForm<RegisterMemberRequest>({
         defaultValues: {
             plan_id: planId || "",
             password_confirmation: "",
         },
     });
 
-    // Load Midtrans Snap Script
-    useEffect(() => {
-        const isProduction = process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true';
-        const snapScriptUrl = isProduction
-            ? 'https://app.midtrans.com/snap/snap.js'
-            : 'https://app.sandbox.midtrans.com/snap/snap.js';
-
-        const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY;
-
-        if (!clientKey) {
-            console.error("MIDTRANS CLIENT KEY tidak ditemukan di environment");
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.src = snapScriptUrl;
-        script.setAttribute('data-client-key', clientKey);
-        script.async = true;
-
-        document.body.appendChild(script);
-
-        return () => {
-            if (document.body.contains(script)) {
-                document.body.removeChild(script);
-            }
-        };
-    }, []);
-
     const onSubmit = async (data: RegisterMemberRequest) => {
         if (!data.plan_id) {
             toast.error("Paket membership tidak ditemukan. Silakan pilih paket terlebih dahulu.");
+            return;
+        }
+
+        if (!isSnapReady) {
+            toast.error("Menu pembayaran masih dimuat. Coba lagi sebentar.");
             return;
         }
 
@@ -87,7 +82,7 @@ function RegisterForm() {
 
             // 2. Tampilkan Midtrans Snap
             pay(snapToken, {
-                onSuccess: (result: any) => {
+                onSuccess: () => {
                     toast.success("Pembayaran berhasil diproses!", {
                         description: "Akun Anda akan aktif setelah pembayaran dikonfirmasi oleh sistem.",
                     });
@@ -97,14 +92,14 @@ function RegisterForm() {
                     }, 2500);
                 },
 
-                onPending: (result: any) => {
+                onPending: () => {
                     toast.info("Pembayaran sedang diproses.", {
                         description: "Silakan selesaikan pembayaran. Akun akan aktif otomatis setelah berhasil.",
                     });
                     setTimeout(() => router.push("/member/login"), 3000);
                 },
 
-                onError: (result: any) => {
+                onError: (result: MidtransResult) => {
                     toast.error("Pembayaran gagal atau terjadi kesalahan.");
                     console.error("Midtrans Error:", result);
                     setIsLoading(false);
@@ -118,13 +113,9 @@ function RegisterForm() {
                 },
             });
 
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error(error);
-            const errorMsg =
-                error.response?.data?.message ||
-                error.response?.data?.errors?.[0] ||
-                "Terjadi kesalahan saat mendaftar. Silakan coba lagi.";
-            toast.error(errorMsg);
+            toast.error(getApiErrorMessage(error));
             setIsLoading(false);
         }
     };
@@ -209,7 +200,7 @@ function RegisterForm() {
                         disabled={isLoading}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-transform hover:scale-[1.02] disabled:opacity-70"
                     >
-                        {isLoading ? "Memproses..." : "Lanjut ke Pembayaran"}
+                        {isLoading ? "Memproses..." : isSnapReady ? "Lanjut ke Pembayaran" : "Memuat Pembayaran..."}
                     </CustomButton>
                 </div>
             </form>

@@ -8,12 +8,15 @@ use App\Models\Admin;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Services\CookieService;
 
 class AdminAuthController extends Controller
 {
     /**
      * Login admin
      */
+    
+
     public function login(Request $request)
     {
         $request->validate([
@@ -31,27 +34,23 @@ class AdminAuthController extends Controller
             return ApiResponse::error('Your account has been deactivated', null, 403);
         }
 
-        // Revoke semua token lama
         $admin->tokens()->delete();
-
-        // Update last_login_at
         $admin->update(['last_login_at' => now()]);
 
         $token = $admin->createToken('admin-token')->plainTextToken;
 
         return ApiResponse::success([
-            'token' => $token,
             'admin' => new AdminResource($admin),
-        ], 'Login successful');
+            // token TIDAK di body
+        ], 'Login successful')->withCookie(CookieService::makeAdminCookie($token));
     }
 
-    /**
-     * Logout admin
-     */
     public function logout(Request $request)
     {
         $request->user('admin')->currentAccessToken()->delete();
-        return ApiResponse::success(null, 'Logged out successfully');
+
+        return ApiResponse::success(null, 'Logged out successfully')
+            ->withCookie(CookieService::clearAdminCookie());
     }
 
     /**

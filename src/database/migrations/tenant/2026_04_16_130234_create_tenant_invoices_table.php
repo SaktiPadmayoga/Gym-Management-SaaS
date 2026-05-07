@@ -9,24 +9,16 @@ return new class extends Migration {
     {
         Schema::create('tenant_invoices', function (Blueprint $table) {
             $table->uuid('id')->primary();
-
-            // relations
             $table->foreignUuid('member_id')->constrained('members')->cascadeOnDelete();
             $table->foreignUuid('branch_id')->constrained('branches')->cascadeOnDelete();
-
-            // invoice identity
-            $table->string('invoice_number')->unique(); // cth: INV-MEM-12345
-            $table->string('external_reference')->nullable(); // cth: midtrans order_id
-
-            // amount
+            $table->string('invoice_number')->unique();
+            $table->string('external_reference')->nullable();
             $table->decimal('subtotal', 15, 2);
             $table->decimal('tax', 15, 2)->default(0);
             $table->decimal('total_amount', 15, 2);
             $table->string('currency', 10)->default('IDR');
-
-            // payment info
             $table->string('payment_gateway')->default('midtrans');
-            $table->string('payment_method')->nullable(); // qris, va, gopay, cc
+            $table->string('payment_method')->nullable();
             $table->string('transaction_id')->nullable(); // midtrans transaction_id
 
             // status

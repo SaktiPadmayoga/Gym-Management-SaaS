@@ -95,9 +95,14 @@ export default function CreatePlans() {
 
             toast.success("Plan created successfully");
             router.push("/admin/plans");
-        } catch (err) {
-            toast.error("Failed to create plan");
-            console.error(err);
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.error ||   
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to create plan";
+
+            toast.error(message);
         }
     };
 
@@ -110,9 +115,9 @@ export default function CreatePlans() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Master Data</li>
+                            <li>Tenant & Subscription</li>
                             <li>
-                                <Link href="/plans">Plans</Link>
+                                <Link href="/admin/plans">Plans</Link>
                             </li>
                             <li className="text-aksen-secondary">Create new</li>
                         </ul>
@@ -138,26 +143,26 @@ export default function CreatePlans() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Plan Name" placeholder="e.g Premium Plan" />
+                                <TextInput name="name" label="Plan Name" placeholder="e.g Premium Plan" rules={{ required: "Plan name is required" }} />
                             </div>
 
                             <div className="col-span-6">
-                                <TextInput name="code" label="Plan Code" placeholder="e.g PREMIUM" />
+                                <TextInput name="code" label="Plan Code" placeholder="e.g PREMIUM" rules={{ required: "Plan code is required" }} />
                             </div>
                         </div>
 
                         {/* PRICE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <NumberInput name="pricing.monthly" label="Monthly Price" />
+                                <NumberInput name="pricing.monthly" label="Monthly Price" rules={{ required: "Monthly price is required" }} />
                             </div>
 
                             <div className="col-span-4">
-                                <NumberInput name="pricing.yearly" label="Yearly Price" />
+                                <NumberInput name="pricing.yearly" label="Yearly Price" rules={{ required: "Yearly price is required" }} />
                             </div>
 
                             <div className="col-span-4">
-                                <SearchableDropdown name="pricing.currency" label="Currency" options={currencyOptions} />
+                                <SearchableDropdown name="pricing.currency" label="Currency" options={currencyOptions}  />
                             </div>
                         </div>
 
@@ -168,15 +173,15 @@ export default function CreatePlans() {
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <NumberInput name="limits.max_membership" label="Max Membership" />
+                                <NumberInput name="limits.max_membership" label="Max Membership" rules={{ required: "Max membership is required" }} />
                             </div>
 
                             <div className="col-span-4">
-                                <NumberInput name="limits.max_staff" label="Max Staff" />
+                                <NumberInput name="limits.max_staff" label="Max Staff" rules={{ required: "Max staff is required" }} />
                             </div>
 
                             <div className="col-span-4">
-                                <NumberInput name="limits.max_branches" label="Max Branches" />
+                                <NumberInput name="limits.max_branches" label="Max Branches" rules={{ required: "Max branches is required" }} />
                             </div>
                         </div>
 
@@ -186,7 +191,7 @@ export default function CreatePlans() {
                         <div className="flex flex-col gap-2">
                             <h2 className="text-lg font-semibold text-gray-800">Features</h2>
 
-                            <TextInput name="features" label="Features (comma separated)" placeholder="Dashboard, Reports, Multi Branch" />
+                            <TextInput name="features" label="Features (comma separated)" placeholder="Dashboard, Reports, Multi Branch" rules={{ required: "Features is required" }} />
 
                             <p className="text-sm text-zinc-400">Pisahkan fitur dengan koma (,)</p>
                         </div>
@@ -198,7 +203,7 @@ export default function CreatePlans() {
 
                         <div className="flex gap-10 text-gray-800">
                             <label className="flex items-center gap-2">
-                                <input type="checkbox" {...form.register("is_active")} />
+                                <input type="checkbox"  {...form.register("is_active")} />
                                 <span>Active</span>
                             </label>
 

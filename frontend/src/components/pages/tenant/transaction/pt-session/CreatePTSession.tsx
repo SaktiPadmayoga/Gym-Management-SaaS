@@ -93,15 +93,14 @@ export default function CreatePtSession() {
                     </div>
 
                     <div className="mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-zinc-800">
+                        <div className="flex items-center gap-2 text-zinc-800">
                             <button 
                                 type="button" 
                                 onClick={() => router.push("/pt-sessions")}
-                                className="p-2 hover:bg-zinc-100 rounded-full transition-colors"
                             >
                                 <Icon name="back" className="h-6 w-6 text-zinc-600" />
                             </button>
-                            <h1 className="text-2xl font-bold tracking-tight">Buat Jadwal PT</h1>
+                            <h1 className="text-2xl font-semibold tracking-tight">Buat Jadwal PT</h1>
                         </div>
 
                         <CustomButton 
@@ -115,9 +114,9 @@ export default function CreatePtSession() {
 
                     <hr className="border-zinc-100 mb-8" />
 
-                    <div className="flex flex-col gap-6 max-w-4xl">
+                    <div className="flex flex-col gap-6">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-                            <div className="md:col-span-7">
+                            <div className="md:col-span-6">
                                 <SearchableDropdown 
                                     name="pt_package_id" 
                                     label="Pilih Member & Paket Aktif *" 
@@ -128,7 +127,7 @@ export default function CreatePtSession() {
                                     Hanya menampilkan member yang memiliki paket PT aktif.
                                 </p>
                             </div>
-                            <div className="md:col-span-5">
+                            <div className="md:col-span-6">
                                 <SearchableDropdown 
                                     name="trainer_id" 
                                     label="Pelatih (Trainer) *" 
@@ -138,7 +137,7 @@ export default function CreatePtSession() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 p-5 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
                             <div className="md:col-span-4">
                                 <TextInput type="date" name="date" label="Tanggal Sesi *" />
                             </div>

@@ -12,8 +12,6 @@ use Stancl\Tenancy\Events;
 use Stancl\Tenancy\Jobs;
 use Stancl\Tenancy\Listeners;
 use Stancl\Tenancy\Middleware;
-use App\Jobs\CreateTenantSubscriptionJob;
-
 
 class TenancyServiceProvider extends ServiceProvider
 {
@@ -33,7 +31,6 @@ class TenancyServiceProvider extends ServiceProvider
 
                     // Your own jobs to prepare the tenant.
                     // Provision API keys, create S3 buckets, anything you want!
-                    \App\Jobs\CreateTenantSubscriptionJob::class,
 
                 ])->send(function (Events\TenantCreated $event) {
                     return $event->tenant;

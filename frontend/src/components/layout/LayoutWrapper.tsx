@@ -43,14 +43,14 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
     }
 
     return (
-        <div className="bg-white">
-            <div className="flex flex-col h-full bg-zinc-100">
+        <div className="">
+            <div className="flex flex-col h-full bg-zinc-100 py-4">
                 {/* Header - akan fetch tenant sendiri */}
                 <TenantHeader />
 
                 {/* Main Container */}
-                <div className="flex flex-1 overflow-visible">
-                    <div className="relative">
+                <div className="flex flex-1 overflow-visible h-full">
+                    <div className="relative mb-4">
                         <Sidebar isOpen={isOpen} pathname={pathname} />
 
                         {/* Toggle Button */}

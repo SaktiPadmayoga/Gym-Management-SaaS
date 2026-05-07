@@ -20,7 +20,7 @@ class StoreTenantRequest extends FormRequest
             'owner_name' => 'required|string|max:255',
             'owner_email' => 'required|email|max:255',
 
-            'status' => 'required|in:trial,active,suspended,expired',
+            'status' => 'required|in:provisioning,failed,trial,active,suspended,expired',
             'logo_url' => 'nullable|url|max:500',
             'timezone' => 'required|string|max:100',
             'locale' => 'required|string|max:10',

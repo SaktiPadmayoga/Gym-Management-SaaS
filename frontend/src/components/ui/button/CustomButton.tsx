@@ -9,6 +9,7 @@ interface CustomButtonProps {
   iconName?: IconName;
   iconClassName?: string;
   className?: string;
+  style?: React.CSSProperties;
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
   size?: 'sm' | 'md' | 'lg';
@@ -20,6 +21,7 @@ export default function CustomButton({
   iconName,
   iconClassName = 'h-5 w-5',
   className = '',
+  style,
   disabled = false,
   type = 'button',
 }: CustomButtonProps) {
@@ -30,6 +32,7 @@ export default function CustomButton({
     <button
       type={type}
       className={`${baseClasses} ${className}`}
+      style={style}
       onClick={onClick}
       disabled={disabled}
     >

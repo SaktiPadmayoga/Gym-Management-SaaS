@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use App\Services\CookieService;
 
 class MemberAuthController extends Controller
 {
@@ -49,6 +50,9 @@ class MemberAuthController extends Controller
     // Email/Password Login
     // =============================================
 
+    
+
+    // Login
     public function login(Request $request)
     {
         $request->validate([
@@ -63,27 +67,30 @@ class MemberAuthController extends Controller
         }
 
         if (!$member->is_active) {
-            return ApiResponse::error('Your account has been deactivated. Please contact gym staff.', null, 403);
+            return ApiResponse::error('Your account has been deactivated.', null, 403);
         }
 
-        // Hapus token lama & update waktu login
         $member->tokens()->delete();
         $member->update(['last_login_at' => now()]);
 
-        // Berikan scope/ability khusus member agar tidak bisa tembus API Staff
         $token = $member->createToken('member-token', ['role:member'])->plainTextToken;
 
         return ApiResponse::success([
-            'token'  => $token,
             'member' => new MemberResource($member->load(['activeMembership.branch', 'activeMembership.plan'])),
-        ], 'Login successful');
+            // token TIDAK di body
+        ], 'Login successful')->withCookie(CookieService::makeMemberCookie($token));
     }
 
+    // Logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        return ApiResponse::success(null, 'Logged out successfully');
+
+        return ApiResponse::success(null, 'Logged out successfully')
+            ->withCookie(CookieService::clearMemberCookie());
     }
+
+
 
     public function me(Request $request)
     {
@@ -194,19 +201,17 @@ class MemberAuthController extends Controller
         ]);
 
         // 3. Generate Sanctum Token khusus Member
+        // handleGoogleCallback — ganti bagian redirect terakhir
         $member->tokens()->delete();
         $token = $member->createToken('member-token', ['role:member'])->plainTextToken;
 
-        // 4. Siapkan Data untuk URL Redirect
         $member->load(['homeBranch', 'activeMembership.plan']);
         $memberEncoded = urlencode(json_encode(new MemberResource($member)));
 
-        // 5. Redirect ke Frontend Member dengan Token
-        // Ganti path sesuai routing Svelte kamu untuk aplikasi member
         return redirect(
             "{$frontendUrl}/tenant-auth/member/callback" .
-            "?token={$token}" .
-            "&member={$memberEncoded}"
-        );
+            "?member={$memberEncoded}"
+            // token TIDAK ada di URL
+        )->withCookie(CookieService::makeMemberCookie($token));
     }
 }

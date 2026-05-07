@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { adminsAPI } from "@/lib/api/admins";
 import { AdminCreateRequest, AdminData, AdminUpdateRequest } from "@/types/central/admins";
+import { adminAuthAPI } from "@/lib/api/adminAuth";
+import { ChangePasswordRequest } from "@/types/central/admin-auth";
 
 export type AdminsQueryParams = {
     page?: number;
@@ -112,3 +114,26 @@ export function useDeleteAdmin() {
         },
     });
 }
+
+export function useMyProfile() {
+    return useQuery<AdminData>({
+        queryKey: adminKeys.detail("me"),
+        queryFn: () => adminAuthAPI.me(),
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+export function useUpdatePassword() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: ChangePasswordRequest) => adminAuthAPI.changePassword(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: adminKeys.detail("me") });
+        },
+        onError: (error) => {
+            console.error("Update profile error:", error);
+        },
+    });
+}
+

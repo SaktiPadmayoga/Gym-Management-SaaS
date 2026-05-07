@@ -210,8 +210,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, pathname }) => {
         sticky
         top-0
         z-20
-        m-4
-        h-[84vh]
+        mt-4
+        mx-4
+        h-[86vh]
         overflow-y-scroll
         rounded-lg
         border

@@ -214,10 +214,10 @@ function ListTab() {
                     </div>
                     <CustomButton
                         iconName="plus"
-                        className="text-white px-3"
+                        className="text-white px-3 py-2"
                         onClick={() => router.push("/facility-bookings/create")}
                     >
-                        Booking / POS
+                        Tambah Booking
                     </CustomButton>
                 </div>
 
@@ -300,10 +300,10 @@ function CalendarTab() {
                     <h2 className="text-xl font-semibold text-zinc-800">
                         {currentDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' })}
                     </h2>
-                    <div className="flex gap-2">
-                        <CustomButton size="sm" onClick={prevMonth}>←</CustomButton>
-                        <CustomButton size="sm" onClick={nextMonth}>→</CustomButton>
-                        <CustomButton size="sm" onClick={goToToday}>Hari Ini</CustomButton>
+                    <div className="flex gap-2 ">
+                        <CustomButton size="sm" onClick={prevMonth} className="px-2 py-1">←</CustomButton>
+                        <CustomButton size="sm" onClick={nextMonth} className="px-2 py-1">→</CustomButton>
+                        <CustomButton size="sm" onClick={goToToday} className="px-2 py-1">Hari Ini</CustomButton>
                     </div>
                 </div>
 

@@ -9,7 +9,7 @@ export const membershipsAPI = {
         branch_id?: string;
         expiring_in_days?: number;
     }): Promise<{ data: MembershipDetail[]; meta: any }> => {
-        const response = await tenantApiClient.get("/memberships/active", {
+        const response = await tenantApiClient.get("/members/memberships/active", {
             params: {
                 page: params?.page || 1,
                 per_page: params?.per_page || 15,
@@ -33,7 +33,7 @@ export const membershipsAPI = {
         start_date?: string;
         end_date?: string;
     }): Promise<{ data: MembershipDetail[]; meta: any }> => {
-        const response = await tenantApiClient.get("/memberships/history", {
+        const response = await tenantApiClient.get("/members/memberships/history", {
             params: {
                 page: params?.page || 1,
                 per_page: params?.per_page || 15,

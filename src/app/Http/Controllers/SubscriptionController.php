@@ -12,52 +12,46 @@ class SubscriptionController extends Controller
 {
 
     /**
- * List subscriptions
- * GET /api/subscriptions
- */
-public function index(Request $request)
-{
-    $page = $request->get('page', 1);
-    $perPage = $request->get('per_page', 10);
-    $search = $request->get('search');
+     * List subscriptions
+     * GET /api/subscriptions
+     */
+    public function index(Request $request)
+    {
+        $perPage = min((int) $request->get('per_page', 10), 100); // cap max 100
+        $search  = $request->get('search');
 
-    $query = Subscription::with(['tenant', 'plan']);
+        $query = Subscription::select('subscriptions.*')
+            ->join('tenants', 'tenants.id', '=', 'subscriptions.tenant_id')
+            ->join('plans',   'plans.id',   '=', 'subscriptions.plan_id')
+            ->with(['tenant', 'plan']);
 
-    // 🔍 Search by tenant name / plan name / status
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('status', 'ilike', "%{$search}%")
-              ->orWhere('billing_cycle', 'ilike', "%{$search}%")
-              ->orWhereHas('tenant', function ($qt) use ($search) {
-                  $qt->where('name', 'ilike', "%{$search}%");
-              })
-              ->orWhereHas('plan', function ($qp) use ($search) {
-                  $qp->where('name', 'ilike', "%{$search}%");
-              });
-        });
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('tenants.name', 'ilike', "%{$search}%")
+                ->orWhere('plans.name',  'ilike', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $statuses = explode(',', $request->status);
+            $query->whereIn('subscriptions.status', $statuses);
+        }
+
+        $subscriptions = $query
+            ->orderBy('subscriptions.created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data'    => SubscriptionResource::collection($subscriptions->items()),
+            'meta'    => [
+                'current_page' => $subscriptions->currentPage(),
+                'per_page'     => $subscriptions->perPage(),
+                'total'        => $subscriptions->total(),
+                'last_page'    => $subscriptions->lastPage(),
+            ],
+        ]);
     }
-
-    if ($request->filled('status')) {
-    $statuses = explode(',', $request->status);
-    $query->whereIn('subscriptions.status', $statuses);
-}
-
-    // 📦 Order latest
-    $subscriptions = $query
-        ->orderBy('created_at', 'desc')
-        ->paginate($perPage);
-
-    return response()->json([
-        'success' => true,
-        'data' => SubscriptionResource::collection($subscriptions->items()),
-        'meta' => [
-            'current_page' => $subscriptions->currentPage(),
-            'per_page' => $subscriptions->perPage(),
-            'total' => $subscriptions->total(),
-            'last_page' => $subscriptions->lastPage(),
-        ],
-    ]);
-}
 
 
     /**

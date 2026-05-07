@@ -110,6 +110,14 @@ class MembershipPurchaseService
                     'member_since'   => $member->member_since ?? now()->toDateString()
                 ]);
 
+                app(NotificationService::class)->createTenant(
+                    $branchId,
+                    null,
+                    'member_membership_upgraded',
+                    'Member Upgrade Membership',
+                    "{$member->name} berhasil upgrade ke paket {$plan->name}."
+                );
+
                 return ['membership' => $membership, 'invoice' => $invoice, 'snap_token' => null];
             }
 

@@ -51,8 +51,8 @@ const AdminLayoutWrapper: React.FC<AdminLayoutWrapperProps> = ({ children }) => 
     }
 
     return (
-        <div className="bg-white">
-            <div className="flex flex-col h-full bg-zinc-100 ">
+        <div className="">
+            <div className="flex flex-col min-h-screen h-auto bg-zinc-100 ">
                 {/* Header */}
 
                 <Header isOpen={isOpen} pathname={pathname} />

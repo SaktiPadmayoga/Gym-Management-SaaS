@@ -19,6 +19,7 @@ class StaffResource extends JsonResource
             'is_active'     => $this->is_active,
             'last_login_at' => $this->last_login_at?->toIso8601String(),
             'created_at'    => $this->created_at->toIso8601String(),
+            'updated_at'    => $this->updated_at->toIso8601String(),
 
             // Relasi branches — hanya muncul jika di-load
             'branches' => StaffBranchResource::collection($this->whenLoaded('staffBranches')),

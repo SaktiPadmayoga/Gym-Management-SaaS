@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
+use App\Services\CookieService;
 
 class StaffAuthController extends Controller
 {
@@ -32,6 +33,7 @@ class StaffAuthController extends Controller
                     'address'     => $b->address,
                     'city'        => $b->city,
                     'role'        => 'owner',
+                    'permissions' => ['*'],
                 ])
                 ->toArray();
         }
@@ -47,6 +49,7 @@ class StaffAuthController extends Controller
                 'address'     => $sb->branch->address,
                 'city'        => $sb->branch->city,
                 'role'        => $sb->role,
+                'permissions' => $staff->getPermissionsInBranch($sb->branch->id),
             ])
             ->toArray();
     }
@@ -94,53 +97,73 @@ class StaffAuthController extends Controller
     // Email/Password Login
     // =============================================
 
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+    
 
-        $staff = Staff::where('email', $request->email)->first();
+// Login
+public function login(Request $request)
+{
+    $request->validate([
+        'email'    => ['required', 'email'],
+        'password' => ['required', 'string'],
+    ]);
 
-        if (!$staff || !Hash::check($request->password, $staff->password)) {
-            return ApiResponse::error('Invalid email or password', null, 401);
-        }
+    $staff = Staff::where('email', $request->email)->first();
 
-        if (!$staff->is_active) {
-            return ApiResponse::error('Your account has been deactivated', null, 403);
-        }
-
-        $staff->tokens()->delete();
-        $staff->update(['last_login_at' => now()]);
-
-        $token    = $staff->createToken('staff-token')->plainTextToken;
-        $branches = $this->getBranchesForStaff($staff);
-
-        return ApiResponse::success([
-            'token'          => $token,
-            'staff'          => new StaffResource($staff),
-            'branches'       => $branches,
-            'global_role'    => $staff->role,
-            'dashboard_path' => $this->getDashboardPath($staff),
-        ], 'Login successful');
+    if (!$staff || !Hash::check($request->password, $staff->password)) {
+        return ApiResponse::error('Invalid email or password', null, 401);
     }
 
+    if (!$staff->is_active) {
+        return ApiResponse::error('Your account has been deactivated', null, 403);
+    }
+
+    $staff->tokens()->delete();
+    $staff->update(['last_login_at' => now()]);
+
+    $token    = $staff->createToken('staff-token')->plainTextToken;
+    $branches = $this->getBranchesForStaff($staff);
+
+    return ApiResponse::success([
+        'staff'          => new StaffResource($staff),
+        'branches'       => $branches,
+        'global_role'    => $staff->role,
+        'dashboard_path' => $this->getDashboardPath($staff),
+    ], 'Login successful')->withCookie(
+        cookie(
+            name:     'staff_token',
+            value:    $token,
+            minutes:  480,
+            path:     '/',
+            domain:   null,
+            secure:   true,
+            httpOnly: true,
+            sameSite: 'None',
+        )
+    );
+}
+
+// Logout
     public function logout(Request $request)
     {
         $request->user('staff')->currentAccessToken()->delete();
-        return ApiResponse::success(null, 'Logged out successfully');
+
+        return ApiResponse::success(null, 'Logged out successfully')
+            ->withCookie(CookieService::clearStaffCookie());
     }
+    
 
     public function me(Request $request)
     {
         $staff    = $request->user('staff');
-        $branchId = $request->header('X-Branch-Id');
+        $branches = $this->getBranchesForStaff($staff);
 
         return ApiResponse::success([
             'staff'          => new StaffResource($staff),
+            'branches'       => $branches,
             'global_role'    => $staff->role,
-            'current_role'   => $branchId ? $staff->getRoleInBranch($branchId) : null,
+            'current_role'   => $request->header('X-Branch-Id')
+                                ? $staff->getRoleInBranch($request->header('X-Branch-Id'))
+                                : null,
             'dashboard_path' => $this->getDashboardPath($staff),
         ]);
     }
@@ -261,14 +284,13 @@ class StaffAuthController extends Controller
         $globalRole      = urlencode($staff->role);
         $dashboardPath   = urlencode($this->getDashboardPath($staff));
 
-        // Redirect balik ke frontend tenant (bukan auth domain)
         return redirect(
             "{$frontendUrl}/tenant-auth/callback" .
-            "?token={$token}" .
-            "&staff={$staffEncoded}" .
+            "?staff={$staffEncoded}" .
             "&branches={$branchesEncoded}" .
             "&global_role={$globalRole}" .
             "&dashboard_path={$dashboardPath}"
-        );
+            // token TIDAK ada di URL
+        )->withCookie(CookieService::makeStaffCookie($token));
     }
 }

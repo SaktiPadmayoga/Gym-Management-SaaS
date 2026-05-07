@@ -25,24 +25,12 @@ $domains = $this->centralDomains ?? Domain::where('branch_id', $this->id)->get()
             'timezone' => $this->timezone,
             'is_active' => (bool) $this->is_active,
             'opened_at' => $this->opened_at?->toISOString(),
-
             'domains' => $domains->map(fn($d) => [
                 'id' => $d->id,
                 'domain' => $d->domain,
                 'type' => $d->type,
                 'is_primary' => (bool) $d->is_primary,
             ]),
-
-            // 'users' => $this->whenLoaded('users', function () {
-            //     return $this->users->map(fn($user) => [
-            //         'id' => $user->id,
-            //         'name' => $user->name,
-            //         'email' => $user->email,
-            //         'role' => $user->pivot->role,
-            //         'is_active' => $user->pivot->is_active,
-            //     ]);
-            // }),
-
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

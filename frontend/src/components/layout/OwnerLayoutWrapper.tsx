@@ -44,15 +44,21 @@ const OwnerLayoutWrapper: React.FC<OwnerLayoutWrapperProps> = ({ children }) => 
     // Show loading state while mounting
     if (!mounted) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600"></div>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center my-4">
+                <div className="h-16 mx-4 rounded-lg border flex items-center justify-between px-5 font-sans bg-zinc-400 animate-ping">
+                </div>
+                <div className="flex">
+                    <div className="h-full w-1/5 mx-4 rounded-lg border flex items-center justify-between px-5 font-sans bg-zinc-400 animate-ping"></div>
+                    <div className="h-full w-4/5 mx-4 rounded-lg border flex items-center justify-between px-5 font-sans bg-zinc-400 animate-ping"></div>
+                </div>
+
             </div>
         );
     }
 
     return (
         <div className="bg-white">
-            <div className="flex flex-col h-full bg-zinc-100 ">
+            <div className="flex flex-col min-h-screen h-full bg-zinc-100 pt-4 ">
                 {/* Header */}
 
                 <TenantHeader/>

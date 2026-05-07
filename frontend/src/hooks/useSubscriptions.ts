@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { subscriptionsAPI } from "@/lib/api/subscriptions";
-import { SubscriptionsData, SubscriptionCreateRequest } from "@/types/central/subscriptions";
+import { SubscriptionsData, SubscriptionCreateRequest, SubscriptionPaginatedResponse } from "@/types/central/subscriptions";
 
 export type SubscriptionsQueryParams = {
     page?: number;
@@ -28,11 +28,11 @@ export const subscriptionKeys = {
  * GET ALL SUBSCRIPTIONS
  * ===================================================== */
 export function useSubscriptions(params?: SubscriptionsQueryParams) {
-    return useQuery<SubscriptionsData[]>({
+    return useQuery<SubscriptionPaginatedResponse>({
         queryKey: subscriptionKeys.list(params),
         queryFn: () => subscriptionsAPI.getAll(params),
+        staleTime: 30_000,
         placeholderData: (prev) => prev,
-        staleTime: 300_000,
     });
 }
 

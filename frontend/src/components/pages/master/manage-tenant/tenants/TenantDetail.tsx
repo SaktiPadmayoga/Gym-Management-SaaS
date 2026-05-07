@@ -39,19 +39,10 @@ export default function TenantDetail() {
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;
-
-    console.log("Detail Page - ID:", id); // Debug
-    console.log("Params:", params); // Debug
-
     const { data: tenant, isLoading, isError, error } = useTenant(id);
-
-    console.log("Tenant Data:", tenant); // Debug
-    console.log("Loading:", isLoading); // Debug
-    console.log("Error:", isError, error); // Debug
     const [isEditMode, setIsEditMode] = useState(false);
 
     // Fetch tenant data
-    // const { data: tenant, isLoading, isError } = useTenant(id);
     const updateMutation = useUpdateTenant();
 
     const form = useForm<TenantUpdateRequest>({
@@ -67,10 +58,9 @@ export default function TenantDetail() {
             locale: "id",
             trial_ends_at: "",
             subscription_ends_at: "",
-        }, // ✅ Provide initial default values
+        }, 
     });
 
-    // ✅ Update form when data loads
     useEffect(() => {
         if (tenant) {
             form.reset({
@@ -95,9 +85,15 @@ export default function TenantDetail() {
             setIsEditMode(false);
             // Optionally redirect or refetch
             // router.push("/admin/tenants?updated=true");
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to update tenant");
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to update tenant";
+
+            toast.error(message);
         }
     };
 
@@ -183,7 +179,7 @@ export default function TenantDetail() {
                             </CustomButton>
                         ) : (
                             <div className="flex gap-2">
-                                <CustomButton type="button" className="border border-zinc-300 text-zinc-700 px-4 py-2.5" onClick={handleCancel}>
+                                <CustomButton type="button" className="border border-zinc-300 text-white px-4 py-2.5" onClick={handleCancel}>
                                     Cancel
                                 </CustomButton>
                                 <CustomButton type="submit" className="bg-aksen-secondary text-white px-4 py-2.5" disabled={updateMutation.isPending}>
@@ -243,35 +239,39 @@ export default function TenantDetail() {
                             </div>
                         </div>
                     )}
-
                     {/* Tenant Information */}
                     <div className="flex flex-col gap-6 mt-6">
                         <h2 className="text-lg font-semibold text-zinc-800">Tenant Information</h2>
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="name" label="Tenant Name" disabled={!isEditMode} />
-                            </div>
-                            <div className="col-span-6">
-                                <TextInput name="slug" label="Slug" disabled={!isEditMode} />
-                            </div>
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="owner_name" label="Owner Name" disabled={!isEditMode} />
+                            {/* 2 kolom */}
+                            <div className="lg:col-span-4">
+                                <TextInput name="name" label="Tenant Name" disabled={!isEditMode} rules={{ required: "Tenant name is required" }} />
                             </div>
-                            <div className="col-span-6">
-                                <TextInput name="owner_email" label="Owner Email" disabled={!isEditMode} />
+                            <div className="lg:col-span-4">
+                                <TextInput name="slug" label="Slug" disabled={!isEditMode} rules={{ required: "Slug is required" }} />
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
+                            {/* 2 kolom */}
+                            <div className="lg:col-span-4">
+                                <TextInput name="owner_name" label="Owner Name" disabled={!isEditMode} rules={{ required: "Owner name is required" }} />
+                            </div>
+                            <div className="lg:col-span-4">
+                                <TextInput name="owner_email" label="Owner Email" disabled={true} />
+                            </div>
+
+                            {/* 3 kolom */}
+                            <div className="lg:col-span-4">
                                 <TextInput name="logo_url" label="Logo URL" disabled={!isEditMode} />
                             </div>
-                            <div className="col-span-6">
-                                <SearchableDropdown name="status" label="Status" options={statusOptions} disabled={!isEditMode} />
+                            <div className="lg:col-span-4">
+                                <SearchableDropdown
+                                    name="status"
+                                    label="Status"
+                                    options={statusOptions}
+                                    disabled={!isEditMode}
+                                />
                             </div>
                         </div>
 
@@ -280,12 +280,25 @@ export default function TenantDetail() {
                         {/* System Configuration */}
                         <h2 className="text-lg font-semibold text-zinc-800">System Configuration</h2>
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
-                                <SearchableDropdown name="timezone" label="Timezone" options={timezoneOptions} disabled={!isEditMode} />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+
+                            {/* 3 kolom */}
+                            <div className="lg:col-span-4">
+                                <SearchableDropdown
+                                    name="timezone"
+                                    label="Timezone"
+                                    options={timezoneOptions}
+                                    disabled={!isEditMode}
+                                />
                             </div>
-                            <div className="col-span-4">
-                                <SearchableDropdown name="locale" label="Locale" options={localeOptions} disabled={!isEditMode} />
+
+                            <div className="lg:col-span-4">
+                                <SearchableDropdown
+                                    name="locale"
+                                    label="Locale"
+                                    options={localeOptions}
+                                    disabled={!isEditMode}
+                                />
                             </div>
                         </div>
 
@@ -297,14 +310,27 @@ export default function TenantDetail() {
                         {tenant.domains && tenant.domains.length > 0 ? (
                             <div className="space-y-2">
                                 {tenant.domains.map((domain, index) => (
-                                    <div key={domain.id || index} className="flex items-center justify-between p-3 border rounded-lg bg-zinc-50">
+                                    <div
+                                        key={domain.id || index}
+                                        className="flex items-center justify-between p-3 border rounded-lg bg-zinc-50"
+                                    >
                                         <div>
                                             <div className="font-medium text-zinc-800">{domain.domain}</div>
                                             <div className="text-sm text-zinc-500">
-                                                Type: {domain.type} {domain.is_primary && <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">Primary</span>}
+                                                Type: {domain.type}
+                                                {domain.is_primary && (
+                                                    <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
+                                                        Primary
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                        <a href={`http://${domain.domain}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 text-sm">
+                                        <a
+                                            href={`http://${domain.domain}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:text-blue-700 text-sm"
+                                        >
                                             Visit →
                                         </a>
                                     </div>
@@ -333,34 +359,47 @@ export default function TenantDetail() {
                                                 <div className="font-semibold text-zinc-800">{branch.name}</div>
                                                 <div className="text-sm text-zinc-500">Code: {branch.code}</div>
                                             </div>
-                                            <span className={`px-2 py-1 text-xs rounded ${branch.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700"}`}>{branch.is_active ? "Active" : "Inactive"}</span>
+                                            <span
+                                                className={`px-2 py-1 text-xs rounded ${
+                                                    branch.is_active
+                                                        ? "bg-green-100 text-green-700"
+                                                        : "bg-gray-100 text-gray-700"
+                                                }`}
+                                            >
+                                                {branch.is_active ? "Active" : "Inactive"}
+                                            </span>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-3 text-sm">
+
                                             {branch.address && (
-                                                <div>
+                                                <div className="lg:col-span-4">
                                                     <div className="text-zinc-500">Address</div>
                                                     <div className="text-zinc-800">{branch.address}</div>
                                                 </div>
                                             )}
+
                                             {branch.city && (
-                                                <div>
+                                                <div className="lg:col-span-3">
                                                     <div className="text-zinc-500">City</div>
                                                     <div className="text-zinc-800">{branch.city}</div>
                                                 </div>
                                             )}
+
                                             {branch.phone && (
-                                                <div>
+                                                <div className="lg:col-span-3">
                                                     <div className="text-zinc-500">Phone</div>
                                                     <div className="text-zinc-800">{branch.phone}</div>
                                                 </div>
                                             )}
+
                                             {branch.email && (
-                                                <div>
+                                                <div className="lg:col-span-4">
                                                     <div className="text-zinc-500">Email</div>
                                                     <div className="text-zinc-800">{branch.email}</div>
                                                 </div>
                                             )}
+
                                         </div>
                                     </div>
                                 ))}
@@ -376,23 +415,23 @@ export default function TenantDetail() {
 
                         {tenant.latestSubscription && tenant.latestSubscription.plan ? (
                             <div className="border rounded-lg p-4 bg-zinc-50">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+
+                                    <div className="lg:col-span-4">
                                         <div className="text-sm text-zinc-500">Plan</div>
-                                        <div className="font-semibold text-zinc-800">{tenant.latestSubscription.plan?.name || "-"}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-sm text-zinc-500">Status</div>
-                                        <div>
-                                            <span
-                                                className={`inline-block px-2 py-1 text-xs rounded ${
-                                                    tenant.latestSubscription.status === "active" ? "bg-green-100 text-green-700" : tenant.latestSubscription.status === "trial" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"
-                                                }`}
-                                            >
-                                                {tenant.latestSubscription.status.charAt(0).toUpperCase() + tenant.latestSubscription.status.slice(1)}
-                                            </span>
+                                        <div className="font-semibold text-zinc-800">
+                                            {tenant.latestSubscription.plan?.name || "-"}
                                         </div>
                                     </div>
+
+                                    <div className="lg:col-span-4">
+                                        <div className="text-sm text-zinc-500">Status</div>
+                                        <span className="inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-700">
+                                            {tenant.latestSubscription.status.charAt(0).toUpperCase() +
+                                                tenant.latestSubscription.status.slice(1)}
+                                        </span>
+                                    </div>
+
                                 </div>
                             </div>
                         ) : (
@@ -404,15 +443,28 @@ export default function TenantDetail() {
                         {/* Metadata */}
                         <h2 className="text-lg font-semibold text-zinc-800">Metadata</h2>
 
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 text-sm">
+
+                            <div className="lg:col-span-4">
                                 <div className="text-zinc-500">Created At</div>
-                                <div className="text-zinc-800">{new Date(tenant.created_at).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}</div>
+                                <div className="text-zinc-800">
+                                    {new Date(tenant.created_at).toLocaleString("en-US", {
+                                        dateStyle: "long",
+                                        timeStyle: "short",
+                                    })}
+                                </div>
                             </div>
-                            <div>
+
+                            <div className="lg:col-span-4">
                                 <div className="text-zinc-500">Last Updated</div>
-                                <div className="text-zinc-800">{new Date(tenant.updated_at).toLocaleString("en-US", { dateStyle: "long", timeStyle: "short" })}</div>
+                                <div className="text-zinc-800">
+                                    {new Date(tenant.updated_at).toLocaleString("en-US", {
+                                        dateStyle: "long",
+                                        timeStyle: "short",
+                                    })}
+                                </div>
                             </div>
+
                         </div>
                     </div>
                 </div>

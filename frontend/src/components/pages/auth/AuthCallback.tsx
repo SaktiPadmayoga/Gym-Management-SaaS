@@ -46,11 +46,13 @@ export default function AuthCallbackPage() {
             const role = decodeURIComponent(globalRole ?? "staff");
 
             // Simpan ke localStorage + cookie
-            localStorage.setItem(TOKEN_KEY, token);
+            // localStorage.setItem(TOKEN_KEY, token);
+            // document.cookie = `staff_token=...`
+
+            // Cukup simpan data non-sensitif:
             localStorage.setItem(DATA_KEY, JSON.stringify(staffData));
             localStorage.setItem(BRANCH_KEY, JSON.stringify(branches));
             localStorage.setItem(ROLE_KEY, role);
-            document.cookie = `staff_token=${token}; path=/; max-age=${60 * 60 * 8}`;
 
             // Owner → langsung owner dashboard
             if (role === "owner") {

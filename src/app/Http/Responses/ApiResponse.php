@@ -10,33 +10,23 @@ class ApiResponse
     /**
      * Success response with data
      */
-    public static function success(
-        $data = null,
-        $message = 'Success',
-        $meta = null,
-        $statusCode = 200
-    ): JsonResponse {
+    public static function success($data = null, string $message = 'Success', $meta = null, int $code = 200)
+    {
         return response()->json([
             'success' => true,
             'message' => $message,
             'data' => $data,
             'meta' => $meta,
-        ], $statusCode);
+        ], $code);
     }
 
-    /**
-     * Error response
-     */
-    public static function error(
-        $message = 'Error',
-        $errors = null,
-        $statusCode = 400
-    ): JsonResponse {
+    public static function error(string $message = 'Error', $error = null, int $code = 500)
+    {
         return response()->json([
             'success' => false,
             'message' => $message,
-            'errors' => $errors,
-        ], $statusCode);
+            'error' => $error,
+        ], $code);
     }
 
     /**

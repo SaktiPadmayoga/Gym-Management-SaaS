@@ -14,14 +14,11 @@ return new class extends Migration
             $table->foreignUuid('member_id')->constrained('members')->cascadeOnDelete();
             $table->foreignUuid('branch_id')->constrained('branches')->cascadeOnDelete();
             $table->foreignUuid('membership_id')->nullable()->constrained('memberships')->nullOnDelete();
-            
             $table->timestamp('checked_in_at');
             $table->enum('status', ['success', 'failed'])->default('success');
-            $table->string('notes')->nullable(); // Alasan jika failed (misal: "Expired", "Salah Cabang")
-
+            $table->string('notes')->nullable(); 
             $table->timestamps();
 
-            // Indexing agar pencarian riwayat check-in cepat
             $table->index('checked_in_at');
             $table->index(['member_id', 'checked_in_at']);
             $table->index(['branch_id', 'checked_in_at']);

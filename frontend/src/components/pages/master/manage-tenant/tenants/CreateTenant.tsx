@@ -13,9 +13,7 @@ import { SearchableDropdown, DropdownOption } from "@/components/ui/input/Custom
 import { TenantCreateRequest } from "@/types/central/tenants";
 import { useCreateTenant } from "@/hooks/useTenants";
 
-/* =====================
- * OPTIONS
- * ===================== */
+/* ===================== */
 const statusOptions: DropdownOption<string>[] = [
     { key: "trial", label: "Trial", value: "trial" },
     { key: "active", label: "Active", value: "active" },
@@ -23,7 +21,11 @@ const statusOptions: DropdownOption<string>[] = [
     { key: "expired", label: "Expired", value: "expired" },
 ];
 
-const timezoneOptions: DropdownOption<string>[] = [{ key: "Asia/Jakarta", label: "Asia/Jakarta", value: "Asia/Jakarta" }];
+const timezoneOptions: DropdownOption<string>[] = [
+    { key: "Asia/Jakarta", label: "Asia/Jakarta", value: "Asia/Jakarta" },
+    { key: "Asia/Makassar", label: "Asia/Makassar", value: "Asia/Makassar" },
+    { key: "Asia/Jayapura", label: "Asia/Jayapura", value: "Asia/Jayapura" },
+];
 
 const localeOptions: DropdownOption<string>[] = [
     { key: "id", label: "Indonesian", value: "id" },
@@ -45,7 +47,6 @@ export default function CreateTenant() {
             logo_url: "",
             timezone: "Asia/Jakarta",
             locale: "id",
-
             branch: {
                 branch_code: "MAIN",
                 name: "",
@@ -58,25 +59,34 @@ export default function CreateTenant() {
         },
     });
 
-    const onSubmit = async (data: TenantCreateRequest) => {
+        const onSubmit = async (data: TenantCreateRequest) => {
         try {
             await createMutation.mutateAsync(data);
-            toast.success("Tenant created successfully");
-            router.push("/tenants/admin?success=true");
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to create tenant");
+
+            toast.success( "Tenant created successfully");
+
+            router.push("/admin/tenants?success=true");
+
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error ||   
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to create tenant";
+
+            toast.error(message);
         }
     };
 
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="font-figtree rounded-xl bg-white border px-6 py-4">
+                <div className="font-figtree rounded-xl bg-white border px-6 py-5">
                     <Toaster position="top-center" />
 
                     {/* Breadcrumb */}
-                    <div className="breadcrumbs text-sm text-zinc-400 mb-4">
+                    <div className="breadcrumbs text-sm text-zinc-400 mb-5">
                         <ul>
                             <li>Tenant & Subscription</li>
                             <li>
@@ -92,10 +102,14 @@ export default function CreateTenant() {
                             <button type="button" onClick={() => router.push("/admin/tenants")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
-                            <h1 className="text-2xl font-semibold ">Create Tenant</h1>
+                            <h1 className="text-2xl font-semibold">Create Tenant</h1>
                         </div>
 
-                        <CustomButton type="submit" className="px-4 py-2" disabled={createMutation.isPending}>
+                        <CustomButton
+                            type="submit"
+                            className="px-4 py-2"
+                            disabled={createMutation.isPending}
+                        >
                             {createMutation.isPending ? "Creating..." : "Create & Save"}
                         </CustomButton>
                     </div>
@@ -103,40 +117,39 @@ export default function CreateTenant() {
                     <hr />
 
                     <div className="flex flex-col gap-6 mt-6">
+
                         {/* TENANT */}
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="name" label="Tenant Name" />
-                            </div>
-                            <div className="col-span-6">
-                                <TextInput name="slug" label="Slug" />
-                            </div>
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="owner_name" label="Owner Name" />
+                            {/* 2 kolom */}
+                            <div className="lg:col-span-4">
+                                <TextInput name="name" label="Tenant Name" rules={{ required: "Nama tenant wajib diisi" }} />
                             </div>
-                            <div className="col-span-6">
-                                <TextInput name="owner_email" label="Owner Email" />
+                            <div className="lg:col-span-4">
+                                <TextInput name="slug" label="Slug" rules={{ required: "Slug wajib diisi" }} />
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
+                            {/* 2 kolom */}
+                            <div className="lg:col-span-4">
+                                <TextInput name="owner_name" label="Owner Name" rules={{ required: "Nama owner wajib diisi" }} />
+                            </div>
+                            <div className="lg:col-span-4">
+                                <TextInput name="owner_email" label="Owner Email" rules={{ required: "Email owner wajib diisi" }} />
+                            </div>
+
+                            {/* 3 kolom */}
+                            <div className="lg:col-span-4">
                                 <TextInput name="logo_url" label="Logo URL" />
                             </div>
-                            <div className="col-span-6">
+                            <div className="lg:col-span-4">
                                 <SearchableDropdown name="status" label="Status" options={statusOptions} />
                             </div>
-                        </div>
-
-                        {/* SYSTEM */}
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
+                            <div className="lg:col-span-4">
                                 <SearchableDropdown name="timezone" label="Timezone" options={timezoneOptions} />
                             </div>
-                            <div className="col-span-4">
+
+                            {/* 3 kolom */}
+                            <div className="lg:col-span-4">
                                 <SearchableDropdown name="locale" label="Locale" options={localeOptions} />
                             </div>
                         </div>
@@ -144,40 +157,37 @@ export default function CreateTenant() {
                         <hr />
 
                         {/* BRANCH */}
-                        <h2 className="text-lg font-semibold">Default Branch</h2>
-
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
-                                <TextInput name="branch.branch_code" label="Branch Code" />
-                            </div>
-                            <div className="col-span-8">
-                                <TextInput name="branch.name" label="Branch Name" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="branch.address" label="Address" />
-                            </div>
-                            <div className="col-span-6">
-                                <TextInput name="branch.city" label="City" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="branch.phone" label="Phone" />
-                            </div>
-                            <div className="col-span-6">
-                                <TextInput name="branch.email" label="Email" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
-                                <SearchableDropdown name="branch.timezone" label="Branch Timezone" options={timezoneOptions} />
+                        <div>
+                            <h2 className="text-lg font-semibold mb-3 text-zinc-900">Default Branch</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+                                <div className="lg:col-span-4">
+                                    <TextInput name="branch.branch_code" label="Branch Code" rules={{ required: "Branch code wajib diisi" }} />
+                                </div>
+                                <div className="lg:col-span-4">
+                                    <TextInput name="branch.name" label="Branch Name" rules={{ required: "Branch name wajib diisi" }} />
+                                </div>
+                                <div className="lg:col-span-4">
+                                    <TextInput name="branch.email" label="Email" />
+                                </div>
+                                <div className="lg:col-span-4">
+                                    <TextInput name="branch.phone" label="Phone" />
+                                </div>
+                                <div className="lg:col-span-4">
+                                    <TextInput name="branch.address" label="Address" />
+                                </div>
+                                <div className="lg:col-span-4">
+                                    <TextInput name="branch.city" label="City" />
+                                </div>
+                                <div className="lg:col-span-4">
+                                    <SearchableDropdown
+                                        name="branch.timezone"
+                                        label="Branch Timezone"
+                                        options={timezoneOptions}
+                                    />
+                                </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </form>

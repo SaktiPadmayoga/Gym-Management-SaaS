@@ -93,9 +93,15 @@ export default function AdminDetail() {
             toast.success("Admin updated successfully");
             setIsEditMode(false);
             router.push("/admin/admins");
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to update admin");
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to update tenant";
+
+            toast.error(message);
         }
     };
 
@@ -121,7 +127,7 @@ export default function AdminDetail() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>System Management</li>
+                            <li>User Management</li>
                             <li>
                                 <Link href="/admin/admins">Admins</Link>
                             </li>
@@ -174,30 +180,42 @@ export default function AdminDetail() {
                         {/* BASIC */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" disabled={!isEditMode} />
+                                <TextInput 
+                                    name="name" 
+                                    label="Full Name" 
+                                    disabled={!isEditMode} 
+                                    rules={{
+                                        required: "Name is required",
+                                    }}
+                                />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email" disabled={!isEditMode} />
+                                <TextInput 
+                                    name="email" 
+                                    label="Email" 
+                                    disabled={!isEditMode} 
+                                    rules={{
+                                        required: "Email is required",
+                                        pattern: {
+                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            message: "Invalid email format",
+                                        },
+                                    }}
+                                />
                             </div>
                         </div>
 
                         {/* SECURITY */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput
-                                    name="password"
-                                    label="New Password (optional)"
-                                    type="password"
-                                    placeholder="Leave empty to keep current password"
-                                    disabled={!isEditMode}
-                                />
-                            </div>
-                            <div className="col-span-6">
                                 <SearchableDropdown
                                     name="role"
                                     label="Role"
                                     options={roleOptions}
                                     disabled={!isEditMode}
+                                    rules={{
+                                        required: "Role is required",
+                                    }}
                                 />
                             </div>
                         </div>

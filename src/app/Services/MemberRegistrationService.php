@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use App\Services\NotificationService;
 
 class MemberRegistrationService
 {
@@ -177,6 +178,16 @@ class MemberRegistrationService
                 'is_active'    => true,
                 'member_since' => now(),
             ]);
+
+            $planName = $membership?->plan?->name ?? 'Membership';
+            app(NotificationService::class)->createTenant(
+                $membership?->branch_id ?? $invoice->branch_id,
+                null,
+                'member_registered',
+                'Member Baru Terdaftar',
+                "{$invoice->member->name} berhasil mendaftar paket {$planName}."
+            );
+            
         });
 
         return true;

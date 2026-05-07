@@ -12,22 +12,23 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Register tenant middleware alias for Stancl Tenancy
+        $middleware->prepend(\App\Http\Middleware\InjectTokenFromCookie::class);
+        $middleware->prepend(\Illuminate\Cookie\Middleware\EncryptCookies::class);
+        $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+
         $middleware->alias([
-            'tenant' => \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
+            'tenant'              => \Stancl\Tenancy\Middleware\InitializeTenancyByDomain::class,
             'check_tenant_access' => \App\Http\Middleware\CheckTenantAccess::class,
             'check.tenant.access' => \App\Http\Middleware\CheckTenantAccess::class,
-            'tenant.header'=> \App\Http\Middleware\InitializeTenancy::class,
-
+            'tenant.header'       => \App\Http\Middleware\InitializeTenancy::class,
+            'permission'          => \App\Http\Middleware\CheckPermission::class,
         ]);
-        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
 
         $middleware->validateCsrfTokens(except: [
             'api/payment/webhook',
             'api/*',
             'api/webhook/midtrans',
         ]);
-    
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         

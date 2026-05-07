@@ -58,8 +58,9 @@ export default function SubscriptionHistory() {
         router.replace(`${BASE_PATH}?${params.toString()}`);
     }, [debouncedSearch, page, perPage, router]);
 
-    const entries: SubscriptionsData[] = data ?? [];
+    const entries: SubscriptionsData[] = data?.data ?? [];
     const totalData = entries.length;
+    const meta = data?.meta;
 
     const columns: Column<SubscriptionsData>[] = [
         {
@@ -228,7 +229,16 @@ export default function SubscriptionHistory() {
 
                 <div className="mt-4">
                     <div className="mt-4">
-                                        <PaginationWithRows hasNextPage={data?.length === perPage} hasPrevPage={page > 1} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={perPage} />
+                        <PaginationWithRows
+                            hasNextPage={page < (data?.meta?.last_page || 0)}
+                            hasPrevPage={page > 1}
+                            totalItems={data?.meta?.total || 0}
+                            currentPage={data?.meta?.current_page || 1}
+                            currentPerPage={data?.meta?.per_page || 10}
+                            onPageChange={setPage}
+                            onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
+                            rowOptions={[5, 10, 20, 50]}
+                            defaultRowsPerPage={perPage} />
                                     </div>
                 </div>
             </div>

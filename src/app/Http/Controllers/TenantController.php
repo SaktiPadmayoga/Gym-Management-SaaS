@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\StoreTenantRequest;
+use Illuminate\Support\Facades\Hash;
+use App\Services\TenantService;
+use App\Services\NotificationService;
+use Throwable;
+use App\Support\ErrorResolver;
+
 
 
 
@@ -83,72 +89,25 @@ class TenantController extends Controller
     
 
     public function store(StoreTenantRequest $request)
-{
-    $validated = $request->validated();
+    {
+        try {
+            $tenant = TenantService::create($request->validated());
 
-    $slug = Str::slug($validated['slug']);
+            return ApiResponse::success(
+                new TenantResource($tenant),
+                'Tenant created successfully',
+                null,
+                201
+            );
 
-    // =====================
-    // CREATE TENANT (DI CENTRAL DATABASE)
-    // =====================
-    $tenant = Tenant::create([
-        'id' => (string) Str::uuid(),
-        'name' => $validated['name'],
-        'slug' => $slug,
-        'owner_name' => $validated['owner_name'],
-        'owner_email' => $validated['owner_email'],
-        'status' => $validated['status'],
-        'logo_url' => $validated['logo_url'] ?? null,
-        'timezone' => $validated['timezone'],
-        'locale' => $validated['locale'],
-        'max_branches' => $validated['max_branches'] ?? 0,
-        'current_branch_count' => 1,
-        'trial_ends_at' => $validated['trial_ends_at'] ?? now()->addDays(7),
-        'subscription_ends_at' => $validated['subscription_ends_at'] ?? now()->addDays(14),
- 0   ]);
-
-    // =====================
-    // CREATE TENANT DOMAIN (DI CENTRAL DATABASE)
-    // =====================
-    $tenant->domains()->create([
-        'id' => (string) Str::uuid(),
-        'domain' => "{$slug}.localhost",
-        'type' => 'tenant',
-        'is_primary' => true,
-    ]);
-
-    // =====================
-    // CREATE BRANCH DI TENANT DATABASE
-    // Menggunakan tenancy()->run() untuk menjalankan closure di context tenant
-    // =====================
-    $branchData = $validated['branch'];
-    $branchId = (string) Str::uuid();
-    $branchSlug = Str::slug($branchData['branch_code']);
-
-    $tenant->run(function () use ($branchData, $branchId, $validated) {
-        // Ini berjalan di tenant database context
-        \App\Models\Branch::create([
-            'id' => $branchId,
-            'branch_code' => $branchData['branch_code'],
-            'name' => $branchData['name'],
-            'address' => $branchData['address'] ?? null,
-            'city' => $branchData['city'] ?? null,
-            'phone' => $branchData['phone'] ?? null,
-            'email' => $branchData['email'] ?? null,
-            'timezone' => $branchData['timezone'] ?? $validated['timezone'],
-            'is_active' => true,
-            'opened_at' => $branchData['opened_at'] ?? now(),
-        ]);
-    });
-
-
-    return ApiResponse::success(
-        new TenantResource($tenant->load(['domains'])),
-        'Tenant created successfully',
-        null,
-        201
-    );
-}
+        } catch (Throwable $e) {
+            return ApiResponse::error(
+                'Gagal membuat tenant',
+                ErrorResolver::resolve($e),
+                500
+            );
+        }
+    }
 
 
 
@@ -168,7 +127,8 @@ class TenantController extends Controller
      */
     public function update(Request $request, Tenant $tenant)
     {
-        $validated = $request->validate([
+        try {
+            $validated = $request->validate([
             'name'        => 'sometimes|string',
             'slug'        => 'sometimes|string|unique:tenants,slug,' . $tenant->id,
             'owner_name'  => 'sometimes|string',
@@ -186,13 +146,37 @@ class TenantController extends Controller
             $validated['slug'] = Str::slug($validated['slug']);
         }
 
+        $oldStatus = $tenant->status;
         $tenant->update($validated);
+
+        if (
+            isset($validated['status'])
+            && $validated['status'] !== $oldStatus
+            && in_array($validated['status'], ['suspended', 'expired'])
+        ) {
+            app(NotificationService::class)->createTenantForTenant(
+                $tenant->fresh(),
+                null,
+                'tenant_deactivated',
+                'Tenant Dinonaktifkan',
+                "Tenant {$tenant->name} telah dinonaktifkan dengan status {$validated['status']}."
+            );
+        }
 
         return ApiResponse::success(
             new TenantResource($tenant->fresh(['domains'])),
-            'Tenant updated successfully'
+            'Tenant updated successfully',
+            null,
+            200
         );
-    }
+    }catch (Throwable $e) {
+            return ApiResponse::error(
+                'Gagal mengupdate tenant',
+                ErrorResolver::resolve($e),
+                500
+            );
+        }
+    }   
 
     /**
      * DELETE /api/tenants/{id}
@@ -287,6 +271,11 @@ public function current(Request $request)
             ->orderBy('name')
             ->get();
 
+        $currentDomainId = Domain::where('tenant_id', $tenant->id)
+        ->where('is_primary', true)
+        ->value('id');
+
+
         return ApiResponse::success([
             'id'                   => $tenantData->id,
             'name'                 => $tenantData->name,
@@ -302,6 +291,8 @@ public function current(Request $request)
             'subscription'         => $subscription,
             'current_branch'       => $currentBranch,
             'branches'             => $branches,
+            'current_domain_id'    => $currentDomainId,
+
         ], 'Tenant data retrieved successfully');
 
     } catch (\Exception $e) {

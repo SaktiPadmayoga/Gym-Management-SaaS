@@ -203,7 +203,7 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                 {/* Breadcrumb */}
                                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                                         <ul>
-                                            <li>Management</li>
+                                            <li>Tenant & Subscription</li>
                                             <li>
                                                 <Link href="/owner/domains">Domains</Link>
                                             </li>
@@ -213,9 +213,6 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                     <div className="flex items-center gap-2 text-gray-800">
-                            <Link href="/owner/domains">
-                                <Icon name="back" className="h-7 w-7 cursor-pointer" />
-                            </Link>
                         <div className="flex flex-col">
                             <h1 className="text-2xl font-bold text-zinc-800">{domain.domain}</h1>
                         <p className="text-sm text-zinc-500 mt-1">Domain ID: {domain.id}</p>
@@ -224,23 +221,7 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <CustomButton
-                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2"
-                            onClick={handleDelete}
-                            disabled={deleteMutation.isPending}
-                        >
-                            {deleteMutation.isPending ? "Deleting..." : "Delete Domain"}
-                        </CustomButton>
-                        <CustomButton
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2"
-                            onClick={handleTogglePrimary}
-                            disabled={togglePrimaryMutation.isPending}
-                        >
-                            {togglePrimaryMutation.isPending 
-                                ? "Toggling..." 
-                                : domain.is_primary ? "Unset Primary" : "Set as Primary"}
-                        </CustomButton>
-                        <CustomButton
-                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2"
+                            className="bg-aksen-secondary border-none text-white px-4 py-2"
                             onClick={() => setIsModalOpen(true)}
                         >
                             Request Change
@@ -248,54 +229,51 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                     </div>
                 </div>
 
+                <hr />
+
                 {/* Grid Layout */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6">
                     {/* Domain Info */}
-                    <div className="md:col-span-6">
+                    <div className="md:col-span-4">
                         <div className="bg-zinc-50 rounded-lg p-5 shadow-sm h-full">
                             <h3 className="font-semibold text-zinc-800 mb-4">Domain Information</h3>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Domain</span>
+                                    <span className="text-zinc-500">Domain name </span>
                                     <span className="font-medium text-zinc-800">{domain.domain}</span>
                                 </div>
-                                <div className="flex justify-between">
-                                    <span className="text-zinc-500">Is Primary</span>
-                                    <span className={`font-medium ${domain.is_primary ? 'text-green-600' : 'text-zinc-800'}`}>
-                                        {domain.is_primary ? "Yes" : "No"}
-                                    </span>
-                                </div>
                                 
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Associations */}
-                    <div className="md:col-span-6">
-                        <div className="bg-zinc-50 rounded-lg p-5 shadow-sm">
-                            <h3 className="font-semibold text-zinc-800 mb-4">Associations</h3>
-                            <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500">Tenant</span>
                                     <span className="font-medium text-zinc-800">{domain.tenant?.name || "—"}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Branch</span>
-                                    <span className="font-medium text-zinc-800">{domain.branch?.name || "—"}</span>
+                                    <span className="text-zinc-500">Created at</span>
+                                    <span className="text-zinc-800">{domain.created_at 
+                                    ? new Date(domain.created_at).toLocaleString("en-US", {
+                                        month: "short", day: "numeric", year: "numeric",
+                                        hour: "2-digit", minute: "2-digit"
+                                      }) 
+                                    : "—"}
+                                    </span>
                                 </div>
-                                {domain.branch?.branch_code && (
-                                    <div className="flex justify-between">
-                                        <span className="text-zinc-500">Branch Code</span>
-                                        <span className="font-medium text-zinc-800">{domain.branch.branch_code}</span>
-                                    </div>
-                                )}
+                                <div className="flex justify-between">
+                                    <span className="text-zinc-500">Updated at</span>
+                                    <span className="text-zinc-800">{domain.updated_at 
+                                    ? new Date(domain.updated_at).toLocaleString("en-US", {
+                                        month: "short", day: "numeric", year: "numeric",
+                                        hour: "2-digit", minute: "2-digit"
+                                      }) 
+                                    : "—"}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Domain Change Requests — SELALU RENDER, meskipun kosong */}
-                    <div className="md:col-span-12">
-                        <div className="bg-zinc-50 rounded-lg p-5 shadow-sm">
+                    <div className="md:col-span-8 h-full">
+                        <div className="bg-zinc-50 rounded-lg p-5 shadow-sm h-full">
                             <h3 className="font-semibold text-zinc-800 mb-4">Domain Change Requests History</h3>
 
                             {requestsLoading ? (
@@ -351,28 +329,6 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                                     </button>
                                 </div>
                             )}
-                        </div>
-                    </div>
-
-                    {/* Timestamps */}
-                    <div className="md:col-span-12 text-sm text-zinc-500 mt-2">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div>
-                                Created: {domain.created_at 
-                                    ? new Date(domain.created_at).toLocaleString("en-US", {
-                                        month: "short", day: "numeric", year: "numeric",
-                                        hour: "2-digit", minute: "2-digit"
-                                      }) 
-                                    : "—"}
-                            </div>
-                            <div>
-                                Updated: {domain.updated_at 
-                                    ? new Date(domain.updated_at).toLocaleString("en-US", {
-                                        month: "short", day: "numeric", year: "numeric",
-                                        hour: "2-digit", minute: "2-digit"
-                                      }) 
-                                    : "—"}
-                            </div>
                         </div>
                     </div>
                 </div>

@@ -31,6 +31,7 @@ export const TenantCurrentSchema = z.object({
     subscription: SubscriptionInfoSchema.nullable().optional(),
     current_branch: BranchSchema.nullable().optional(),
     branches: z.array(BranchSchema),
+    current_domain_id: z.string().nullable().optional(),
 });
 
 export type BranchData = z.infer<typeof BranchSchema>;

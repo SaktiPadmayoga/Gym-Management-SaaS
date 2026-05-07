@@ -1,101 +1,99 @@
 "use client";
 
 import {
-    createContext,
-    useContext,
-    useEffect,
-    useState,
-    ReactNode,
-    useCallback,
+    createContext, useContext, useEffect,
+    useReducer, ReactNode, useCallback, useRef
 } from "react";
 import { useRouter } from "next/navigation";
 import { adminAuthAPI } from "@/lib/api/adminAuth";
 import { AdminData } from "@/types/central/admin-auth";
 
-interface AdminAuthContextValue {
+interface AdminAuthState {
     admin:     AdminData | null;
-    token:     string | null;
     isLoading: boolean;
     isReady:   boolean;
-    login:     (email: string, password: string) => Promise<void>;
-    logout:    () => Promise<void>;
+}
+
+type AuthAction =
+    | { type: "SET_AUTH"; payload: { admin: AdminData } }
+    | { type: "LOGOUT" }
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "SET_READY" };
+
+const initialState: AdminAuthState = {
+    admin:     null,
+    isLoading: false,
+    isReady:   false,
+};
+
+function authReducer(state: AdminAuthState, action: AuthAction): AdminAuthState {
+    switch (action.type) {
+        case "SET_AUTH":
+            return { ...state, admin: action.payload.admin, isLoading: false, isReady: true };
+        case "LOGOUT":
+            return { ...initialState, isReady: true };
+        case "SET_LOADING":
+            return { ...state, isLoading: action.payload };
+        case "SET_READY":
+            return { ...state, isReady: true };
+        default:
+            return state;
+    }
+}
+
+interface AdminAuthContextValue extends AdminAuthState {
+    login:  (email: string, password: string) => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
-const TOKEN_KEY = "admin_token";
-const DATA_KEY  = "admin_data";
-
-// Helper — simpan token ke localStorage DAN cookie
-// Cookie dibutuhkan agar middleware Next.js bisa baca (server-side)
-function saveToken(token: string) {
-    localStorage.setItem(TOKEN_KEY, token);
-    document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; // 7 hari
-}
-
-function clearToken() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(DATA_KEY);
-    document.cookie = `${TOKEN_KEY}=; path=/; max-age=0`; // hapus cookie
-}
-
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-    const router = useRouter();
+    const router  = useRouter();
+    const [state, dispatch] = useReducer(authReducer, initialState);
+    const didInit = useRef(false);
 
-    const [admin,     setAdmin]     = useState<AdminData | null>(null);
-    const [token,     setToken]     = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
-    const [isReady,   setIsReady]   = useState(false);
-
-    // Hydrate dari localStorage saat mount
+    // -----------------------------------------------
+    // Init — hit /me sekali saat mount
+    // -----------------------------------------------
     useEffect(() => {
-        const storedToken = localStorage.getItem(TOKEN_KEY);
-        const storedData  = localStorage.getItem(DATA_KEY);
+        if (didInit.current) return;
+        didInit.current = true;
 
-        if (storedToken && storedData) {
-            try {
-                setToken(storedToken);
-                setAdmin(JSON.parse(storedData));
-            } catch {
-                clearToken();
-            }
-        }
-
-        setIsReady(true);
+        adminAuthAPI.me()
+            .then((fresh) => {
+                dispatch({ type: "SET_AUTH", payload: { admin: fresh } });
+            })
+            .catch(() => {
+                dispatch({ type: "SET_READY" });
+            });
     }, []);
 
-    const login = useCallback(async (email: string, password: string) => {
-        setIsLoading(true);
-        try {
-            const { token: newToken, admin: adminData } = await adminAuthAPI.login({ email, password });
-
-            saveToken(newToken);
-            localStorage.setItem(DATA_KEY, JSON.stringify(adminData));
-
-            setToken(newToken);
-            setAdmin(adminData);
-
-            router.push("/admin/dashboard");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [router]);
+    const login = useCallback(
+        async (email: string, password: string): Promise<void> => {
+            dispatch({ type: "SET_LOADING", payload: true });
+            try {
+                const { admin: adminData } = await adminAuthAPI.login({ email, password });
+                dispatch({ type: "SET_AUTH", payload: { admin: adminData } });
+                router.push("/admin/dashboard");
+            } catch (e) {
+                dispatch({ type: "SET_LOADING", payload: false });
+                throw e;
+            }
+        },
+        [router],
+    );
 
     const logout = useCallback(async () => {
         try {
             await adminAuthAPI.logout();
-        } catch {
-            // Tetap logout meski API error
-        } finally {
-            clearToken();
-            setToken(null);
-            setAdmin(null);
-            router.push("/admin/auth/login");
-        }
+        } catch { /* tetap logout */ }
+        dispatch({ type: "LOGOUT" });
+        router.push("/admin/auth/login");
     }, [router]);
 
     return (
-        <AdminAuthContext.Provider value={{ admin, token, isLoading, isReady, login, logout }}>
+        <AdminAuthContext.Provider value={{ ...state, login, logout }}>
             {children}
         </AdminAuthContext.Provider>
     );

@@ -21,13 +21,6 @@ const roleOptions: DropdownOption<string>[] = [
     { key: "admin", label: "Admin", value: "admin" },
 ];
 
-/* =========================
- * STATUS OPTIONS
- * ========================= */
-const statusOptions: DropdownOption<string>[] = [
-    { key: "active", label: "Active", value: "active" },
-    { key: "inactive", label: "Inactive", value: "inactive" },
-];
 
 /* =========================
  * FORM TYPE
@@ -69,9 +62,15 @@ export default function CreateAdmin() {
 
             toast.success("Admin created successfully");
             router.push("/admin/admins?success=true");
-        } catch (err) {
-            toast.error("Failed to create admin");
-            console.error(err);
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to update tenant";
+
+            toast.error(message);
         }
     };
 
@@ -84,7 +83,7 @@ export default function CreateAdmin() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>System Management</li>
+                            <li>User Management</li>
                             <li>
                                 <Link href="/admin/admins">Admins</Link>
                             </li>
@@ -123,6 +122,9 @@ export default function CreateAdmin() {
                                     name="name"
                                     label="Full Name"
                                     placeholder="e.g John Doe"
+                                    rules={{
+                                        required: "Name is required",
+                                    }}
                                 />
                             </div>
 
@@ -131,6 +133,9 @@ export default function CreateAdmin() {
                                     name="email"
                                     label="Email"
                                     placeholder="e.g admin@saas.com"
+                                    rules={{
+                                        required: "Email is required",
+                                    }}
                                 />
                             </div>
                         </div>
@@ -143,6 +148,13 @@ export default function CreateAdmin() {
                                     label="Password"
                                     type="password"
                                     placeholder="Minimum 6 characters"
+                                    rules={{
+                                        required: "Password is required",
+                                        minLength: {
+                                            value: 6,
+                                            message: "Password must be at least 6 characters",
+                                        },
+                                    }}
                                 />
                             </div>
 
@@ -151,6 +163,9 @@ export default function CreateAdmin() {
                                     name="role"
                                     label="Role"
                                     options={roleOptions}
+                                    rules={{
+                                        required: "Role is required",
+                                    }}
                                 />
                             </div>
                         </div>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, notFound } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ import { TextInput, NumberInput } from "@/components/ui/input/Input";
 import { SearchableDropdown, DropdownOption } from "@/components/ui/input/CustomDropdown";
 
 import { SubscriptionsData } from "@/types/central/subscriptions";
-import { DUMMY_SUBSCRIPTIONS } from "@/lib/dummy/central/subscriptionsDummy";
+import { useSubscription, useUpdateSubscription } from "@/hooks/useSubscriptions";
 
 const statusOptions: DropdownOption<string>[] = [
     { key: "trial", label: "Trial", value: "trial" },
@@ -34,20 +34,53 @@ export default function SubscriptionDetail() {
 
     const [isEditMode, setIsEditMode] = useState(false);
 
-    const subscription = useMemo(() => DUMMY_SUBSCRIPTIONS.find((s) => s.id === id), [id]);
+    // 🔥 FETCH DATA
+    const { data: subscription, isLoading, isError } = useSubscription(id);
 
-    if (!subscription) notFound();
+    const updateMutation = useUpdateSubscription();
 
     const form = useForm<SubscriptionsData>({
         mode: "onChange",
-        defaultValues: subscription,
+        defaultValues: undefined,
     });
 
-    const handleSave = () => {
-        console.log("UPDATED SUBSCRIPTION:", form.getValues());
-        toast.success("Subscription updated");
-        setIsEditMode(false);
-        router.push("/subscriptions?updated=true");
+    // 🔥 SET DATA KE FORM
+    useEffect(() => {
+        if (subscription) {
+            form.reset(subscription);
+        }
+    }, [subscription, form]);
+
+    if (isLoading) {
+        return <div className="p-6">Loading...</div>;
+    }
+
+    if (isError || !subscription) {
+        notFound();
+    }
+
+    const handleSave = async () => {
+        try {
+            const values = form.getValues();
+
+            await updateMutation.mutateAsync({
+                id,
+                payload: values,
+            });
+
+            toast.success("Subscription updated");
+            setIsEditMode(false);
+            router.push("/subscriptions?updated=true");
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to update tenant";
+
+            toast.error(message);
+        }
     };
 
     const handleCancel = () => {
@@ -73,23 +106,34 @@ export default function SubscriptionDetail() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Link href="/subscriptions">
-                                <Icon name="back" className="h-7 w-7" />
+                            <Link href="/admin/subscriptions">
+                                <Icon name="back" className="h-7 w-7 text-zinc-900" />
                             </Link>
-                            <h1 className="text-2xl font-semibold">Subscription Detail</h1>
+                            <h1 className="text-2xl  text-zinc-900 font-semibold">Subscription Detail</h1>
                         </div>
 
                         {!isEditMode ? (
-                            <CustomButton iconName="edit" className="bg-aksen-secondary text-white px-4 py-2.5" onClick={() => setIsEditMode(true)}>
+                            <CustomButton
+                                iconName="edit"
+                                className="bg-aksen-secondary text-white px-4 py-2.5"
+                                onClick={() => setIsEditMode(true)}
+                            >
                                 Edit
                             </CustomButton>
                         ) : (
                             <div className="flex gap-2">
-                                <CustomButton className="border px-4 py-2.5" onClick={handleCancel}>
+                                <CustomButton
+                                    className="border px-4 py-2.5"
+                                    onClick={handleCancel}
+                                >
                                     Cancel
                                 </CustomButton>
-                                <CustomButton className="bg-aksen-secondary text-white px-4 py-2.5" onClick={handleSave}>
-                                    Save
+                                <CustomButton
+                                    className="bg-aksen-secondary text-white px-4 py-2.5"
+                                    onClick={handleSave}
+                                    disabled={updateMutation.isPending}
+                                >
+                                    {updateMutation.isPending ? "Saving..." : "Save"}
                                 </CustomButton>
                             </div>
                         )}
@@ -108,19 +152,46 @@ export default function SubscriptionDetail() {
                         </div>
 
                         <div className="grid grid-cols-12 gap-4">
+                            <div className="col-span-6">
+                                <TextInput name="tenantName" label="Tenant Name" disabled />
+                            </div>
+                            <div className="col-span-6">
+                                <TextInput name="planName" label="Plan Name" disabled />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <SearchableDropdown name="status" label="Status" options={statusOptions} disabled={!isEditMode} />
+                                <SearchableDropdown
+                                    name="status"
+                                    label="Status"
+                                    options={statusOptions}
+                                    disabled={!isEditMode}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="billingCycle" label="Billing Cycle" options={billingCycleOptions} disabled={!isEditMode} />
+                                <SearchableDropdown
+                                    name="billingCycle"
+                                    label="Billing Cycle"
+                                    options={billingCycleOptions}
+                                    disabled={!isEditMode}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="amount" label="Amount" disabled={!isEditMode} />
+                                <NumberInput
+                                    name="amount"
+                                    label="Amount"
+                                    disabled={!isEditMode}
+                                />
                             </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <input type="checkbox" {...form.register("autoRenew")} disabled={!isEditMode} />
+                            <input
+                                type="checkbox"
+                                {...form.register("autoRenew")}
+                                disabled={!isEditMode}
+                            />
                             <span>Auto Renew</span>
                         </div>
                     </div>

@@ -4,13 +4,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { toast, Toaster } from "sonner";
-import { useMemberAuth } from "@/providers/MemberAuthProvider"; // Pastikan path sesuai
+import { useMemberAuth } from "@/providers/MemberAuthProvider";
 import { TextInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
 
-/* =========================
- * LOGIN FORM
- * ========================= */
 
 function LoginForm() {
     const { login, loginWithGoogle, isLoading } = useMemberAuth();
@@ -72,24 +69,19 @@ export default function MemberLogin() {
     const router = useRouter();
 
     useEffect(() => {
-        router.prefetch("/member/dashboard");
-    }, [router]);
-
-    // Jika sudah terautentikasi → langsung masuk ke dashboard member
-    useEffect(() => {
-        if (!isReady) return;
-        if (member) {
-            router.replace("/member/dashboard");
-        }
+        if (!isReady || !member) return;
+        router.replace("/member/dashboard");
     }, [isReady, member, router]);
 
-    if (!isReady || member) {
+    if (!isReady) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-zinc-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
             </div>
         );
     }
+
+    if (member) return null;
 
     return (
         <div className="min-h-screen bg-zinc-50 flex items-center justify-center font-figtree">

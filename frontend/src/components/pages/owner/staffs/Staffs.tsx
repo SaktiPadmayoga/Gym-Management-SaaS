@@ -268,22 +268,21 @@ export default function StaffList() {
                     <div className="mt-4 text-sm text-zinc-500">
                         Showing {entries.length} of {totalItems} staff
                     </div>
-                </div>
 
-                {/* Pagination */}
-                {/* Pagination - Controlled Mode */}
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={data?.meta?.hasNextPage ?? false}
-                        hasPrevPage={data?.meta?.hasPrevPage ?? false}
-                        totalItems={data?.meta?.total ?? 0}
-                        currentPage={page}
-                        currentPerPage={perPage}
-                        onPageChange={setPage}
-                        onRowsPerPageChange={setPerPage}
-                        rowOptions={[5, 10, 15, 20, 50]}
-                        defaultRowsPerPage={15}
-                    />
+                    {/* Pagination */}
+                    <div className="mt-4">
+                        <PaginationWithRows
+                            hasNextPage={data?.meta?.hasNextPage ?? false}
+                            hasPrevPage={data?.meta?.hasPrevPage ?? false}
+                            totalItems={data?.meta?.total ?? 0}
+                            currentPage={page}
+                            currentPerPage={perPage}
+                            onPageChange={setPage}
+                            onRowsPerPageChange={setPerPage}
+                            rowOptions={[5, 10, 15, 20, 50]}
+                            defaultRowsPerPage={15}
+                        />
+                    </div>
                 </div>
             </div>
         </FormProvider>

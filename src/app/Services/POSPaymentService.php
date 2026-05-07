@@ -10,8 +10,10 @@ use App\Models\Tenant\StockMovement;
 use App\Models\Tenant\Membership;
 use App\Models\Tenant\PtPackage;
 use App\Models\Tenant\Member;
+use App\Models\Tenant\TenantNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str; // <-- 1. JANGAN LUPA IMPORT INI
 
 class POSPaymentService
 {
@@ -35,7 +37,6 @@ class POSPaymentService
             ]);
 
             // 2. Eksekusi Post-Payment Hooks
-            // Pada webhook, created_by diambil langsung dari invoice yang diproses
             $this->dispatchPostPaymentHooks($invoice, $invoice->items, $invoice->created_by);
             
             Log::info('[POSPayment] Transaksi POS Berhasil via Midtrans', ['invoice' => $invoice->invoice_number]);
@@ -58,30 +59,26 @@ class POSPaymentService
             ]);
             
             Log::info('[POSPayment] Transaksi POS Batal/Expired', ['invoice' => $invoice->invoice_number]);
-            // Tidak ada hook yang dieksekusi, stok aman, paket belum dibuat.
         });
     }
 
     /**
      * Distributor logika berdasarkan tipe item.
-     * Dipanggil oleh Cash (langsung) atau Midtrans (via confirmPayment).
-     * @param TenantInvoice $invoice
-     * @param iterable $items Bisa berupa array (dari Cash) atau Collection TenantInvoiceItem (dari Webhook)
-     * @param string|null $staffId
      */
     public function dispatchPostPaymentHooks(TenantInvoice $invoice, iterable $items, ?string $staffId): void
     {
         foreach ($items as $item) {
-            // Standarisasi agar support format Array maupun Object
-            $itemType = is_array($item) ? $item['item_type'] : $item->item_type;
-            $itemId   = is_array($item) ? $item['item_id']   : $item->item_id;
-            $quantity = is_array($item) ? $item['quantity']  : $item->quantity;
+            // BE SMART: Deteksi key dari Frontend ('type'/'id') ATAU dari Webhook ('item_type'/'item_id')
+            $itemType = is_array($item) ? ($item['item_type'] ?? $item['type']) : $item->item_type;
+            $itemId   = is_array($item) ? ($item['item_id'] ?? $item['id']) : $item->item_id;
+            $quantity = is_array($item) ? $item['quantity'] : $item->quantity;
 
+            // BE SMART: Cocokkan Namespace Laravel ATAU string simpel dari Frontend
             match ($itemType) {
-                Product::class        => $this->handleProductSold($itemId, $quantity, $invoice, $staffId),
-                MembershipPlan::class => $this->handleMembershipSold($itemId, $invoice),
-                PtSessionPlan::class  => $this->handlePtPackageSold($itemId, $invoice),
-                default               => Log::warning("[POSPayment] Unknown item type: {$itemType}")
+                Product::class, 'product'               => $this->handleProductSold($itemId, $quantity, $invoice, $staffId),
+                MembershipPlan::class, 'membership'     => $this->handleMembershipSold($itemId, $invoice, $staffId),
+                PtSessionPlan::class, 'pt_package', 'pt_session' => $this->handlePtPackageSold($itemId, $invoice),
+                default                                 => Log::warning("[POSPayment] Unknown item type: {$itemType}")
             };
         }
     }
@@ -98,10 +95,8 @@ class POSPaymentService
         $qtyBefore = $product->stock;
         $qtyAfter  = $qtyBefore - $quantity;
 
-        // Kurangi stok
         $product->decrement('stock', $quantity);
 
-        // Catat di Stock Movement
         StockMovement::create([
             'product_id'     => $product->id,
             'branch_id'      => $invoice->branch_id,
@@ -113,18 +108,31 @@ class POSPaymentService
             'reference_type' => TenantInvoice::class,
             'created_by'     => $staffId, 
         ]);
+
+        TenantNotification::create([
+            'id'        => (string) Str::uuid(),
+            'branch_id' => $invoice->branch_id,
+            'staff_id'  => $staffId,
+            'type'      => 'pos_transaction',
+            'title'     => 'Produk Terjual!',
+            'message'   => "Produk {$product->name} berhasil terjual.",
+            'is_read'   => false,
+        ]);
     }
 
-    private function handleMembershipSold(string $planId, TenantInvoice $invoice): void
+    // 3. TANGKAP PARAMETER $staffId DI SINI
+    private function handleMembershipSold(string $planId, TenantInvoice $invoice, ?string $staffId): void
     {
         $plan = MembershipPlan::find($planId);
         if (!$plan || !$invoice->member_id) return;
 
+        // 4. CARI DATA MEMBER AGAR NAMANYA BISA DIAMBIL UNTUK NOTIFIKASI
+        $member = Member::find($invoice->member_id);
+        if (!$member) return;
+
         $startDate = now();
-        // Asumsi kamu menggunakan duration_days di tabel membership_plans
         $endDate = $plan->duration_days ? $startDate->copy()->addDays($plan->duration_days) : null;
 
-        // Matikan paket lama jika ada (Auto Upgrade)
         Membership::where('member_id', $invoice->member_id)
             ->whereIn('status', ['active', 'pending', 'trial'])
             ->update([
@@ -132,7 +140,6 @@ class POSPaymentService
                 'notes'  => 'Dibatalkan otomatis karena pembelian paket membership baru via Kasir (POS).'
             ]);
 
-        // Buat Membership baru
         Membership::create([
             'member_id'               => $invoice->member_id,
             'membership_plan_id'      => $plan->id,
@@ -145,7 +152,17 @@ class POSPaymentService
             'remaining_checkin_quota' => $plan->checkin_quota ?? null,
         ]);
 
-        // Pastikan status akun member aktif
+        // 5. PERBAIKAN PAYLOAD NOTIFIKASI
+        TenantNotification::create([
+            'id'        => (string) Str::uuid(),
+            'branch_id' => $invoice->branch_id, // Gunakan branch_id dari invoice, lebih pasti
+            'staff_id'  => $staffId, // Staff ID bisa null jika diproses oleh webhook murni
+            'type'      => 'pos_transaction', // Lebih cocok pos_transaction karena ini dari invoice
+            'title'     => 'Paket Membership Terjual!',
+            'message'   => "{$member->name} baru saja membeli/memperpanjang paket {$plan->name}.",
+            'is_read'   => false,
+        ]);
+
         Member::where('id', $invoice->member_id)->update(['status' => 'active']);
     }
 
@@ -159,12 +176,11 @@ class POSPaymentService
             'pt_session_plan_id' => $plan->id,
             'tenant_invoice_id'  => $invoice->id,
             'branch_id'          => $invoice->branch_id,
-            // Deteksi penamaan field sesuai tabel kamu (total_sessions atau sessions)
             'total_sessions'     => $plan->total_sessions ?? $plan->sessions ?? 0,
             'used_sessions'      => 0,
             'status'             => 'active',
             'purchased_at'       => now()->toDateString(),
-            'activated_at'       => now()->toDateString(), // Langsung aktif saat lunas
+            'activated_at'       => now()->toDateString(), 
         ]);
     }
 }

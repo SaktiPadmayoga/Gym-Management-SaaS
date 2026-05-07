@@ -1,236 +1,234 @@
-// components/Sidebar.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { sidebarData, type SidebarItem } from "@/types/sidebar-menu";
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
 
 interface SidebarProps {
-  isOpen: boolean;
-
-  pathname: string;
+    isOpen: boolean;
+    pathname: string;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+    const { hasPermission } = useStaffAuth(); // ← tambah
+    const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const findActiveItem = (items: SidebarItem[], currentPath: string): SidebarItem | null => {
-    for (const item of items) {
-      if (item.isHeader) continue;
+    // Helper: cek apakah item boleh ditampilkan
+    const canShow = (item: SidebarItem): boolean => {
+        if (!item.permission) return true; // tidak ada permission = semua boleh lihat
+        return hasPermission(item.permission);
+    };
 
-      if (item.path && (currentPath === item.path || currentPath.startsWith(item.path + '/'))) {
-        return item;
-      }
-      if (item.children) {
-        const found = findActiveItem(item.children, currentPath);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
+    // Filter sidebarData — hanya item yang boleh dilihat
+    // Header ditampilkan hanya kalau ada minimal 1 item di bawahnya yang visible
+    const getVisibleItems = (items: SidebarItem[]): SidebarItem[] => {
+        const result: SidebarItem[] = [];
 
-  const getParentPaths = (items: SidebarItem[], targetId: string, currentPath: string[] = []): string[] => {
-    for (const item of items) {
-      if (item.isHeader) continue;
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
 
-      const newPath = [...currentPath, item.id];
+            if (item.isHeader) {
+                // Cek apakah ada item non-header setelah ini yang visible
+                const nextItems = items.slice(i + 1);
+                const hasVisibleChild = nextItems.some(
+                    (next) => !next.isHeader && canShow(next)
+                );
+                if (hasVisibleChild) result.push(item);
+                continue;
+            }
 
-      if (item.id === targetId) {
-        return newPath;
-      }
+            if (!canShow(item)) continue;
 
-      if (item.children) {
-        const found = getParentPaths(item.children, targetId, newPath);
-        if (found.length > 0) return found;
-      }
-    }
-    return [];
-  };
+            // Kalau punya children, filter juga children-nya
+            if (item.children) {
+                result.push({
+                    ...item,
+                    children: item.children.filter((child) =>
+                        !child.permission || hasPermission(child.permission)
+                    ),
+                });
+            } else {
+                result.push(item);
+            }
+        }
 
-  useEffect(() => {
-    const activeItem = findActiveItem(sidebarData, pathname);
-    if (activeItem) {
-      const pathsToExpand = getParentPaths(sidebarData, activeItem.id);
-      const newExpanded: Record<string, boolean> = {};
-      pathsToExpand.forEach(path => {
-        newExpanded[path] = true;
-      });
-      setExpandedItems(prev => ({ ...prev, ...newExpanded }));
-    }
-  }, [pathname]);
+        return result;
+    };
 
-  const toggleExpanded = (key: string) => {
-    setExpandedItems(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+    const visibleItems = getVisibleItems(sidebarData);
 
-  const isActive = (item: SidebarItem): boolean => {
-    if (!item.path) return false;
-    return pathname === item.path || pathname.startsWith(item.path + '/');
-  };
+    const findActiveItem = (items: SidebarItem[], currentPath: string): SidebarItem | null => {
+        for (const item of items) {
+            if (item.isHeader) continue;
+            if (item.path && (currentPath === item.path || currentPath.startsWith(item.path + "/"))) {
+                return item;
+            }
+            if (item.children) {
+                const found = findActiveItem(item.children, currentPath);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
 
-  const isParentActive = (item: SidebarItem): boolean => {
-    if (isActive(item)) return true;
-    if (item.children) {
-      return item.children.some(child => isParentActive(child));
-    }
-    return false;
-  };
+    const getParentPaths = (items: SidebarItem[], targetId: string, currentPath: string[] = []): string[] => {
+        for (const item of items) {
+            if (item.isHeader) continue;
+            const newPath = [...currentPath, item.id];
+            if (item.id === targetId) return newPath;
+            if (item.children) {
+                const found = getParentPaths(item.children, targetId, newPath);
+                if (found.length > 0) return found;
+            }
+        }
+        return [];
+    };
 
-  const renderChildren = (children: SidebarItem[]) => {
-    return children.map((child) => {
-      const itemActive = isActive(child);
-      const CurrentIcon = itemActive && child.IconSolid ? child.IconSolid : child.Icon;
+    useEffect(() => {
+        const activeItem = findActiveItem(visibleItems, pathname);
+        if (activeItem) {
+            const pathsToExpand = getParentPaths(visibleItems, activeItem.id);
+            const newExpanded: Record<string, boolean> = {};
+            pathsToExpand.forEach((path) => { newExpanded[path] = true; });
+            setExpandedItems((prev) => ({ ...prev, ...newExpanded }));
+        }
+    }, [pathname]);
 
-      return (
-        <div key={child.id} className="relative">
-          {/* Branch lines */}
-          {isOpen && (
-            <div className="absolute left-0 top-0 bottom-0 flex items-start">
-              <div className="w-px bg-zinc-200 ml-3 h-full" />
-              <div className="w-4 h-px bg-zinc-200 mt-6" />
+    const toggleExpanded = (key: string) => {
+        setExpandedItems((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const isActive = (item: SidebarItem): boolean => {
+        if (!item.path) return false;
+        return pathname === item.path || pathname.startsWith(item.path + "/");
+    };
+
+    const isParentActive = (item: SidebarItem): boolean => {
+        if (isActive(item)) return true;
+        if (item.children) return item.children.some((child) => isParentActive(child));
+        return false;
+    };
+
+    const renderChildren = (children: SidebarItem[]) => {
+        return children.map((child) => {
+            const itemActive = isActive(child);
+            const CurrentIcon = itemActive && child.IconSolid ? child.IconSolid : child.Icon;
+
+            return (
+                <div key={child.id} className="relative">
+                    {isOpen && (
+                        <div className="absolute left-0 top-0 bottom-0 flex items-start">
+                            <div className="w-px bg-zinc-200 ml-3 h-full" />
+                            <div className="w-4 h-px bg-zinc-200 mt-6" />
+                        </div>
+                    )}
+                    <div className={`flex items-center ${isOpen ? "ml-9" : ""}`}>
+                        <Link
+                            href={child.path || "#"}
+                            className={`w-full flex items-center py-2 px-3 mt-2 rounded-lg transition-all duration-200 group ${
+                                itemActive
+                                    ? "bg-aksen-primary text-white border border-gray-500/20 shadow-sm font-semibold text-md"
+                                    : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                            }`}
+                        >
+                            {CurrentIcon && (
+                                <CurrentIcon className={`${isOpen ? "w-4 h-4 mr-3" : "w-5 h-5"} flex-shrink-0`} />
+                            )}
+                            {isOpen && <span className="text-sm truncate">{child.title}</span>}
+                        </Link>
+                    </div>
+                </div>
+            );
+        });
+    };
+
+    const renderMenuItem = (item: SidebarItem) => {
+        if (item.isHeader) {
+            if (!isOpen) return null;
+            return (
+                <div key={item.id} className="mt-6 mb-2 px-2">
+                    <span className="text-sm text-zinc-400 uppercase tracking-wider">
+                        {item.title}
+                    </span>
+                </div>
+            );
+        }
+
+        const hasChildren = item.children && item.children.length > 0;
+        const isExpanded = expandedItems[item.id];
+        const itemActive = isActive(item);
+        const parentActive = isParentActive(item);
+        const CurrentIcon = (itemActive || parentActive) && item.IconSolid ? item.IconSolid : item.Icon;
+
+        return (
+            <div key={item.id} className="mb-1">
+                {hasChildren ? (
+                    <button
+                        onClick={() => toggleExpanded(item.id)}
+                        className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 group ${
+                            itemActive || parentActive
+                                ? "bg-aksen-primary text-white border border-gray-500/20 shadow-sm font-semibold text-md"
+                                : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                        }`}
+                    >
+                        <div className="flex items-center min-w-0">
+                            {CurrentIcon && (
+                                <CurrentIcon className={`${isOpen ? "w-5 h-5 mr-3" : "w-6 h-6"} flex-shrink-0`} />
+                            )}
+                            {isOpen && <span className="truncate">{item.title}</span>}
+                        </div>
+                        {hasChildren && isOpen && (
+                            <div className="ml-2">
+                                {isExpanded
+                                    ? <ChevronDownIcon className="w-4 h-4" />
+                                    : <ChevronRightIcon className="w-4 h-4" />
+                                }
+                            </div>
+                        )}
+                    </button>
+                ) : (
+                    <Link
+                        href={item.path || "#"}
+                        className={`w-full flex items-center py-2 px-3 rounded-lg transition-all duration-200 group ${
+                            itemActive
+                                ? "bg-aksen-primary/90 text-white border border-gray-500/20 shadow-sm font-semibold text-md"
+                                : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
+                        }`}
+                    >
+                        {CurrentIcon && (
+                            <CurrentIcon className={`${isOpen ? "w-5 h-5 mr-3" : "w-6 h-6"} flex-shrink-0`} />
+                        )}
+                        {isOpen && <span className="truncate">{item.title}</span>}
+                    </Link>
+                )}
+
+                {hasChildren && isOpen && (
+                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+                    }`}>
+                        <div className="relative ml-2 mt-1">
+                            {renderChildren(item.children!)}
+                        </div>
+                    </div>
+                )}
             </div>
-          )}
-
-          {/* Menu item */}
-          <div className={`flex items-center ${isOpen ? 'ml-9' : ''}`}>
-            <Link
-              href={child.path || '#'}
-              className={`w-full flex items-center py-2 px-3 mt-2 rounded-lg transition-all duration-200 group ${
-                itemActive
-                  ? 'bg-aksen-primary text-white border border-gray-500/20 shadow-sm font-semibold text-md' 
-                  : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
-              }`}
-            >
-              {CurrentIcon && (
-                <CurrentIcon className={`${isOpen ? 'w-4 h-4 mr-3' : 'w-5 h-5'} flex-shrink-0`} />
-              )}
-
-              {isOpen && (
-                <span className="text-sm truncate">{child.title}</span>
-              )}
-            </Link>
-          </div>
-        </div>
-      );
-    });
-  };
-
-  const renderMenuItem = (item: SidebarItem) => {
-    // Render header
-    if (item.isHeader) {
-      if (!isOpen) return null;
-
-      return (
-        <div key={item.id} className="mt-6 mb-2 px-2">
-          <span className="text-sm text-zinc-400 uppercase tracking-wider">
-            {item.title}
-          </span>
-        </div>
-      );
-    }
-
-    const hasChildren = item.children && item.children.length > 0;
-    const isExpanded = expandedItems[item.id];
-    const itemActive = isActive(item);
-    const parentActive = isParentActive(item);
-    const CurrentIcon = (itemActive || parentActive) && item.IconSolid ? item.IconSolid : item.Icon;
+        );
+    };
 
     return (
-      <div key={item.id} className="mb-1">
-        {hasChildren ? (
-          <button
-            onClick={() => toggleExpanded(item.id)}
-            className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 group ${
-              itemActive || parentActive 
-                ? 'bg-aksen-primary text-white border border-gray-500/20 shadow-sm font-semibold text-md' 
-                : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
-            }`}
-          >
-            <div className="flex items-center min-w-0">
-              {CurrentIcon && (
-                <CurrentIcon className={`${isOpen ? 'w-5 h-5 mr-3' : 'w-6 h-6'} flex-shrink-0`} />
-              )}
-              
-              {isOpen && (
-                <span className=" truncate">{item.title}</span>
-              )}
-            </div>
-
-            {hasChildren && isOpen && (
-              <div className="ml-2">
-                {isExpanded ? (
-                  <ChevronDownIcon className="w-4 h-4" />
-                ) : (
-                  <ChevronRightIcon className="w-4 h-4" />
-                )}
-              </div>
-            )}
-          </button>
-        ) : (
-          <Link
-            href={item.path || '#'}
-            className={`w-full flex items-center py-2 px-3 rounded-lg transition-all duration-200 group ${
-              itemActive 
-                ? ' bg-aksen-primary/90  text-white border border-gray-500/20 shadow-sm font-semibold text-md' 
-                : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
-            }`}
-          >
-            {CurrentIcon && (
-              <CurrentIcon className={`${isOpen ? 'w-5 h-5 mr-3' : 'w-6 h-6'} flex-shrink-0`} />
-            )}
-            
-            {isOpen && (
-              <span className=" truncate">{item.title}</span>
-            )}
-          </Link>
-        )}
-
-        {/* Children with branch design */}
-        {hasChildren && isOpen && (
-          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="relative ml-2 mt-1">
-              {renderChildren(item.children!)}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <aside
-        className={`
+        <aside className={`
             ${isOpen ? "w-64" : "w-21 py-5"}
-            relative
-            sticky
-            top-0
-            z-20
-            m-4
-            h-[84vh]
-            overflow-y-scroll
-            rounded-lg
-            border
-            border-gray-200
-            bg-white
-            transition-all
-            duration-500
-            ease-in-out
-            overflow-visible
-        `}
-        >
-        
-
-        {/* MENU ITEMS */}
-        <div className="pb-4 px-4 font-figtree">
-            {sidebarData.map(renderMenuItem)}
-        </div>
-    </aside>
-
-  );
+            relative sticky top-0 z-20 m-4  h-full
+            overflow-y-scroll rounded-lg border border-gray-200
+            bg-white transition-all duration-500 ease-in-out overflow-visible
+        `}>
+            <div className="pb-4 px-4 font-figtree">
+                {visibleItems.map(renderMenuItem)}
+            </div>
+        </aside>
+    );
 };
 
 export default Sidebar;

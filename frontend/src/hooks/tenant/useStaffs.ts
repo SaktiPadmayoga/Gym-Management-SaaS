@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { staffAPI } from "@/lib/api/tenant/staffs";
 import { AssignBranchRequest, StaffCreateRequest, StaffData, StaffUpdateRequest } from "@/types/tenant/staffs";
+import { ChangePasswordRequest } from "@/types/tenant/staff-auth";
+import { staffAuthAPI } from "@/lib/api/tenant/staffAuth";
 
 export type StaffQueryParams = {
     page?: number;
@@ -180,6 +182,20 @@ export function useRevokeBranch() {
                 queryKey: staffKeys.branches(staffId),
             });
             queryClient.invalidateQueries({ queryKey: staffKeys.lists() });
+        },
+    });
+}
+
+export function useUpdateStaffPassword() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: ChangePasswordRequest) => staffAuthAPI.changePassword(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: staffKeys.detail("me") });
+        },
+        onError: (error) => {
+            console.error("Update profile error:", error);
         },
     });
 }

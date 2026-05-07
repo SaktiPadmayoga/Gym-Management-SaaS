@@ -1,16 +1,7 @@
 import {
     IconLayoutDashboard,
     IconLayoutDashboardFilled,
-    IconUser,
-    IconUserFilled,
     IconUsers,
-    IconUsersGroup,
-    IconDatabase,
-    IconDatabaseSmile,
-    IconHierarchy,
-    IconCherryFilled,
-    IconCalendarCheck,
-    IconCalendarFilled,
     IconHistory,
     IconFileInvoice,
     IconFileInvoiceFilled,
@@ -18,21 +9,13 @@ import {
     IconCoinFilled,
     IconCreditCard,
     IconCreditCardFilled,
-    IconRefresh,
-    IconSettings,
-    IconSettingsFilled,
-    IconClock,
-    IconClockFilled,
-    IconShieldLock,
     IconBarbell,
     IconBarbellFilled,
     IconCards,
     IconCardsFilled,
-    IconDeviceIpadDollar,
-    IconKey,
-    IconKeyFilled,
     IconLink,
-    IconUnlink,
+    IconReportAnalytics,
+    IconReportAnalyticsFilled,
 } from "@tabler/icons-react";
 
 /**
@@ -62,6 +45,13 @@ export const adminSidebarData: AdminSidebarItem[] = [
         Icon: IconLayoutDashboard,
         IconSolid: IconLayoutDashboardFilled,
     },
+    {
+        id: "nav-tenant-reports",
+        title: "Reports",
+        path: "/admin/reports",
+        Icon: IconReportAnalytics,
+        IconSolid: IconReportAnalyticsFilled,
+    },
 
     // =========================
     // TENANT & SUBSCRIPTION
@@ -82,13 +72,6 @@ export const adminSidebarData: AdminSidebarItem[] = [
         Icon: IconLink,
         IconSolid: IconLink,
     },
-    {
-        id: "nav-domain-request",
-        title: "Domain Requests",
-        path: "/admin/domain-requests",
-        Icon: IconUnlink,
-        IconSolid: IconUnlink,
-    },
     
     {
         id: "nav-plan",
@@ -99,15 +82,15 @@ export const adminSidebarData: AdminSidebarItem[] = [
     },
     {
         id: "nav-subscription",
-        title: "Subscription",
+        title: "Subscriptions",
         path: "/admin/subscriptions",
         Icon: IconCreditCard,
         IconSolid: IconCreditCardFilled,
     },
     {
         id: "nav-subscription-history",
-        title: "Subscription History",
-        path: "/admin/subscription-history",
+        title: "Subscriptions History",
+        path: "/admin/subscriptions-history",
         Icon: IconHistory,
         IconSolid: IconHistory,
     },
@@ -130,20 +113,6 @@ export const adminSidebarData: AdminSidebarItem[] = [
         Icon: IconCoin,
         IconSolid: IconCoinFilled,
     },
-    {
-        id: "nav-refund",
-        title: "Refunds",
-        path: "/admin/refunds",
-        Icon: IconRefresh,
-        IconSolid: IconRefresh,
-    },
-    {
-        id: "nav-payment-method",
-        title: "Payment Methods",
-        path: "/admin/payment-methods",
-        Icon: IconDeviceIpadDollar,
-        IconSolid: IconDeviceIpadDollar,
-    },
 
     // =========================
     // USER MANAGEMENT
@@ -156,44 +125,22 @@ export const adminSidebarData: AdminSidebarItem[] = [
         Icon: IconUsers,
         IconSolid: IconUsers,
     },
-    // {
-    //     id: "nav-tenant-users",
-    //     title: "Tenant Users",
-    //     path: "/admin/tenant-users",
-    //     Icon: IconUsersGroup,
-    //     IconSolid: IconUsersGroup,
-    // },
-    // {
-    //     id: "nav-roles",
-    //     title: "Roles",
-    //     path: "/roles",
-    //     Icon: IconShieldLock,
-    //     IconSolid: IconShieldLock,
-    // },
-    // {
-    //     id: "nav-permissions",
-    //     title: "Permissions",
-    //     path: "/permissions",
-    //     Icon: IconKey,
-    //     IconSolid: IconKeyFilled,
-    // },
-
     // =========================
     // ANALYTICS & CONTROL
     // =========================
-    { id: "header-analytics", title: "Analytics & Control", isHeader: true },
-    {
-        id: "nav-activity-log",
-        title: "Tenant Activity Logs",
-        path: "/admin/tenant-activity-logs",
-        Icon: IconClock,
-        IconSolid: IconClockFilled,
-    },
-    {
-        id: "nav-settings",
-        title: "Settings",
-        path: "/admin/settings",
-        Icon: IconSettings,
-        IconSolid: IconSettingsFilled,
-    },
+    // { id: "header-analytics", title: "Analytics & Control", isHeader: true },
+    // {
+    //     id: "nav-activity-log",
+    //     title: "Tenant Activity Logs",
+    //     path: "/admin/tenant-activity-logs",
+    //     Icon: IconClock,
+    //     IconSolid: IconClockFilled,
+    // },
+    // {
+    //     id: "nav-settings",
+    //     title: "Settings",
+    //     path: "/admin/settings",
+    //     Icon: IconSettings,
+    //     IconSolid: IconSettingsFilled,
+    // },
 ];

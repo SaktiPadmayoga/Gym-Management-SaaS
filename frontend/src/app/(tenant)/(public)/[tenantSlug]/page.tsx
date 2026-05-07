@@ -94,7 +94,7 @@ export default function TenantLandingPage() {
                             </span>
                         </h1>
                         <p className="text-lg md:text-xl text-zinc-300 mb-10 max-w-xl leading-relaxed font-medium">
-                            Don't wait for tomorrow. Build your best version today with state-of-the-art equipment, elite trainers, and an unstoppable community.
+                            Dont wait for tomorrow. Build your best version today with state-of-the-art equipment, elite trainers, and an unstoppable community.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <CustomButton 
@@ -153,10 +153,10 @@ export default function TenantLandingPage() {
                         <div className="w-full lg:w-1/2">
                             <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">About {gymName}</h2>
                             <h3 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tight mb-6 leading-tight">
-                                MORE THAN JUST A GYM. IT'S A LIFESTYLE.
+                                MORE THAN JUST A GYM. ITS A LIFESTYLE.
                             </h3>
                             <p className="text-lg text-zinc-600 mb-8 leading-relaxed">
-                                We believe that fitness is the foundation of a great life. Our facility is designed to inspire, motivate, and help you achieve results you never thought possible. Whether you're a beginner or a pro athlete, you belong here.
+                                We believe that fitness is the foundation of a great life. Our facility is designed to inspire, motivate, and help you achieve results you never thought possible. Whether youre a beginner or a pro athlete, you belong here.
                             </p>
                             <ul className="space-y-4 mb-8">
                                 <li className="flex items-center gap-3 text-zinc-800 font-semibold">

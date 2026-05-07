@@ -2,12 +2,13 @@ import * as z from "zod";
 import { StaffData } from "./staffs";
 
 export const LoginBranchSchema = z.object({
-    id: z.string(),
-    name: z.string(),
+    id:          z.string(),
+    name:        z.string(),
     branch_code: z.string().optional(),
-    address: z.string().nullable().optional(),
-    city: z.string().nullable().optional(),
-    role: z.string(),
+    address:     z.string().nullable().optional(),
+    city:        z.string().nullable().optional(),
+    role:        z.string(),
+    permissions: z.array(z.string()).default([]), // ← tambah
 });
 
 export type LoginBranchData = z.infer<typeof LoginBranchSchema>;
@@ -18,7 +19,6 @@ export interface StaffLoginRequest {
 }
 
 export interface StaffLoginResponse {
-    token: string;
     staff: StaffData;
     branches: LoginBranchData[];
     global_role: "owner" | "staff";
@@ -38,4 +38,5 @@ export interface SelectedBranch {
     address: string | null;
     city?: string | null;
     role: string;
+    permissions: string[]; // ← tambah
 }

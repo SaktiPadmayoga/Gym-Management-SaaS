@@ -8,9 +8,6 @@ import { DEFAULT_WALK_IN_CUSTOMER, CATEGORIES, TAX_RATE } from "@/lib/constans/p
 import { SearchBar } from "./SearchBar";
 import { FilterDropdown } from "./FilterDropdown";
 import { ProductGrid } from "./ProductGrid";
-// TODO: Uncomment jika komponen Grid untuk Membership dan PT Package sudah dibuat
-// import { MembershipGrid } from "./MembershipGrid"; 
-// import { PtPackageGrid } from "./PtPackageGrid";
 
 import { CartSidebar } from "./CartSidebar";
 import { PaymentModal } from "./PaymentModal";
@@ -18,7 +15,7 @@ import { ReceiptModal } from "./ReceiptModal";
 import { usePaymentModal } from "@/hooks/usePaymentModal";
 import { toast } from "sonner";
 import { calcSubtotal } from "@/lib/utils/pos-cart";
-
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { usePOSCheckout, mapCartToPayload } from "@/hooks/tenant/usePOS";
 import { Payment } from "@/types/payment";
 import CustomButton from "@/components/ui/button/CustomButton";
@@ -27,6 +24,7 @@ import { getCurrentBranchId } from "@/lib/tenant-api-client";
 import { MembershipGrid } from "./MembershipGrid";
 import { PtPackageGrid } from "./PtPackageGrid";
 import { useRouter } from "next/navigation";
+
 
 type PosTab = "product" | "membership" | "pt_package";
 
@@ -50,6 +48,8 @@ export const POSWrapper: React.FC = () => {
     // Hooks
     const { isOpen: isPaymentModalOpen, open: openPaymentModal, close: closePaymentModal } = usePaymentModal();
     const checkoutMutation = usePOSCheckout();
+
+    const { staff } = useStaffAuth();
 
     // Calculations
     const subtotal = calcSubtotal(cartItems);
@@ -153,26 +153,9 @@ export const POSWrapper: React.FC = () => {
     };
 
     const handlePaymentConfirm = (paymentData: Payment & { session: POSSession }) => {
-        // 1. Ambil Branch ID
         const branchId = getCurrentBranchId();
+        const staffId = staff?.id;
 
-        // 2. Ambil Staff ID (created_by)
-        // Ambil dari localStorage tempat kamu biasa menyimpan data user/auth. 
-        // Sesuaikan key "user" dengan key yang kamu gunakan di aplikasi.
-        let staffId = null;
-        if (typeof window !== "undefined") {
-            const userDataStr = localStorage.getItem("staff_data");
-            if (userDataStr) {
-                try {
-                    const userObj = JSON.parse(userDataStr);
-                    staffId = userObj.id;
-                } catch (e) {
-                    console.error("Gagal parse data user", e);
-                }
-            }
-        }
-
-        // 3. FRONTEND VALIDATION (Mencegah error 422 dari Backend)
         if (!branchId) {
             toast.error("Gagal: Branch ID tidak ditemukan. Pastikan Anda sudah memilih cabang aktif.");
             return;

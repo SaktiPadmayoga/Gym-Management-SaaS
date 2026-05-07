@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Subscription;
+use App\Services\NotificationService;
 use Illuminate\Console\Command;
 
 class CheckSubscriptions extends Command
@@ -17,7 +18,16 @@ class CheckSubscriptions extends Command
             ->each(function ($subscription) {
                 $subscription->update(['status' => 'expired']);
                 $subscription->syncToTenant();
-                // Optional: Kirim email expired
+
+                if ($subscription->tenant) {
+                    app(NotificationService::class)->createTenantForTenant(
+                        $subscription->tenant,
+                        null,
+                        'tenant_deactivated',
+                        'Tenant Dinonaktifkan',
+                        'Langganan tenant telah berakhir. Silakan perpanjang atau upgrade paket untuk mengaktifkan kembali layanan.'
+                    );
+                }
             });
 
         $this->info('Subscriptions checked successfully.');

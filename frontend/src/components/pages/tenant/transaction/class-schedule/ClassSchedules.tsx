@@ -243,7 +243,7 @@ function ListTab() {
                     </div>
                     <CustomButton
                         iconName="plus"
-                        className="text-white px-3"
+                        className="text-white px-3 py-2"
                         onClick={() => router.push("/class-schedules/create")}
                     >
                         Buat Jadwal
@@ -336,21 +336,21 @@ function CalendarTab() {
                     </h2>
                     <div className="flex gap-2">
                         <CustomButton 
-                            
+                            className="px-2 py-1"
                             size="sm"
                             onClick={prevMonth}
                         >
                             ←
                         </CustomButton>
                         <CustomButton 
-                            
+                            className="px-2 py-1"
                             size="sm"
                             onClick={nextMonth}
                         >
                             →
                         </CustomButton>
                         <CustomButton 
-                            
+                            className="px-2 py-1"
                             size="sm"
                             onClick={goToToday}
                         >

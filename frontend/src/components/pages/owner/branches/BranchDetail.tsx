@@ -87,11 +87,17 @@ export default function BranchDetailPage() {
 
             await updateMutation.mutateAsync({ id, payload });
 
-            toast.success("Branch updated successfully");
+            router.push("/owner/branches?success=true");
             setIsEditMode(false);
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to update branch");
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error ||
+                error?.response?.data?.message ||
+                error?.message ||
+                "Gagal mengubah data cabang";
+
+            toast.error(message);
         }
     };
 
@@ -119,9 +125,9 @@ export default function BranchDetailPage() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Cabang & Langganan</li>
                             <li>
-                                <Link href="/owner/branches">Branches</Link>
+                                <Link href="/owner/branches">Cabang</Link>
                             </li>
                             <li className="text-aksen-secondary">{branch.name}</li>
                         </ul>
@@ -133,7 +139,7 @@ export default function BranchDetailPage() {
                             <Link href="/owner/branches">
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </Link>
-                            <h1 className="text-2xl font-semibold">Branch Detail</h1>
+                            <h1 className="text-2xl font-semibold">Detail Cabang</h1>
                         </div>
 
                         {!isEditMode ? (
@@ -143,7 +149,7 @@ export default function BranchDetailPage() {
                                 className="bg-aksen-secondary text-white px-4 py-2.5"
                                 onClick={() => setIsEditMode(true)}
                             >
-                                Edit
+                                Ubah Data
                             </CustomButton>
                         ) : (
                             <div className="flex gap-2">
@@ -152,7 +158,7 @@ export default function BranchDetailPage() {
                                     className="border px-4 py-2.5"
                                     onClick={handleCancel}
                                 >
-                                    Cancel
+                                    Batal
                                 </CustomButton>
                                 <CustomButton
                                     type="button"
@@ -160,7 +166,7 @@ export default function BranchDetailPage() {
                                     onClick={handleSave}
                                     disabled={updateMutation.isPending}
                                 >
-                                    {updateMutation.isPending ? "Saving..." : "Save"}
+                                    {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
                                 </CustomButton>
                             </div>
                         )}
@@ -168,15 +174,15 @@ export default function BranchDetailPage() {
 
                     <hr />
 
-                    <div className="flex flex-col gap-6 mt-6">
+                    <div className="flex flex-col gap-5 mt-6">
                         {/* BASIC INFO */}
                         <h2 className="text-lg font-semibold text-gray-800">Basic Info</h2>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Branch Name" disabled={!isEditMode} />
+                                <TextInput name="name" label="Nama Cabang" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="branch_code" label="Branch Code" disabled={!isEditMode} />
+                                <TextInput name="branch_code" label="Kode Cabang" disabled={!isEditMode} />
                             </div>
                         </div>
 
@@ -188,55 +194,20 @@ export default function BranchDetailPage() {
                                 <TextInput name="phone" label="Phone" disabled={!isEditMode} />
                             </div>
                         </div>
-
-                        <hr />
-
-                        {/* LOCATION */}
-                        <h2 className="text-lg font-semibold text-gray-800">Location</h2>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
                                 <TextInput name="city" label="City" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="timezone" label="Timezone" disabled={!isEditMode} />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12">
                                 <TextInput name="address" label="Address" disabled={!isEditMode} />
                             </div>
                         </div>
-
                         <hr />
 
-                        {/* DOMAIN */}
-                        {branch.domains && branch.domains.length > 0 && (
-                            <>
-                                <h2 className="text-lg font-semibold text-gray-800">Domains</h2>
-                                <div className="flex flex-col gap-2">
-                                    {branch.domains.map((d) => (
-                                        <div
-                                            key={d.id}
-                                            className="flex items-center gap-3 text-sm text-zinc-700 bg-zinc-50 border rounded-lg px-4 py-2"
-                                        >
-                                            <span className="font-medium">{d.domain}</span>
-                                            <span className="text-xs text-zinc-400 capitalize">{d.type}</span>
-                                            {d.is_primary && (
-                                                <span className="text-xs text-green-600 bg-green-100 rounded px-2 py-0.5">
-                                                    Primary
-                                                </span>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                                <hr />
-                            </>
-                        )}
-
                         {/* OTHER */}
-                        <h2 className="text-lg font-semibold text-gray-800">Other</h2>
+                        <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
+                            <div className="col-span-4">
                                 <TextInput
                                     name="opened_at"
                                     label="Opened At"
@@ -244,12 +215,10 @@ export default function BranchDetailPage() {
                                     disabled={!isEditMode}
                                 />
                             </div>
-                        </div>
-
-                        {/* STATUS */}
-                        <h2 className="text-lg font-semibold text-gray-800">Status</h2>
-                        <div className="flex gap-10 text-gray-800">
-                            <label className="flex items-center gap-2">
+                            <div className="col-span-4">
+                                <TextInput name="timezone" label="Timezone" disabled={!isEditMode} />
+                            </div>
+                            <label className="flex items-center gap-2 col-span-4">
                                 <input
                                     type="checkbox"
                                     {...form.register("is_active")}

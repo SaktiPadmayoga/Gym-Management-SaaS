@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Header from "./Header";
 import { GripVertical } from "lucide-react";
 import MemberSidebar from "./MemberSidebar";
+import MemberHeader from "./MemberHeader";
 
 interface MemberLayoutWrapperProps {
     children: React.ReactNode;
@@ -54,7 +55,7 @@ const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) =
             <div className="flex flex-col h-full bg-zinc-100 ">
                 {/* Header */}
 
-                <Header isOpen={isOpen} pathname={pathname} />
+                <MemberHeader />
 
                 {/* Main Container */}
                 <div className="flex flex-1 overflow-visible">

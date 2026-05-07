@@ -70,25 +70,40 @@ services:
             dockerfile: ../docker/nextjs/Dockerfile
         container_name: gym-nextjs
         working_dir: /app
-        user: "1000:1000" # Mencegah error permission (root) di Linux
+        # user: "1000:1000"          # ← KOMENTARI atau HAPUS baris ini dulu
+        user: "${UID:-1000}:${GID:-1000}" # ← TAMBAHKAN baris ini (lebih aman)
         environment:
             NODE_ENV: development
+            HOSTNAME: "0.0.0.0"
+            PORT: "3000"
+            NEXT_PUBLIC_HOSTNAME: "0.0.0.0" # kadang membantu di Next 15
+            HOST: "0.0.0.0" # alternatif nama env
             NEXT_PUBLIC_API_BASE_URL: http://localhost/api
             NEXT_PUBLIC_APP_NAME: Gym Management System
             NEXT_PUBLIC_TENANT_DOMAIN: localhost
         volumes:
             - ./frontend:/app
-            - nextjs_node_modules:/app/node_modules # Menggunakan named volume
-            - nextjs_next_cache:/app/.next # Menggunakan named volume
+            - nextjs_node_modules:/app/node_modules
+            # - nextjs_next_cache:/app/.next
         networks:
             - gym-network
         restart: unless-stopped
         healthcheck:
-            test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
-            interval: 30s
+            test: [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "
+                    const http = require('http');
+                    http.get('http://127.0.0.1:3000', (r) => {
+                    process.exit(r.statusCode >= 200 && r.statusCode < 400 ? 0 : 1);
+                    }).on('error', () => process.exit(1));
+                    ",
+                ]
+            interval: 15s
             timeout: 10s
-            retries: 3
-            start_period: 60s
+            retries: 8
+            start_period: 45s
 
     # ========================================
     # Nginx - Web Server

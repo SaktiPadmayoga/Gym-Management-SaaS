@@ -31,3 +31,14 @@ export type SubscriptionsData = z.infer<typeof SubscriptionsSchema>;
 export type SubscriptionsDataWithKeyword = SubscriptionsData & { keyword: string };
 
 export type SubscriptionCreateRequest = Omit<SubscriptionsData, "id" | "createdAt" | "updatedAt" | "deletedAt">;
+
+
+export interface SubscriptionPaginatedResponse {
+    data: SubscriptionsData[];
+    meta: {
+        current_page: number;
+        per_page:     number;
+        total:        number;
+        last_page:    number;
+    };
+}

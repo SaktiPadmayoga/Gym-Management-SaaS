@@ -11,10 +11,11 @@ use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Notification;
 use App\Http\Controllers\Tenant\MidtransWebhookController;
+use App\Services\CentralPaymentService;
 
 class PaymentController extends Controller
 {
-    public function __construct()
+    public function __construct(protected CentralPaymentService $paymentService)
     {
         Config::$serverKey    = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
@@ -181,168 +182,53 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
-
         $payload = $request->all();
         $orderId = $payload['order_id'] ?? null;
 
-        // Routing berdasarkan prefix order_id
+        // Routing ke tenant jika prefix bukan ORD- (misal INV-POS, INV-MEM)
         if (!str_starts_with($orderId, 'ORD-')) {
             return app(MidtransWebhookController::class)->handle($request);
         }
 
-
-
         try {
-            Config::$serverKey    = config('midtrans.server_key');
-            Config::$isProduction = config('midtrans.is_production');
-
             $body = $request->getContent();
-            Log::info('Webhook incoming', ['body' => $body]);
-
-            // Parse manual dari request body — lebih reliable dari Notification class
             $data = json_decode($body, true);
 
-            if (!$data) {
-                Log::error('Webhook: invalid JSON body');
-                return response()->json(['message' => 'Invalid body'], 200);
-            }
+            if (!$data) return response()->json(['message' => 'Invalid body'], 200);
 
-            $orderId           = $data['order_id'] ?? null;
-            $statusCode        = $data['status_code'] ?? null;
-            $grossAmount       = $data['gross_amount'] ?? null;
-            $transactionStatus = $data['transaction_status'] ?? null;
-            $fraudStatus       = $data['fraud_status'] ?? null;
-            $paymentType       = $data['payment_type'] ?? null;
-            $transactionId     = $data['transaction_id'] ?? null;
-            $signatureKey      = $data['signature_key'] ?? null;
-
-            Log::info('Webhook parsed', [
-                'order_id'           => $orderId,
-                'transaction_status' => $transactionStatus,
-                'fraud_status'       => $fraudStatus,
-                'status_code'        => $statusCode,
-            ]);
-
-            if (!$orderId || !$signatureKey) {
-                Log::error('Webhook: missing required fields');
-                return response()->json(['message' => 'Missing fields'], 200);
-            }
+            $signatureKey = $data['signature_key'] ?? null;
+            $statusCode   = $data['status_code'] ?? null;
+            $grossAmount  = $data['gross_amount'] ?? null;
 
             // Verifikasi signature
-            $localSignature = hash(
-                'sha512',
-                $orderId . $statusCode . $grossAmount . config('midtrans.server_key')
-            );
-
+            $localSignature = hash('sha512', $orderId . $statusCode . $grossAmount . config('midtrans.server_key'));
             if ($localSignature !== $signatureKey) {
-                Log::warning('Webhook: invalid signature', [
-                    'expected' => $localSignature,
-                    'received' => $signatureKey,
-                ]);
                 return response()->json(['message' => 'Invalid signature'], 403);
             }
 
             // Cari invoice
-            $invoice = DB::connection('central')
-                ->table('invoices')
-                ->where('external_reference', $orderId)
-                ->first();
+            $invoice = DB::connection('central')->table('invoices')->where('external_reference', $orderId)->first();
+            if (!$invoice) return response()->json(['message' => 'Invoice not found'], 200);
+            if ($invoice->status === 'paid') return response()->json(['message' => 'Already processed'], 200);
 
-            if (!$invoice) {
-                Log::error('Webhook: invoice not found', ['order_id' => $orderId]);
-                return response()->json(['message' => 'Invoice not found'], 200);
-            }
-
-            if ($invoice->status === 'paid') {
-                Log::info('Webhook: already processed', ['order_id' => $orderId]);
-                return response()->json(['message' => 'Already processed'], 200);
-            }
-
-            // Tentukan status pembayaran
-            $isPaid = ($transactionStatus === 'capture' && $fraudStatus === 'accept')
-                   || ($transactionStatus === 'settlement');
-
+            $transactionStatus = $data['transaction_status'] ?? null;
+            $fraudStatus       = $data['fraud_status'] ?? null;
+            
+            $isPaid = ($transactionStatus === 'capture' && $fraudStatus === 'accept') || ($transactionStatus === 'settlement');
             $isFailed = in_array($transactionStatus, ['cancel', 'deny', 'expire']);
 
-            Log::info('Webhook: status determined', [
-                'isPaid'   => $isPaid,
-                'isFailed' => $isFailed,
-            ]);
-
             if ($isPaid) {
-                DB::connection('central')->transaction(function () use (
-                    $invoice, $body, $paymentType, $transactionId
-                ) {
-                    // Update invoice
-                    DB::connection('central')
-                        ->table('invoices')
-                        ->where('id', $invoice->id)
-                        ->update([
-                            'status'           => 'paid',
-                            'payment_method'   => $paymentType,
-                            'transaction_id'   => $transactionId,
-                            'paid_at'          => now(),
-                            'gateway_response' => $body,
-                            'updated_at'       => now(),
-                        ]);
-
-                    // Update payment
-                    DB::connection('central')
-                        ->table('payments')
-                        ->where('invoice_id', $invoice->id)
-                        ->update([
-                            'status'         => 'success',
-                            'payment_type'   => $paymentType,
-                            'transaction_id' => $transactionId,
-                            'raw_response'   => $body,
-                            'paid_at'        => now(),
-                            'updated_at'     => now(),
-                        ]);
-
-                    // Buat subscription baru + cancel lama
-                    $this->activateSubscription($invoice);
-                });
-
+                $this->paymentService->activateSubscription($invoice, $body, $data['payment_type'] ?? null, $data['transaction_id'] ?? null);
             } elseif ($isFailed) {
                 $statusLabel = $transactionStatus === 'expire' ? 'expired' : 'failed';
-
-                DB::connection('central')->transaction(function () use (
-                    $invoice, $body, $statusLabel
-                ) {
-                    DB::connection('central')
-                        ->table('invoices')
-                        ->where('id', $invoice->id)
-                        ->update([
-                            'status'           => $statusLabel,
-                            'gateway_response' => $body,
-                            'updated_at'       => now(),
-                        ]);
-
-                    DB::connection('central')
-                        ->table('payments')
-                        ->where('invoice_id', $invoice->id)
-                        ->update([
-                            'status'       => $statusLabel,
-                            'raw_response' => $body,
-                            'updated_at'   => now(),
-                        ]);
-                });
+                $this->paymentService->failPayment($invoice, $body, $statusLabel);
             }
 
-            Log::info('Webhook: processed successfully', ['order_id' => $orderId]);
             return response()->json(['message' => 'OK'], 200);
 
         } catch (\Exception $e) {
-            Log::error('Webhook error', [
-                'message' => $e->getMessage(),
-                'file'    => $e->getFile(),
-                'line'    => $e->getLine(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
-            return response()->json([
-                'message' => 'Error logged',
-                'debug'   => config('app.debug') ? $e->getMessage() : null,
-            ], 200);
+            Log::error('Central Webhook error', ['message' => $e->getMessage()]);
+            return response()->json(['message' => 'Error logged'], 200);
         }
     }
 

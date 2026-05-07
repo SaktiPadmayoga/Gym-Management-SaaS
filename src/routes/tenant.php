@@ -25,111 +25,125 @@ use App\Http\Controllers\Tenant\MemberPtController;
 use App\Http\Controllers\Tenant\PtSessionController;
 use App\Http\Controllers\Tenant\PtPackageController;
 use App\Http\Controllers\Tenant\POSController;
+use App\Http\Controllers\Tenant\FacilityBookingController;
+use App\Http\Controllers\Tenant\MemberMembershipController;
+use App\Http\Controllers\Tenant\TenantDashboardController;
+use App\Http\Controllers\Tenant\TenantReportController;
+use App\Http\Controllers\Tenant\BranchReportController;
+use App\Http\Controllers\Tenant\TenantNotificationController;
+use App\Http\Controllers\Tenant\RoleController;
 
- 
+
 // ============================================================================
 // PUBLIC — Tidak butuh autentikasi
 // ============================================================================
-Route::prefix('member')->group(function () {
-    Route::post('/register', [MemberRegistrationController::class, 'register'])
-        ->name('tenant.member.register');
+
+Route::prefix('tenant')->group(function () {
+    Route::get('/current', [TenantController::class, 'current']);
 });
 
+Route::get('/branches/{branch}/settings/public', [BranchSettingController::class, 'public']);
+
+Route::prefix('member')->group(function () {
+    Route::post('/register',    [MemberRegistrationController::class, 'register']);
+    Route::post('/auth/login',  [MemberAuthController::class, 'login']);
+    Route::get('/auth/google',  [MemberAuthController::class, 'redirectToGoogle']);
+    Route::get('/membershipAvailable', [MembershipPlanController::class, 'getAvailablePlans']);
+});
 
 Route::prefix('tenant-auth')->group(function () {
-    Route::post('/login',          [StaffAuthController::class, 'login']);
-    Route::get('/google',          [StaffAuthController::class, 'redirectToGoogle']);
+    Route::post('/login',  [StaffAuthController::class, 'login']);
+    Route::get('/google',  [StaffAuthController::class, 'redirectToGoogle']);
 });
 
-
-// Prefix /api otomatis ditambahkan oleh konfigurasi RouteServiceProvider kamu
-Route::prefix('member')->group(function () {
-    
-    // 1. AUTH ROUTES (Sudah berada di dalam konteks Tenant)
-    Route::post('/auth/login', [MemberAuthController::class, 'login']);
-    
-    // Rute ini yang dipanggil tombol frontend Svelte untuk minta URL Google
-    // Aman di sini karena Controller tinggal membaca request()->getHost()
-    Route::get('/auth/google', [MemberAuthController::class, 'redirectToGoogle']);
-
-
-    // 2. PROTECTED MEMBER ROUTES
-    Route::middleware(['auth:member'])->group(function () {
-        Route::get('/auth/me', [MemberAuthController::class, 'me']);
-        Route::post('/auth/logout', [MemberAuthController::class, 'logout']);
-        Route::post('/auth/change-password', [MemberAuthController::class, 'changePassword']);
-    });
-});
+// ============================================================================
+// MEMBER PROTECTED
+// ============================================================================
 
 Route::prefix('member')->middleware('auth:member')->group(function () {
+
+    // Auth
+    Route::get('/auth/me',               [MemberAuthController::class, 'me']);
+    Route::post('/auth/logout',          [MemberAuthController::class, 'logout']);
+    Route::post('/auth/change-password', [MemberAuthController::class, 'changePassword']);
+
+    // Check-ins
+    Route::post('/check-ins', [CheckInController::class, 'store']);
+
+    // Class schedules
     Route::get('/class-schedules',              [MemberClassController::class, 'index']);
     Route::post('/class-schedules/{id}/book',   [MemberClassController::class, 'book']);
     Route::delete('/class-schedules/{id}/book', [MemberClassController::class, 'cancelBook']);
     Route::get('/my-classes',                   [MemberClassController::class, 'myClasses']);
 
-    Route::get('pt-plans', [MemberPtController::class, 'availablePlans']);
-        
-        // Proses Pembelian Paket PT
-        Route::post('pt-packages/purchase', [MemberPtController::class, 'purchase']);
-        
-        // Daftar Paket PT milik Member (untuk cek sisa kuota)
-        Route::get('my-pt-packages', [MemberPtController::class, 'myPackages']);
+    // Class booking (versi MemberClassBookingController)
+    Route::post('/class-schedules/{id}/book-v2',   [MemberClassBookingController::class, 'book']);
+    Route::delete('/class-schedules/{id}/book-v2', [MemberClassBookingController::class, 'cancel']);
+
+    // PT
+    Route::get('/pt-plans',             [MemberPtController::class, 'availablePlans']);
+    Route::post('/pt-packages/purchase',[MemberPtController::class, 'purchase']);
+    Route::get('/my-pt-packages',       [MemberPtController::class, 'myPackages']);
+
+    // Membership
+    Route::post('/memberships/upgrade', [MemberMembershipController::class, 'upgrade']);
 });
 
-Route::prefix('member')->group(function() {
-    Route::get('/membershipAvailable', [MembershipPlanController::class, 'getAvailablePlans']);
-});
-
-Route::middleware(['auth:member'])->group(function () {
-    Route::post('/check-ins', [CheckInController::class, 'store']);
-
-    // routes/member.php (atau sesuai struktur kamu)
-    Route::post('/memberships/upgrade', [\App\Http\Controllers\Tenant\MemberMembershipController::class, 'upgrade']);
-
-    Route::post('/member/class-schedules/{id}/book',    [MemberClassBookingController::class, 'book']);
-    Route::delete('/member/class-schedules/{id}/book',  [MemberClassBookingController::class, 'cancel']);
-});
+// ============================================================================
+// STAFF PROTECTED
+// ============================================================================
 
 Route::middleware('auth:staff')->group(function () {
-    // ... route staff lainnya ...
-    Route::post('/check-ins', [CheckInController::class, 'store']);
-    Route::get('/check-ins', [CheckInController::class, 'index']);
-});
 
+    // Dashboard
+    Route::get('/dashboard/summary', [TenantDashboardController::class, 'getSummary']);
 
-// 3. PROTECTED STAFF ROUTES (Tetap di dalam routes/tenant.php)
+    // Notification
+    Route::get('/notifications', [TenantNotificationController::class, 'index']);
+    Route::post('/notifications/{id}/read', [TenantNotificationController::class, 'markAsRead']);
+    Route::post('/notifications/read-all', [TenantNotificationController::class, 'markAllAsRead']);
 
+    // Reports (Owner)
+    Route::get('/reports', [TenantReportController::class, 'index']);
+    Route::get('/reports/export', [TenantReportController::class, 'export']);
+    Route::get('/reports/branches', [TenantReportController::class, 'branches']);
 
+    // Branch Reports
+    Route::get('/branch-reports/{type}', [BranchReportController::class, 'show']);
 
+    Route::middleware('permission:settings')->prefix('roles')->group(function () {
+        Route::get('/', [RoleController::class, 'index']);
+        Route::post('/', [RoleController::class, 'store']);
+        Route::get('/{id}', [RoleController::class, 'show']);
+        Route::put('/{id}', [RoleController::class, 'update']);
+        Route::delete('/{id}', [RoleController::class, 'destroy']);
+        Route::put('/{id}/permissions', [RoleController::class, 'syncPermissions']);
+    });
 
-// API Routes
-Route::prefix('tenant')->group(function () {
-    Route::get('/current', [TenantController::class, 'current']);
-});
+    // Auth
+    Route::prefix('auth')->group(function () {
+        Route::post('/logout',          [StaffAuthController::class, 'logout']);
+        Route::get('/me',               [StaffAuthController::class, 'me']);
+        Route::post('/change-password', [StaffAuthController::class, 'changePassword']);
+    });
 
-    Route::get('/branches/{branch}/settings/public', [BranchSettingController::class, 'public']);
-    // Ambil semua setting (bisa filter ?group=appearance)
-    Route::get('/branches/{branch}/settings', [BranchSettingController::class, 'index']);
+    Route::prefix('tenant-auth')->group(function () {
+        Route::get('/me',               [StaffAuthController::class, 'me']);
+        Route::post('/change-password', [StaffAuthController::class, 'changePassword']);
+        Route::post('/logout',          [StaffAuthController::class, 'logout']);
+    });
 
-        // Update banyak setting sekaligus
-    Route::put('/branches/{branch}/settings', [BranchSettingController::class, 'update']);
-
-        // Update per group (lebih simpel untuk frontend per-tab)
-        // PUT /branches/{id}/settings/appearance
-        // PUT /branches/{id}/settings/operational
-        // dst
+    // Branch settings
+    Route::get('/branches/{branch}/settings',         [BranchSettingController::class, 'index']);
+    Route::put('/branches/{branch}/settings',         [BranchSettingController::class, 'update']);
     Route::put('/branches/{branch}/settings/{group}', [BranchSettingController::class, 'updateGroup']);
-
-        // Reset group ke default
     Route::post('/branches/{branch}/settings/{group}/reset', [BranchSettingController::class, 'reset']);
 
+    // Check-ins
+    Route::get('/check-ins',  [CheckInController::class, 'index']);
+    Route::post('/check-ins', [CheckInController::class, 'store']);
 
-
-
-
-
-Route::middleware('auth:staff')->group(function () {
-
+    // Class schedules
     Route::prefix('class-schedules')->group(function () {
         Route::get('/',                                          [ClassScheduleController::class, 'index']);
         Route::post('/',                                         [ClassScheduleController::class, 'store']);
@@ -145,158 +159,96 @@ Route::middleware('auth:staff')->group(function () {
 
     Route::post('class-schedules/{id}/book-by-staff', [ClassScheduleController::class, 'bookByStaff']);
 
-    Route::post('facility-bookings', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'store']);
-    Route::get('facility-bookings', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'index']);
-    Route::get('facility-bookings/{id}', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'show']);
-    Route::put('facility-bookings/{id}', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'update']);
-    Route::delete('facility-bookings/{id}', [\App\Http\Controllers\Tenant\FacilityBookingController::class, 'destroy']);
-    
-    Route::apiResource('members', MemberController::class);
-    Route::get('/memberships/active',  [MemberController::class, 'activeMemberships']);
-    Route::get('/memberships/history', [MemberController::class, 'membershipHistory']);
- 
-    // Auth
-    Route::prefix('auth')->group(function () {
-        Route::post('/logout',          [StaffAuthController::class, 'logout']);
-        Route::get('/me',               [StaffAuthController::class, 'me']);
-        Route::post('/change-password', [StaffAuthController::class, 'changePassword']);
+    // Facility bookings
+    Route::apiResource('facility-bookings', FacilityBookingController::class);
+
+    // ==========================================
+    // MEMBERS (Staff Operations on Members)
+    // ==========================================
+    Route::prefix('members')->group(function () {
+        // 1. Specific Endpoints (Tanpa ID) HARUS DI ATAS
+        Route::get('/memberships/active',  [MemberController::class, 'activeMemberships']);
+        Route::get('/memberships/history', [MemberController::class, 'membershipHistory']);
+
+        // 2. Specific Endpoints (Dengan ID Member)
+        Route::get('/{member}/memberships',                 [MemberController::class, 'memberships']);
+        Route::post('/{member}/memberships',                [MemberController::class, 'assignMembership']);
+        Route::patch('/{member}/memberships/{membership}',  [MemberController::class, 'updateMembership']);
+        Route::delete('/{member}/memberships/{membership}', [MemberController::class, 'cancelMembership']);
+
+        // 3. Standard CRUD (Pengganti apiResource agar urutan tidak ditimpa Laravel)
+        Route::get('/',           [MemberController::class, 'index']);
+        Route::post('/',          [MemberController::class, 'store']);
+        Route::get('/{member}',   [MemberController::class, 'show']);
+        Route::put('/{member}',   [MemberController::class, 'update']);
+        Route::delete('/{member}',[MemberController::class, 'destroy']);
     });
- 
-    Route::get('/pt-sessions', [PtSessionController::class, 'index']);
-    Route::post('/pt-sessions', [PtSessionController::class, 'store']);
-    Route::get('/pt-sessions/{id}', [PtSessionController::class, 'show']);
-    Route::put('/pt-sessions/{id}', [PtSessionController::class, 'update']);
+
+    // Staff
+    Route::get('/staff',                              [StaffController::class, 'index']);
+    Route::post('/staff',                             [StaffController::class, 'store']);
+    Route::get('/staff/{staff}',                      [StaffController::class, 'show']);
+    Route::put('/staff/{staff}',                      [StaffController::class, 'update']);
+    Route::delete('/staff/{staff}',                   [StaffController::class, 'destroy']);
+    Route::get('/staff/{staff}/branches',             [StaffController::class, 'branches']);
+    Route::post('/staff/{staff}/branches',            [StaffController::class, 'assignBranch']);
+    Route::delete('/staff/{staff}/branches/{branch}', [StaffController::class, 'revokeBranch']);
+
+    // Membership plans
+    Route::get('/membership-plans/categories',                        [MembershipPlanController::class, 'categories']);
+    Route::apiResource('membership-plans', MembershipPlanController::class);
+    Route::patch('/membership-plans/{plan}/toggle-active',            [MembershipPlanController::class, 'toggleActive']);
+    Route::post('/membership-plans/{plan}/duplicate',                 [MembershipPlanController::class, 'duplicate']);
+    Route::get('/membership-plans/{plan}/class-plans',                [MembershipPlanController::class, 'classPlans']);
+    Route::post('/membership-plans/{plan}/class-plans/sync',          [MembershipPlanController::class, 'syncClassPlans']);
+    Route::post('/membership-plans/{plan}/class-plans/attach',        [MembershipPlanController::class, 'attachClassPlan']);
+    Route::delete('/membership-plans/{plan}/class-plans/{classPlan}', [MembershipPlanController::class, 'detachClassPlan']);
+
+    // Class plans
+    Route::get('/class-plans/categories',          [ClassPlanController::class, 'categories']);
+    Route::apiResource('class-plans', ClassPlanController::class);
+    Route::patch('/class-plans/{plan}/toggle-active', [ClassPlanController::class, 'toggleActive']);
+    Route::post('/class-plans/{plan}/duplicate',      [ClassPlanController::class, 'duplicate']);
+    Route::get('/class-plans/{plan}/membership-plans',[ClassPlanController::class, 'membershipPlans']);
+
+    // PT session plans
+    Route::get('/pt-session-plans/categories',             [PtSessionPlanController::class, 'categories']);
+    Route::apiResource('pt-session-plans', PtSessionPlanController::class);
+    Route::patch('/pt-session-plans/{plan}/toggle-active', [PtSessionPlanController::class, 'toggleActive']);
+    Route::post('/pt-session-plans/{plan}/duplicate',      [PtSessionPlanController::class, 'duplicate']);
+
+    // Facilities
+    Route::get('/facilities/categories',                  [FacilityController::class, 'categories']);
+    Route::apiResource('facilities', FacilityController::class);
+    Route::patch('/facilities/{facility}/toggle-active',  [FacilityController::class, 'toggleActive']);
+
+    // Products
+    Route::get('/products/categories',                    [ProductController::class, 'categories']);
+    Route::apiResource('products', ProductController::class);
+    Route::patch('/products/{product}/toggle-active',     [ProductController::class, 'toggleActive']);
+    Route::post('/products/{product}/stock/add',          [ProductController::class, 'addStock']);
+    Route::post('/products/{product}/stock/adjust',       [ProductController::class, 'adjustStock']);
+    Route::get('/products/{product}/stock/history',       [ProductController::class, 'stockHistory']);
+
+    // PT sessions & packages
+    Route::get('/pt-sessions',          [PtSessionController::class, 'index']);
+    Route::post('/pt-sessions',         [PtSessionController::class, 'store']);
+    Route::get('/pt-sessions/{id}',     [PtSessionController::class, 'show']);
+    Route::put('/pt-sessions/{id}',     [PtSessionController::class, 'update']);
     Route::patch('/pt-sessions/{id}/cancel', [PtSessionController::class, 'cancel']);
+    Route::get('/pt-packages',          [PtPackageController::class, 'index']);
+    Route::get('/pt-packages/{id}',     [PtPackageController::class, 'show']);
 
-    // Manajemen PT Packages (Sisi Staff)
-    Route::get('pt-packages', [PtPackageController::class, 'index']);
-    Route::get('pt-packages/{id}', [PtPackageController::class, 'show']);
-
-
-    Route::prefix('pos')->group(function () {
+    // POS
+    Route::prefix('pos')->middleware('permission:pos')->group(function () {
         Route::post('/checkout', [POSController::class, 'checkout']);
         Route::get('/history',   [POSController::class, 'history']);
     });
 
-    
+    // Subscription
+    Route::get('/subscription/current', [SubscriptionTenantController::class, 'current']);
+    Route::get('/subscription/history', [SubscriptionTenantController::class, 'history']);
+
+    // Misc
     Route::post('/upgrade', [PlanController::class, 'upgrade']);
-
-    Route::get('/subscription/current', [SubscriptionTenantController::class,'current']);
-    Route::get('/subscription/history', [SubscriptionTenantController::class,'history']);
-
-    // tenant.php — tambahkan ini
-
-    Route::apiResource('branches', BranchController::class);
-
-    Route::apiResource('domain-requests', DomainRequestController::class);
-
-    // CRUD Staff
-    Route::get('/staff',                                  [StaffController::class, 'index']);
-    Route::post('/staff',                                 [StaffController::class, 'store']);
-    Route::get('/staff/{staff}',                          [StaffController::class, 'show']);
-    Route::put('/staff/{staff}',                          [StaffController::class, 'update']);
-    Route::delete('/staff/{staff}',                       [StaffController::class, 'destroy']);
-
-    // Branch Assignment
-    Route::get('/staff/{staff}/branches',                 [StaffController::class, 'branches']);
-    Route::post('/staff/{staff}/branches',                [StaffController::class, 'assignBranch']);
-    Route::delete('/staff/{staff}/branches/{branch}',     [StaffController::class, 'revokeBranch']);
-
-
-
-    // -----------------------------------------------
-    // CRUD Member
-    // -----------------------------------------------
-    Route::get('/members',            [MemberController::class, 'index']);
-    Route::post('/members',           [MemberController::class, 'store']);
-    Route::get('/members/{member}',   [MemberController::class, 'show']);
-    Route::put('/members/{member}',   [MemberController::class, 'update']);
-    Route::delete('/members/{member}',[MemberController::class, 'destroy']);
-
-    // -----------------------------------------------
-    // Branch Membership
-    // -----------------------------------------------
-
-    Route::get('members/{member}/memberships', [MemberController::class, 'memberships']);
-    Route::post('members/{member}/memberships', [MemberController::class, 'assignMembership']);
-    Route::patch('members/{member}/memberships/{membership}', [MemberController::class, 'updateMembership']);
-    Route::delete('members/{member}/memberships/{membership}', [MemberController::class, 'cancelMembership']);
-
-    // -----------------------------------------------
-    // Membership Plans
-    // -----------------------------------------------
-
-    Route::get('/membership-plans/categories',                         [MembershipPlanController::class, 'categories']);
-    Route::get('/membership-plans',                                    [MembershipPlanController::class, 'index']);
-    Route::post('/membership-plans',                                   [MembershipPlanController::class, 'store']);
-    Route::get('/membership-plans/{plan}',                             [MembershipPlanController::class, 'show']);
-    Route::put('/membership-plans/{plan}',                             [MembershipPlanController::class, 'update']);
-    Route::delete('/membership-plans/{plan}',                          [MembershipPlanController::class, 'destroy']);
-    Route::patch('/membership-plans/{plan}/toggle-active',             [MembershipPlanController::class, 'toggleActive']);
-    Route::post('/membership-plans/{plan}/duplicate',                  [MembershipPlanController::class, 'duplicate']);
-
-    // Class plan inclusions dalam membership plan
-    Route::get('/membership-plans/{plan}/class-plans',                 [MembershipPlanController::class, 'classPlans']);
-    Route::post('/membership-plans/{plan}/class-plans/sync',           [MembershipPlanController::class, 'syncClassPlans']);
-    Route::post('/membership-plans/{plan}/class-plans/attach',         [MembershipPlanController::class, 'attachClassPlan']);
-    Route::delete('/membership-plans/{plan}/class-plans/{classPlan}',  [MembershipPlanController::class, 'detachClassPlan']);
-
-    // -----------------------------------------------
-    // Class Plans
-    // -----------------------------------------------
-
-    Route::get('/class-plans/categories',                              [ClassPlanController::class, 'categories']);
-    Route::get('/class-plans',                                         [ClassPlanController::class, 'index']);
-    Route::post('/class-plans',                                        [ClassPlanController::class, 'store']);
-    Route::get('/class-plans/{plan}',                                  [ClassPlanController::class, 'show']);
-    Route::put('/class-plans/{plan}',                                  [ClassPlanController::class, 'update']);
-    Route::delete('/class-plans/{plan}',                               [ClassPlanController::class, 'destroy']);
-    Route::patch('/class-plans/{plan}/toggle-active',                  [ClassPlanController::class, 'toggleActive']);
-    Route::post('/class-plans/{plan}/duplicate',                       [ClassPlanController::class, 'duplicate']);
-
-    // Membership plans yang menginclude class plan ini
-    Route::get('/class-plans/{plan}/membership-plans',                 [ClassPlanController::class, 'membershipPlans']);
-
-
-    // -----------------------------------------------
-    // PT Session Plans
-    // -----------------------------------------------
-    Route::get('/pt-session-plans/categories',              [PtSessionPlanController::class, 'categories']);
-    Route::get('/pt-session-plans',                         [PtSessionPlanController::class, 'index']);
-    Route::post('/pt-session-plans',                        [PtSessionPlanController::class, 'store']);
-    Route::get('/pt-session-plans/{plan}',                  [PtSessionPlanController::class, 'show']);
-    Route::put('/pt-session-plans/{plan}',                  [PtSessionPlanController::class, 'update']);
-    Route::delete('/pt-session-plans/{plan}',               [PtSessionPlanController::class, 'destroy']);
-    Route::patch('/pt-session-plans/{plan}/toggle-active',  [PtSessionPlanController::class, 'toggleActive']);
-    Route::post('/pt-session-plans/{plan}/duplicate',       [PtSessionPlanController::class, 'duplicate']);
-
-
-    // -----------------------------------------------
-    // Facilities
-    // -----------------------------------------------
-    Route::get('/facilities/categories',              [FacilityController::class, 'categories']);
-    Route::get('/facilities',                         [FacilityController::class, 'index']);
-    Route::post('/facilities',                        [FacilityController::class, 'store']);
-    Route::get('/facilities/{facility}',              [FacilityController::class, 'show']);
-    Route::put('/facilities/{facility}',              [FacilityController::class, 'update']);
-    Route::delete('/facilities/{facility}',           [FacilityController::class, 'destroy']);
-    Route::patch('/facilities/{facility}/toggle-active', [FacilityController::class, 'toggleActive']);
-    
-    // -----------------------------------------------
-    // Products
-    // -----------------------------------------------
-    Route::get('/products/categories',                  [ProductController::class, 'categories']);
-    Route::get('/products',                             [ProductController::class, 'index']);
-    Route::post('/products',                            [ProductController::class, 'store']);
-    Route::get('/products/{product}',                   [ProductController::class, 'show']);
-    Route::put('/products/{product}',                   [ProductController::class, 'update']);
-    Route::delete('/products/{product}',                [ProductController::class, 'destroy']);
-    Route::patch('/products/{product}/toggle-active',   [ProductController::class, 'toggleActive']);
-    
-    // Stock Management
-    Route::post('/products/{product}/stock/add',        [ProductController::class, 'addStock']);
-    Route::post('/products/{product}/stock/adjust',     [ProductController::class, 'adjustStock']);
-    Route::get('/products/{product}/stock/history',     [ProductController::class, 'stockHistory']);
-    
-
 });

@@ -89,11 +89,6 @@ export default function Admins() {
 
     const columns: Column<AdminData>[] = [
         {
-            header: "ID",
-            render: (item) => <span className="font-medium">{item.id}</span>,
-            width: "w-40",
-        },
-        {
             header: "Name",
             render: (item) => (
                 <Link
@@ -153,12 +148,6 @@ export default function Admins() {
             onClick: (row) => router.push(`/admin/admins/${row.id}`),
         },
         {
-            label: "Edit",
-            icon: "edit",
-            className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/admin/admins/${row.id}/edit`),
-        },
-        {
             label: "Delete",
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
@@ -179,7 +168,7 @@ export default function Admins() {
 
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>System Management</li>
+                            <li>Users Management</li>
                             <li className="text-aksen-secondary">Admins</li>
                         </ul>
                     </div>
@@ -236,17 +225,20 @@ export default function Admins() {
                         Showing {entries.length > 0 ? 1 : 0} to{" "}
                         {entries.length} of {totalData} data
                     </div>
-                </div>
-
-                {/* Pagination */}
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={false}
-                        hasPrevPage={false}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
+                    {/* Pagination */}
+                    <div className="mt-4">
+                        <PaginationWithRows
+                            hasNextPage={page < (data?.meta?.last_page || 0)}
+                            hasPrevPage={page > 1}
+                            totalItems={totalData}
+                            currentPage={page}
+                            currentPerPage={perPage}
+                            onPageChange={setPage}
+                            onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
+                            rowOptions={[5, 10, 20, 50]}
+                            defaultRowsPerPage={perPage}
+                        />
+                    </div>
                 </div>
             </div>
         </FormProvider>

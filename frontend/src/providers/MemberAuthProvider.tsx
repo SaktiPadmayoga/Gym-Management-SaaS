@@ -1,149 +1,111 @@
 "use client";
 
-import { createContext, useContext, useEffect, useReducer, ReactNode, useCallback } from "react";
+import {
+    createContext, useContext, useEffect,
+    useReducer, ReactNode, useCallback, useRef
+} from "react";
 import { useRouter } from "next/navigation";
-import { memberAuthAPI } from "@/lib/api/tenant/memberAuth"; 
+import { memberAuthAPI } from "@/lib/api/tenant/memberAuth";
 
 export interface Member {
     id: string;
     name: string;
     email: string;
     phone?: string | null;
-    avatar_url?: string | null; // ✅ Sesuaikan dengan backend
+    avatar_url?: string | null;
     status?: string;
     qr_token?: string | null;
     member_since?: string | null;
-    active_membership?: any;    // ✅ Ubah dari any[] menjadi any (karena ini hasOne/objek)
+    active_membership?: any;
     home_branch?: any;
     [key: string]: unknown;
 }
 
 interface MemberAuthState {
-    member: Member | null;
-    token: string | null;
+    member:    Member | null;
     isLoading: boolean;
-    isReady: boolean;
+    isReady:   boolean;
 }
 
 type AuthAction =
-    | { type: "HYDRATE"; payload: Omit<MemberAuthState, "isLoading" | "isReady"> }
-    | { type: "HYDRATE_EMPTY" }
-    | { type: "LOGIN"; payload: { token: string; member: Member } }
+    | { type: "SET_AUTH"; payload: { member: Member } }
     | { type: "LOGOUT" }
-    | { type: "SET_LOADING"; payload: boolean };
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "SET_READY" };
 
 const initialState: MemberAuthState = {
-    member: null,
-    token: null,
+    member:    null,
     isLoading: false,
-    isReady: false,
+    isReady:   false,
 };
 
-// --- REDUCER ---
 function authReducer(state: MemberAuthState, action: AuthAction): MemberAuthState {
     switch (action.type) {
-        case "HYDRATE":
-            return { ...state, ...action.payload, isReady: true };
-        case "HYDRATE_EMPTY":
-            return { ...state, isReady: true };
-        case "LOGIN":
-            return {
-                ...state,
-                token: action.payload.token,
-                member: action.payload.member,
-                isLoading: false,
-            };
+        case "SET_AUTH":
+            return { ...state, member: action.payload.member, isLoading: false, isReady: true };
         case "LOGOUT":
             return { ...initialState, isReady: true };
         case "SET_LOADING":
             return { ...state, isLoading: action.payload };
+        case "SET_READY":
+            return { ...state, isReady: true };
         default:
             return state;
     }
 }
 
-// --- CONTEXT ---
 interface MemberAuthContextValue extends MemberAuthState {
-    login: (email: string, password: string) => Promise<void>;
+    login:           (email: string, password: string) => Promise<void>;
     loginWithGoogle: () => Promise<void>;
-    logout: () => Promise<void>;
+    logout:          () => Promise<void>;
 }
 
 const MemberAuthContext = createContext<MemberAuthContextValue | null>(null);
 
-// --- STORAGE CONSTANTS ---
-const TOKEN_KEY = "member_token";
-const DATA_KEY = "member_data";
-
-function saveToken(token: string) {
-    localStorage.setItem(TOKEN_KEY, token);
-    document.cookie = `member_token=${token}; path=/; max-age=${60 * 60 * 24 * 7}`; 
-}
-
-function clearAuth() {
-    [TOKEN_KEY, DATA_KEY].forEach((k) => localStorage.removeItem(k));
-    document.cookie = "member_token=; path=/; max-age=0";
-}
-
-// --- PROVIDER COMPONENT ---
 export function MemberAuthProvider({ children }: { children: ReactNode }) {
-    const router = useRouter();
+    const router  = useRouter();
     const [state, dispatch] = useReducer(authReducer, initialState);
+    const didInit = useRef(false);
 
+    // -----------------------------------------------
+    // Init — hit /me sekali saat mount
+    // -----------------------------------------------
     useEffect(() => {
-        const storedToken = localStorage.getItem(TOKEN_KEY);
-        const storedMember = localStorage.getItem(DATA_KEY);
+        if (didInit.current) return;
+        didInit.current = true;
 
-        if (storedToken && storedMember) {
-            try {
+        // Hanya jalan di client, bukan SSR
+        if (typeof window === "undefined") return;
+
+        memberAuthAPI.me()
+            .then((fresh) => {
                 dispatch({
-                    type: "HYDRATE",
-                    payload: {
-                        token: storedToken,
-                        member: JSON.parse(storedMember),
-                    },
+                    type: "SET_AUTH",
+                    payload: { member: { ...fresh, email: fresh.email ?? "" } },
                 });
-            } catch {
-                clearAuth();
-                dispatch({ type: "HYDRATE_EMPTY" });
-            }
-        } else {
-            dispatch({ type: "HYDRATE_EMPTY" });
-        }
+            })
+            .catch(() => {
+                // 401 = belum login, bukan error
+                dispatch({ type: "SET_READY" });
+            });
     }, []);
 
     const login = useCallback(
         async (email: string, password: string): Promise<void> => {
             dispatch({ type: "SET_LOADING", payload: true });
             try {
-                // rawMemberData tipe email-nya mungkin string | null | undefined dari API
-                const { token: newToken, member: rawMemberData } = await memberAuthAPI.login({ email, password });
-
-                // ✅ PENERAPAN OPSI 2: Fallback email ke string kosong jika null/undefined
-                const memberData: Member = {
-                    ...rawMemberData,
-                    email: rawMemberData.email ?? "", 
-                };
-
-                saveToken(newToken);
-                localStorage.setItem(DATA_KEY, JSON.stringify(memberData));
-
+                const { member: rawMember } = await memberAuthAPI.login({ email, password });
                 dispatch({
-                    type: "LOGIN",
-                    payload: {
-                        token: newToken,
-                        member: memberData, // Sekarang memberData dijamin memiliki email bertipe string
-                    },
+                    type: "SET_AUTH",
+                    payload: { member: { ...rawMember, email: rawMember.email ?? "" } },
                 });
-
                 router.push("/member/dashboard");
-                
             } catch (e) {
                 dispatch({ type: "SET_LOADING", payload: false });
-                throw e; 
+                throw e;
             }
         },
-        [router]
+        [router],
     );
 
     const loginWithGoogle = useCallback(async () => {
@@ -154,29 +116,18 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
     const logout = useCallback(async () => {
         try {
             await memberAuthAPI.logout();
-        } catch {
-            // Biarkan lanjut bersihkan state lokal
-        }
-        clearAuth();
+        } catch { /* tetap logout */ }
         dispatch({ type: "LOGOUT" });
-        router.push("/login"); 
+        router.push("/member/login");
     }, [router]);
 
     return (
-        <MemberAuthContext.Provider
-            value={{
-                ...state,
-                login,
-                loginWithGoogle,
-                logout,
-            }}
-        >
+        <MemberAuthContext.Provider value={{ ...state, login, loginWithGoogle, logout }}>
             {children}
         </MemberAuthContext.Provider>
     );
 }
 
-// --- HOOK ---
 export function useMemberAuth() {
     const ctx = useContext(MemberAuthContext);
     if (!ctx) throw new Error("useMemberAuth must be used inside <MemberAuthProvider>");

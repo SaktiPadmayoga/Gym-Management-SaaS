@@ -77,6 +77,14 @@ class MembershipPaymentService
                     'home_branch_id' => $member->home_branch_id ?? $membershipBaru->branch_id,
                     'member_since'   => $member->member_since ?? now()->toDateString()
                 ]);
+
+                app(NotificationService::class)->createTenant(
+                    $membershipBaru->branch_id,
+                    null,
+                    'member_membership_upgraded',
+                    'Member Upgrade Membership',
+                    "{$member->name} berhasil upgrade ke paket {$membershipBaru->plan->name}."
+                );
             }
             
             Log::info('[MembershipPayment] Berhasil mengaktifkan membership dan mencatat TenantPayment', ['membership_id' => $membershipBaru->id]);

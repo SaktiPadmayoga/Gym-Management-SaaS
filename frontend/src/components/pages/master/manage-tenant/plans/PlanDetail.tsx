@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useParams, notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { toast, Toaster } from "sonner";
 
 import { Icon } from "@/components/icon";
 import CustomButton from "@/components/ui/button/CustomButton";
@@ -128,9 +128,15 @@ export default function PlanDetailPage() {
             toast.success("Plan updated successfully");
             setIsEditMode(false);
             router.push("/plans");
-        } catch (err) {
-            console.error(err);
-            toast.error("Failed to update plan");
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error ||   
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to update plan";
+
+            toast.error(message);
         }
     };
 
@@ -151,11 +157,13 @@ export default function PlanDetailPage() {
     return (
         <FormProvider {...form}>
             <form>
+
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
+                    <Toaster position="top-center" />
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Master Data</li>
+                            <li>Tenant & Subscription</li>
                             <li>
                                 <Link href="/plans">Plans</Link>
                             </li>
@@ -166,7 +174,7 @@ export default function PlanDetailPage() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <Link href="/plans">
+                            <Link href="/admin/plans">
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </Link>
                             <h1 className="text-2xl font-semibold">Plan Detail</h1>
@@ -194,20 +202,20 @@ export default function PlanDetailPage() {
                         {/* BASIC */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Plan Name" disabled={!isEditMode} />
+                                <TextInput name="name" label="Plan Name" disabled={!isEditMode} rules={{ required: "Plan name is required" }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="code" label="Plan Code" disabled={!isEditMode} />
+                                <TextInput name="code" label="Plan Code" disabled={!isEditMode} rules={{ required: "Plan code is required" }} />
                             </div>
                         </div>
 
                         {/* PRICE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <NumberInput name="pricing.monthly" label="Monthly Price" disabled={!isEditMode} />
+                                <NumberInput name="pricing.monthly" label="Monthly Price" disabled={!isEditMode} rules={{ required: "Monthly price is required" }} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="pricing.yearly" label="Yearly Price" disabled={!isEditMode} />
+                                <NumberInput name="pricing.yearly" label="Yearly Price" disabled={!isEditMode} rules={{ required: "Yearly price is required" }} />
                             </div>
                             <div className="col-span-4">
                                 <SearchableDropdown name="pricing.currency" label="Currency" options={currencyOptions} disabled={!isEditMode} />
@@ -220,13 +228,13 @@ export default function PlanDetailPage() {
                         <h2 className="text-lg font-semibold text-gray-800">Limits</h2>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <NumberInput name="limits.max_membership" label="Max Membership" disabled={!isEditMode} />
+                                <NumberInput name="limits.max_membership" label="Max Membership" disabled={!isEditMode} rules={{ required: "Max membership is required" }} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="limits.max_staff" label="Max Staff" disabled={!isEditMode} />
+                                <NumberInput name="limits.max_staff" label="Max Staff" disabled={!isEditMode} rules={{ required: "Max staff is required" }} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="limits.max_branches" label="Max Branches" disabled={!isEditMode} />
+                                <NumberInput name="limits.max_branches" label="Max Branches" disabled={!isEditMode} rules={{ required: "Max branches is required" }} />
                             </div>
                         </div>
 
@@ -235,7 +243,7 @@ export default function PlanDetailPage() {
                         {/* FEATURES */}
                         <div className="flex flex-col gap-2">
                             <h2 className="text-lg font-semibold text-gray-800">Features</h2>
-                            <TextInput name="features" label="Features (comma separated)" disabled={!isEditMode} />
+                            <TextInput name="features" label="Features (comma separated)" disabled={!isEditMode} rules={{ required: "Features is required" }} />
                         </div>
 
                         <hr />

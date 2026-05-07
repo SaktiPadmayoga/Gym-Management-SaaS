@@ -79,9 +79,6 @@ export default function TenantsPage() {
     const entries: TenantsData[] = data?.data ?? [];
     const totalData = data?.meta?.total ?? entries.length;
 
-    console.log("data:", data);
-    console.log("entries:", data?.data);
-
     if (isError) {
         toast.error("Error loading tenants");
         return <div className="py-10 text-center text-red-500">Error loading tenants</div>;
@@ -124,7 +121,6 @@ export default function TenantsPage() {
             render: (item) => (
                 <div>
                     <div className="font-semibold text-zinc-800">{item.name}</div>
-                    <div className="text-xs text-zinc-500 mt-0.5">Slug: {item.slug}</div>
                     <div className="text-xs text-zinc-500">Owner: {item.owner_name}</div>
                 </div>
             ),
@@ -135,7 +131,6 @@ export default function TenantsPage() {
             render: (item) => (
                 <div className="text-sm">
                     <div className="text-zinc-700">{item.owner_email}</div>
-                    {item.owner_email && <div className="text-xs text-zinc-500 mt-1">{item.owner_email}</div>}
                 </div>
             ),
             width: "w-48",
@@ -263,12 +258,6 @@ export default function TenantsPage() {
             onClick: (row) => router.push(`/admin/tenants/${row.id}`),
         },
         {
-            label: "Edit",
-            icon: "edit",
-            className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/admin/tenants/${row.id}/edit`),
-        },
-        {
             label: "Delete",
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
@@ -328,17 +317,22 @@ export default function TenantsPage() {
                     <div className="mt-4 text-sm text-zinc-500">
                         Showing {entries.length} of {totalData} tenants
                     </div>
+                    <div className="mt-4">
+                    <PaginationWithRows
+                                            hasNextPage={page < (data?.meta?.last_page || 0)}
+                                            hasPrevPage={page > 1}
+                                            totalItems={totalData}
+                                            currentPage={page}
+                                            currentPerPage={perPage}
+                                            onPageChange={setPage}
+                                            onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
+                                            rowOptions={[5, 10, 20, 50]}
+                                            defaultRowsPerPage={perPage}
+                                        />
+                </div>
                 </div>
 
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={data?.meta?.current_page && data?.meta?.last_page ? data?.meta?.current_page < data?.meta?.last_page : false}
-                        hasPrevPage={(data?.meta?.current_page ?? 0) > 1}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 15, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
-                </div>
+                
             </div>
         </FormProvider>
     );

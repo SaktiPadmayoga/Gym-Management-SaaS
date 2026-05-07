@@ -152,15 +152,6 @@ export default function Invoices() {
         },
     ];
 
-    const actions: ActionItem<InvoiceData>[] = [
-        {
-            label: "View Detail",
-            icon: "eye",
-            className: "text-zinc-800",
-            onClick: (row) => router.push(`/admin/invoices/${row.id}`),
-        },
-    ];
-
     return (
         <FormProvider {...form}>
             <div>
@@ -169,7 +160,7 @@ export default function Invoices() {
 
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Tenant & Subscription</li>
+                            <li>Billing & Payments</li>
                             <li className="text-aksen-secondary">Invoices</li>
                         </ul>
                     </div>
@@ -205,8 +196,6 @@ export default function Invoices() {
                             <CustomTable
                                 columns={columns}
                                 data={entries}
-                                actions={actions}
-                                onRowClick={(row) => router.push(`/admin/invoices/${row.id}`)}
                             />
                         )}
                     </div>
@@ -216,19 +205,18 @@ export default function Invoices() {
                             Showing {entries.length} of {totalData} invoices
                         </div>
                     )}
+                    <div className="mt-4">
+                        <PaginationWithRows
+                            hasNextPage={page < (data?.meta?.last_page || 0)}
+                            hasPrevPage={page > 1}
+                            totalItems={totalData}
+                            rowOptions={[5, 10, 15, 20, 50]}
+                            defaultRowsPerPage={perPage}
+                        />
+                    </div>
                 </div>
 
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={data?.meta?.current_page && data?.meta?.last_page
-                            ? data.meta.current_page < data.meta.last_page
-                            : false}
-                        hasPrevPage={(data?.meta?.current_page ?? 0) > 1}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 15, 20, 50]}
-                        defaultRowsPerPage={15}
-                    />
-                </div>
+                
             </div>
         </FormProvider>
     );

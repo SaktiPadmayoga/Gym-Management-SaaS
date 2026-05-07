@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, useContext, useEffect, useReducer, ReactNode, useCallback } from "react";
+import {
+    createContext, useContext, useEffect,
+    useReducer, ReactNode, useCallback, useRef
+} from "react";
 import { useRouter } from "next/navigation";
 import { staffAuthAPI } from "@/lib/api/tenant/staffAuth";
 import { LoginBranchData, SelectedBranch } from "@/types/tenant/staff-auth";
@@ -14,47 +17,40 @@ interface Staff {
 }
 
 interface AuthState {
-    staff: Staff | null;
-    token: string | null;
-    globalRole: "owner" | "staff" | null;
-    branches: LoginBranchData[];
+    staff:          Staff | null;
+    globalRole:     "owner" | "staff" | null;
+    branches:       LoginBranchData[];
     selectedBranch: SelectedBranch | null;
-    isLoading: boolean;
-    isReady: boolean;
+    isLoading:      boolean;
+    isReady:        boolean;
 }
 
 type AuthAction =
-    | { type: "HYDRATE"; payload: Omit<AuthState, "isLoading" | "isReady"> }
-    | { type: "HYDRATE_EMPTY" }
-    | { type: "LOGIN"; payload: { token: string; staff: Staff; branches: LoginBranchData[]; globalRole: "owner" | "staff" } }
+    | { type: "SET_AUTH"; payload: { staff: Staff; branches: LoginBranchData[]; globalRole: "owner" | "staff" } }
     | { type: "SELECT_BRANCH"; payload: SelectedBranch }
     | { type: "LOGOUT" }
-    | { type: "SET_LOADING"; payload: boolean };
+    | { type: "SET_LOADING"; payload: boolean }
+    | { type: "SET_READY" };
 
 const initialState: AuthState = {
-    staff: null,
-    token: null,
-    globalRole: null,
-    branches: [],
+    staff:          null,
+    globalRole:     null,
+    branches:       [],
     selectedBranch: null,
-    isLoading: false,
-    isReady: false,
+    isLoading:      false,
+    isReady:        false,
 };
 
 function authReducer(state: AuthState, action: AuthAction): AuthState {
     switch (action.type) {
-        case "HYDRATE":
-            return { ...state, ...action.payload, isReady: true };
-        case "HYDRATE_EMPTY":
-            return { ...state, isReady: true };
-        case "LOGIN":
+        case "SET_AUTH":
             return {
                 ...state,
-                token: action.payload.token,
-                staff: action.payload.staff,
-                branches: action.payload.branches,
+                staff:      action.payload.staff,
+                branches:   action.payload.branches,
                 globalRole: action.payload.globalRole,
-                isLoading: false,
+                isReady:    true,
+                isLoading:  false,
             };
         case "SELECT_BRANCH":
             return { ...state, selectedBranch: action.payload };
@@ -62,153 +58,142 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
             return { ...initialState, isReady: true };
         case "SET_LOADING":
             return { ...state, isLoading: action.payload };
+        case "SET_READY":
+            return { ...state, isReady: true };
         default:
             return state;
     }
 }
 
 interface StaffAuthContextValue extends AuthState {
-    isOwner: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    loginWithGoogle: () => Promise<void>;
-    selectBranch: (branch: SelectedBranch) => void;
-    logout: () => Promise<void>;
+    isOwner:            boolean;
+    login:              (email: string, password: string) => Promise<void>;
+    loginWithGoogle:    () => Promise<void>;
+    selectBranch:       (branch: SelectedBranch) => void;
+    logout:             () => Promise<void>;
+    hasPermission:      (permission: string) => boolean;
+    currentPermissions: string[];
 }
 
 const StaffAuthContext = createContext<StaffAuthContextValue | null>(null);
 
-const TOKEN_KEY = "staff_token";
-const DATA_KEY = "staff_data";
-const BRANCH_KEY = "staff_branches";
-const ROLE_KEY = "staff_global_role";
 const SELECTED_KEY = "staff_selected_branch";
 
-// Key tidak perlu subdomain-scoped lagi karena hanya 1 domain (tenant domain)
-function saveToken(token: string) {
-    localStorage.setItem(TOKEN_KEY, token);
-    document.cookie = `staff_token=${token}; path=/; max-age=${60 * 60 * 8}`;
+function saveSelectedBranch(branch: SelectedBranch): void {
+    sessionStorage.setItem(SELECTED_KEY, JSON.stringify(branch));
 }
 
-function getTenantSlug(): string {
-    if (typeof window === "undefined") return "";
-    return window.location.hostname.split(".")[0]; // "atmagym"
+function getSelectedBranch(): SelectedBranch | null {
+    try {
+        const stored = sessionStorage.getItem(SELECTED_KEY);
+        return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
 }
 
-function saveBranchToStorage(branch: SelectedBranch) {
-    localStorage.setItem(SELECTED_KEY, JSON.stringify(branch));
-
+function clearSelectedBranch(): void {
+    sessionStorage.removeItem(SELECTED_KEY);
 }
 
-function clearAuth() {
-    const slug = getTenantSlug();
-    [TOKEN_KEY, DATA_KEY, BRANCH_KEY, ROLE_KEY, SELECTED_KEY].forEach((k) => localStorage.removeItem(k));
-    localStorage.removeItem(`current_branch_${slug}`);
-    document.cookie = "staff_token=; path=/; max-age=0";
+function buildSelectedBranch(branch: LoginBranchData): SelectedBranch {
+    return {
+        id:          branch.id,
+        name:        branch.name,
+        branch_code: branch.branch_code,
+        address:     branch.address ?? null,
+        city:        branch.city    ?? null,
+        role:        branch.role,
+        permissions: branch.permissions ?? [],
+    };
 }
 
 export function StaffAuthProvider({ children }: { children: ReactNode }) {
-    const router = useRouter();
+    const router   = useRouter();
     const [state, dispatch] = useReducer(authReducer, initialState);
+    const didInit  = useRef(false);
 
+    // -----------------------------------------------
+    // Init — hit /me sekali saat mount
+    // -----------------------------------------------
     useEffect(() => {
-        const storedToken = localStorage.getItem(TOKEN_KEY);
-        const storedStaff = localStorage.getItem(DATA_KEY);
-        const storedBranches = localStorage.getItem(BRANCH_KEY);
-        const storedRole = localStorage.getItem(ROLE_KEY);
-        const storedSelected = localStorage.getItem(SELECTED_KEY);
+        if (didInit.current) return;
+        didInit.current = true;
 
-        if (storedToken && storedStaff) {
-            try {
+        staffAuthAPI.me()
+            .then((fresh) => {
+                const savedBranch = getSelectedBranch();
+
+                // Sync permissions kalau branch sudah dipilih sebelumnya
+                let selectedBranch = savedBranch;
+                if (savedBranch) {
+                    const freshBranch = fresh.branches?.find(
+                        (b: LoginBranchData) => b.id === savedBranch.id
+                    );
+                    if (freshBranch) {
+                        selectedBranch = buildSelectedBranch(freshBranch);
+                        saveSelectedBranch(selectedBranch);
+                    }
+                }
+
                 dispatch({
-                    type: "HYDRATE",
+                    type: "SET_AUTH",
                     payload: {
-                        token: storedToken,
-                        staff: JSON.parse(storedStaff),
-                        globalRole: (storedRole as "owner" | "staff") ?? null,
-                        branches: storedBranches ? JSON.parse(storedBranches) : [],
-                        selectedBranch: storedSelected ? JSON.parse(storedSelected) : null,
+                        staff:      fresh.staff,
+                        branches:   fresh.branches ?? [],
+                        globalRole: fresh.global_role,
                     },
                 });
-            } catch {
-                clearAuth();
-                dispatch({ type: "HYDRATE_EMPTY" });
-            }
-        } else {
-            dispatch({ type: "HYDRATE_EMPTY" });
-        }
+
+                if (selectedBranch) {
+                    dispatch({ type: "SELECT_BRANCH", payload: selectedBranch });
+                }
+            })
+            .catch(() => {
+                // Cookie tidak ada / expired → tidak ada auth state
+                dispatch({ type: "SET_READY" });
+            });
     }, []);
 
     const login = useCallback(
         async (email: string, password: string): Promise<void> => {
             dispatch({ type: "SET_LOADING", payload: true });
             try {
-                const { token: newToken, staff: staffData, branches: staffBranches, global_role } = await staffAuthAPI.login({ email, password });
-
-                saveToken(newToken);
-                localStorage.setItem(DATA_KEY, JSON.stringify(staffData));
-                localStorage.setItem(BRANCH_KEY, JSON.stringify(staffBranches));
-                localStorage.setItem(ROLE_KEY, global_role);
+                const { staff: staffData, branches: staffBranches, global_role } =
+                    await staffAuthAPI.login({ email, password });
 
                 dispatch({
-                    type: "LOGIN",
+                    type: "SET_AUTH",
                     payload: {
-                        token: newToken,
-                        staff: staffData,
-                        branches: staffBranches,
+                        staff:      staffData,
+                        branches:   staffBranches,
                         globalRole: global_role as "owner" | "staff",
                     },
                 });
 
-                // -----------------------------------------------
-                // ROUTING LOGIC
-                // -----------------------------------------------
-
                 if (global_role === "owner") {
-                    // ✅ Auto-select branch pertama untuk owner
                     if (staffBranches.length > 0) {
-                        const branch = staffBranches[0];
-                        const branchToSelect: SelectedBranch = {
-                            id: branch.id,
-                            name: branch.name,
-                            branch_code: branch.branch_code,
-                            address: branch.address ?? null,
-                            city: branch.city ?? null,
-                            role: branch.role,
-                        };
-                        dispatch({ type: "SELECT_BRANCH", payload: branchToSelect });
-                        saveBranchToStorage(branchToSelect);
+                        const branch = buildSelectedBranch(staffBranches[0]);
+                        dispatch({ type: "SELECT_BRANCH", payload: branch });
+                        saveSelectedBranch(branch);
                     }
                     router.push("/owner/dashboard");
                     return;
                 }
 
-                // Staff biasa
                 if (staffBranches.length === 1) {
-                    // Hanya 1 branch → auto-select
-                    const branch = staffBranches[0];
-                    const branchToSelect: SelectedBranch = {
-                        id: branch.id,
-                        name: branch.name,
-                        branch_code: branch.branch_code,
-                        address: branch.address ?? null,
-                        city: branch.city ?? null,
-                        role: branch.role,
-                    };
-                    dispatch({ type: "SELECT_BRANCH", payload: branchToSelect });
-                    saveBranchToStorage(branchToSelect);
+                    const branch = buildSelectedBranch(staffBranches[0]);
+                    dispatch({ type: "SELECT_BRANCH", payload: branch });
+                    saveSelectedBranch(branch);
                     router.push("/dashboard");
                     return;
                 }
 
                 if (staffBranches.length > 1) {
-                    // Lebih dari 1 branch → tampilkan pilihan
                     router.push("/tenant-auth/select-branch");
                     return;
                 }
 
-                // Tidak ada branch → tetap di login dengan error
                 dispatch({ type: "SET_LOADING", payload: false });
-                throw new Error("No branch assigned to your account. Please contact your administrator.");
+                throw new Error("No branch assigned. Please contact your administrator.");
             } catch (e) {
                 dispatch({ type: "SET_LOADING", payload: false });
                 throw e;
@@ -225,7 +210,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     const selectBranch = useCallback(
         (branch: SelectedBranch) => {
             dispatch({ type: "SELECT_BRANCH", payload: branch });
-            saveBranchToStorage(branch);
+            saveSelectedBranch(branch);
             router.push("/dashboard");
         },
         [router],
@@ -234,25 +219,34 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
     const logout = useCallback(async () => {
         try {
             await staffAuthAPI.logout();
-        } catch {
-            /* tetap logout */
-        }
-        clearAuth();
+        } catch { /* tetap logout */ }
+        clearSelectedBranch();
         dispatch({ type: "LOGOUT" });
         router.push("/tenant-auth/login");
     }, [router]);
 
+    const currentPermissions: string[] = state.selectedBranch?.permissions ?? [];
+
+    const hasPermission = useCallback(
+        (permission: string): boolean => {
+            if (state.globalRole === "owner") return true;
+            if (currentPermissions.includes("*")) return true;
+            return currentPermissions.includes(permission);
+        },
+        [state.globalRole, currentPermissions],
+    );
+
     return (
-        <StaffAuthContext.Provider
-            value={{
-                ...state,
-                isOwner: state.globalRole === "owner",
-                login,
-                loginWithGoogle,
-                selectBranch,
-                logout,
-            }}
-        >
+        <StaffAuthContext.Provider value={{
+            ...state,
+            isOwner: state.globalRole === "owner",
+            login,
+            loginWithGoogle,
+            selectBranch,
+            logout,
+            hasPermission,
+            currentPermissions,
+        }}>
             {children}
         </StaffAuthContext.Provider>
     );

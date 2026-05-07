@@ -3,34 +3,15 @@ import {
     IconLayoutDashboardFilled,
     IconUser,
     IconUserFilled,
-    IconUsers,
     IconUsersGroup,
-    IconDatabase,
-    IconDatabaseSmile,
-    IconHierarchy,
-    IconCherryFilled,
-    IconCalendarCheck,
-    IconCalendarFilled,
-    IconHistory,
     IconFileInvoice,
     IconFileInvoiceFilled,
-    IconCoin,
-    IconCoinFilled,
     IconCreditCard,
     IconCreditCardFilled,
-    IconRefresh,
-    IconSettings,
-    IconSettingsFilled,
     IconClock,
     IconClockFilled,
-    IconShieldLock,
     IconBarbell,
     IconBarbellFilled,
-    IconCards,
-    IconCardsFilled,
-    IconDeviceIpadDollar,
-    IconKey,
-    IconKeyFilled,
     IconLink,
 } from "@tabler/icons-react";
 
@@ -63,7 +44,7 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     },
     {
         id: "nav-reports",
-        title: "Reports",
+        title: "Laporan",
         path: "/owner/reports",
         Icon: IconFileInvoice,
         IconSolid: IconFileInvoiceFilled,
@@ -72,24 +53,24 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     // =========================
     // TENANT & SUBSCRIPTION
     // =========================
-    { id: "header-transaction", title: "Tenant & Subscription", isHeader: true },
+    { id: "header-tenant", title: "Cabang & Langganan", isHeader: true },
     {
         id: "nav-branches",
-        title: "Branches",
+        title: "Cabang",
         path: "/owner/branches",
         Icon: IconBarbell,
         IconSolid: IconBarbellFilled,
     },
     {
         id: "nav-domains",
-        title: "Domains",
+        title: "Domain",
         path: "/owner/domains",
         Icon: IconLink,
         IconSolid: IconLink,
     },
     {
         id: "nav-subscription",
-        title: "Subscription",
+        title: "Status Langganan",
         path: "/owner/subscription",
         Icon: IconCreditCard,
         IconSolid: IconCreditCardFilled,
@@ -100,17 +81,17 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     // =========================
     // USER MANAGEMENT
     // =========================
-    { id: "header-user", title: "User Management", isHeader: true },
+    { id: "header-user", title: "Data Pengguna", isHeader: true },
     {
         id: "nav-members",
-        title: "Members",
+        title: "Member",
         path: "/owner/members",
         Icon: IconUsersGroup,
         IconSolid: IconUsersGroup,
     },
     {
         id: "nav-staff",
-        title: "Staff",
+        title: "Staf",
         path: "/owner/staffs",
         Icon: IconUser,
         IconSolid: IconUserFilled,
@@ -119,10 +100,10 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     // =========================
     // ANALYTICS & CONTROL
     // =========================
-    { id: "header-analytics", title: "Analytics & Control", isHeader: true },
+    { id: "header-analytics", title: "Riwayat & Kendali", isHeader: true },
     {
         id: "nav-activity-log",
-        title: "Activity Logs",
+        title: "Riwayat Aktivitas",
         path: "/owner/activity-logs",
         Icon: IconClock,
         IconSolid: IconClockFilled,

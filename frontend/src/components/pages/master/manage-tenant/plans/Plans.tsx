@@ -36,13 +36,7 @@ export default function PlansPage() {
         page,
         per_page: perPage,
     });
-    console.log("=== PLANS DEBUG ===");
-    console.log("debouncedSearch:", debouncedSearch);
-    console.log("page:", page);
-    console.log("perPage:", perPage);
-    console.log("data:", data);
-    console.log("isLoading:", isLoading);
-    console.log("isError:", isError);
+
 
     const deleteMutation = useDeletePlan();
 
@@ -209,10 +203,7 @@ export default function PlansPage() {
                         Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
                     </div>
                 </div>
-                {/* Pagination */}
-                <div className="mt-4">
-                    <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={perPage} />
-                </div>
+                
             </div>
         </FormProvider>
     );

@@ -1,11 +1,8 @@
-// lib/tenant-api-client.ts
 import axios, { AxiosInstance, AxiosError } from "axios";
-
 
 function getTenantSlug(): string | null {
     if (typeof window === "undefined") return null;
-    const hostname = window.location.hostname;
-    const parts = hostname.split(".");
+    const parts = window.location.hostname.split(".");
     if (parts.length > 1 && !["www", "admin"].includes(parts[0])) {
         return parts[0];
     }
@@ -14,7 +11,7 @@ function getTenantSlug(): string | null {
 
 export function getCurrentBranchId(): string | null {
     if (typeof window === "undefined") return null;
-    const stored = localStorage.getItem("staff_selected_branch");
+    const stored = sessionStorage.getItem("staff_selected_branch");
     if (!stored) return null;
     try {
         return JSON.parse(stored)?.id ?? null;
@@ -22,33 +19,28 @@ export function getCurrentBranchId(): string | null {
 }
 
 const tenantApiClient: AxiosInstance = axios.create({
-    baseURL: typeof window !== "undefined" ? `${window.location.origin}/api` : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
+    baseURL: typeof window !== "undefined"
+        ? `${window.location.origin}/api`
+        : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
     },
-    withCredentials: false,
+    withCredentials: true, // ← kirim cookie otomatis
 });
 
 tenantApiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("staff_token");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+        // Tidak perlu inject Authorization header — cookie otomatis dikirim browser
 
         const tenantSlug = getTenantSlug();
-        if (tenantSlug) {
-            config.headers["X-Tenant"] = tenantSlug;
-        }
+        if (tenantSlug) config.headers["X-Tenant"] = tenantSlug;
 
         const branchId = getCurrentBranchId();
-        if (branchId) {
-            config.headers["X-Branch-Id"] = branchId;
-        }
+        if (branchId) config.headers["X-Branch-Id"] = branchId;
 
         if (process.env.NODE_ENV === "development") {
-            console.log(`[Tenant API] ${config.method?.toUpperCase()} ${config.url}`, `(tenant: ${tenantSlug}, branch: ${branchId})`);
+            console.log(`[Tenant API] ${config.method?.toUpperCase()} ${config.url}`);
         }
 
         return config;
@@ -58,42 +50,26 @@ tenantApiClient.interceptors.request.use(
 
 tenantApiClient.interceptors.response.use(
     (response) => {
-        if (process.env.NODE_ENV === "development") {
-            console.log(`[Tenant API] Response:`, response.data);
-        }
-
         if (typeof response.data === "string" && response.data.includes("<!DOCTYPE html>")) {
             throw new Error("API returned HTML instead of JSON");
         }
-
         return response;
     },
     (error: AxiosError) => {
-
         const status = error.response?.status;
         const originalRequest = error.config;
 
         if (status === 401) {
-            // 1. CEK APAKAH INI ENDPOINT LOGIN
-            // Jika request-nya adalah proses login, JANGAN redirect. 
-            // Biarkan catch di LoginForm yang memunculkan toast error.
             if (originalRequest?.url?.includes('/login')) {
                 return Promise.reject(error);
             }
-
-            // 2. JIKA BUKAN LOGIN, BERARTI TOKEN EXPIRED. 
-            // Tentukan arah redirect berdasarkan halaman saat ini.
             if (typeof window !== "undefined") {
-                const currentPath = window.location.pathname;
-                
-                // Jika user sedang di area member, lempar ke login member
-                if (currentPath.startsWith('/member')) {
-                    localStorage.removeItem("member_token");
-                    window.location.href = '/member/login'; // Sesuaikan dengan route login member Anda
-                } else {
-                    localStorage.removeItem("staff_token"); 
-                    // Default: lempar ke login staff
-                    window.location.href = '/tenant-auth/login';
+                const path = window.location.pathname;
+                // Jangan redirect kalau sudah di halaman login
+                if (!path.includes('/tenant-auth/login') && !path.includes('/member/login')) {
+                    window.location.href = path.startsWith('/member')
+                        ? '/member/login'
+                        : '/tenant-auth/login';
                 }
             }
         }

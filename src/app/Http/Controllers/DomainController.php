@@ -100,7 +100,7 @@ class DomainController extends Controller
             }
 
             // Pagination
-            $perPage = min((int)$request->input('per_page', 15), 100);
+            $perPage = min((int)$request->input('per_page', 10), 100);
             $domains = $query->paginate($perPage);
 
             return ApiResponse::success(

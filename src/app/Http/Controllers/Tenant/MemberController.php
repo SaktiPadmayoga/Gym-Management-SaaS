@@ -58,6 +58,8 @@ class MemberController extends Controller
                 'total' => $members->total(),
                 'per_page' => $members->perPage(),
                 'current_page' => $members->currentPage(),
+                'has_next' => $members->hasMorePages(),
+                'has_prev' => $members->onFirstPage(),
             ],
         ]);
     }

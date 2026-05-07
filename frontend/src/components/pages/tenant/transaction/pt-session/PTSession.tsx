@@ -219,7 +219,7 @@ function ListTab() {
                     </div>
                     <CustomButton
                         iconName="plus"
-                        className="text-white px-3"
+                        className="text-white px-3 py-2"
                         onClick={() => router.push("/pt-sessions/create")}
                     >
                         Buat Jadwal
@@ -287,8 +287,6 @@ export default function PtSchedules() {
                         <p className="text-zinc-500">Kelola jadwal sesi latihan private</p>
                     </div>
                 </div>
-
-                <hr />
 
                 <ListTab />
 

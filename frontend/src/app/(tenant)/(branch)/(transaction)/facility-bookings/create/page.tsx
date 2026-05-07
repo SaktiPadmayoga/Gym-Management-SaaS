@@ -118,27 +118,27 @@ export default function CreateFacilityBooking() {
                     </div>
 
                     <div className="mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-3 text-zinc-800">
-                            <button type="button" onClick={() => router.push("/facility-bookings")} className="p-2 hover:bg-zinc-100 rounded-full transition-colors">
+                        <div className="flex items-center gap-2 text-zinc-800">
+                            <button type="button" onClick={() => router.push("/facility-bookings")}>
                                 <Icon name="back" className="h-6 w-6 text-zinc-600" />
                             </button>
-                            <h1 className="text-2xl font-bold tracking-tight">Booking Baru (POS)</h1>
+                            <h1 className="text-2xl font-semibold tracking-tight">Tambah Booking</h1>
                         </div>
 
-                        <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary hover:bg-teal-700 text-white px-5 py-2.5 font-semibold transition-colors disabled:opacity-50">
+                        <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary hover:bg-teal-700 text-white px-5 py-2.5 transition-colors disabled:opacity-50">
                             {createMutation.isPending ? "Memproses..." : (isFree ? "Konfirmasi Booking" : "Proses & Bayar")}
                         </CustomButton>
                     </div>
 
                     <hr className="border-zinc-100 mb-8" />
 
-                    <div className="flex flex-col gap-6 max-w-4xl">
+                    <div className="flex flex-col gap-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <SearchableDropdown name="member_id" label="1. Pilih Member *" options={memberOptions} placeholder={loadingMembers ? "Memuat..." : "Ketik nama member..."} />
-                            <SearchableDropdown name="facility_id" label="2. Pilih Fasilitas *" options={facilityOptions} placeholder={loadingFacilities ? "Memuat..." : "Pilih fasilitas gym..."} />
+                            <SearchableDropdown name="member_id" label=" Pilih Member *" options={memberOptions} placeholder={loadingMembers ? "Memuat..." : "Ketik nama member..."} />
+                            <SearchableDropdown name="facility_id" label="Pilih Fasilitas *" options={facilityOptions} placeholder={loadingFacilities ? "Memuat..." : "Pilih fasilitas gym..."} />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-5 bg-zinc-50 rounded-xl border border-zinc-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <TextInput type="date" name="date" label="Tanggal Sewa *" />
                             <TextInput type="time" name="start_time" label="Jam Mulai *" />
                         </div>

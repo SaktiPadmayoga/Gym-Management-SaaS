@@ -47,8 +47,6 @@ export default function Members() {
         per_page: perPage,
     });
 
-    const deleteMutation = useDeleteMember();
-
     // Sync URL
     useEffect(() => {
         const params = new URLSearchParams();
@@ -185,26 +183,6 @@ export default function Members() {
             icon:  "eye",
             onClick: (row) => router.push(`/members/${row.id}`),
         },
-        {
-            label: "Edit",
-            icon:  "edit",
-            className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/members/${row.id}/edit`),
-        },
-        {
-            label: "Delete",
-            icon:  "trash",
-            className: "text-red-600 hover:bg-red-50",
-            divider: true,
-            onClick: (row) => {
-                if (confirm("Are you sure you want to delete this member?")) {
-                    deleteMutation.mutate(row.id, {
-                        onSuccess: () => toast.success("Member deleted"),
-                        onError:   () => toast.error("Failed to delete member"),
-                    });
-                }
-            },
-        },
     ];
 
     return (
@@ -252,17 +230,21 @@ export default function Members() {
                     <div className="mt-4 text-sm text-zinc-500">
                         Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
                     </div>
+                    <div className="mt-4">
+                        <PaginationWithRows
+                            hasNextPage={entries.length > 0}
+                            hasPrevPage={page > 1}
+                            totalItems={totalData}
+                            currentPage={page}
+                            currentPerPage={perPage}
+                            onPageChange={setPage}
+                            onRowsPerPageChange={setPerPage}
+                            rowOptions={[5, 10, 20, 50]}
+                            defaultRowsPerPage={perPage}
+                        />
+                    </div>
                 </div>
 
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={false}
-                        hasPrevPage={false}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
-                </div>
             </div>
         </FormProvider>
     );

@@ -50,18 +50,22 @@ export default function CreateBranch() {
 
     const onSubmit = async (data: TenantBranchCreateRequest) => {
         try {
-            // Set tenant_id from current tenant
             const payload = {
                 ...data,
                 tenant_id: tenant?.id || "",
             };
 
             await createMutation.mutateAsync(payload);
-            toast.success("Branch created successfully");
             router.push("/owner/branches?success=true");
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to create branch");
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to create branch";
+
+            toast.error(message);
         }
     };
 
@@ -69,7 +73,6 @@ export default function CreateBranch() {
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="font-figtree rounded-xl bg-white border border-zinc-200 px-6 py-4">
-                    <Toaster position="top-center" />
 
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
@@ -91,46 +94,42 @@ export default function CreateBranch() {
                             <h1 className="text-2xl font-semibold ">Create Branch</h1>
                         </div>
 
-                        <CustomButton  type="submit" className="px-4 py-2 text-white" disabled={createMutation.isPending}>
+                        <CustomButton  type="submit" className="px-4 py-2.5 text-white" disabled={createMutation.isPending}>
                             {createMutation.isPending ? "Creating..." : "Create & Save"}
                         </CustomButton>
                     </div>
 
                     <hr className="border-zinc-200" />
 
-                    <div className="flex flex-col gap-6 mt-6">
+                    <div className="flex flex-col gap-5 mt-6">
                         {/* BRANCH INFO */}
                         <h2 className="text-lg font-semibold text-zinc-800">Branch Information</h2>
 
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
-                                <TextInput name="branch_code" label="Branch Code" placeholder="e.g. MAIN, BR001" />
+                            <div className="col-span-6">
+                                <TextInput name="branch_code" label="Branch Code" placeholder="e.g. MAIN, BR001" rules={{ required: "Branch code is required" }} />
                             </div>
-                            <div className="col-span-8">
-                                <TextInput name="name" label="Branch Name" placeholder="e.g. Main Branch Jakarta" />
+                            <div className="col-span-6">
+                                <TextInput name="name" label="Branch Name" placeholder="e.g. Main Branch Jakarta" rules={{ required: "Branch name is required" }} />
                             </div>
                         </div>
-
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="address" label="Address" placeholder="Full address" />
+                                <TextInput name="email" label="Email" placeholder="e.g. branch@gym.com" />
+                            </div>
+                            <div className="col-span-6">
+                                <TextInput name="phone" label="Phone" placeholder="e.g. +62 21 1234567" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-12 gap-4">
+                            <div className="col-span-6">
+                                <TextInput name="address" label="Address" placeholder="Full address"  />
                             </div>
                             <div className="col-span-6">
                                 <TextInput name="city" label="City" placeholder="e.g. Jakarta" />
                             </div>
                         </div>
-
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="phone" label="Phone" placeholder="e.g. +62 21 1234567" />
-                            </div>
-                            <div className="col-span-6">
-                                <TextInput name="email" label="Email" placeholder="e.g. branch@gym.com" />
-                            </div>
-                        </div>
-
-                    <hr className="border-zinc-200" />
-
+                        <hr className="border-zinc-200" />
                         {/* SETTINGS */}
                         <h2 className="text-lg font-semibold text-zinc-800">Settings</h2>
 
@@ -138,13 +137,14 @@ export default function CreateBranch() {
                             <div className="col-span-4">
                                 <SearchableDropdown name="timezone" label="Timezone" options={timezoneOptions} />
                             </div>
-                            <label className="flex items-center gap-2 cols-span-4">
-                                <input type="checkbox" name="is_active" />
-                                <span>Active</span>
-                            </label>
+                            
                             <div className="col-span-4">
                                 <TextInput name="opened_at" label="Opened At" type="date" />
                             </div>
+                            <label className="flex items-center gap-2 cols-span-4 text-zinc-900">
+                                <input type="checkbox" name="is_active" defaultChecked />
+                                <span>Active</span>
+                            </label>
                         </div>
                     </div>
                 </div>

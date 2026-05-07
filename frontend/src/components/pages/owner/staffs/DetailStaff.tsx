@@ -45,6 +45,7 @@ export default function DetailStaff() {
     const router = useRouter();
     const params = useParams();
     const staffId = params.id as string;
+    const [isEditMode, setIsEditMode] = useState(false);
 
     const { data: staff, isLoading } = useStaffDetail(staffId);
     const updateMutation = useUpdateStaff();
@@ -97,12 +98,16 @@ export default function DetailStaff() {
             }
 
             await updateMutation.mutateAsync({ id: staffId, payload });
+            router.push(`/owner/staffs?updated=true`);
+        } catch (error: any) {
 
-            toast.success("Staff updated successfully");
-            router.push(`/owner/staffs/${staffId}?updated=true`);
-        } catch (error) {
-            toast.error("Failed to update staff");
-            console.error(error);
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to update staff";
+
+            toast.error(message);
         }
     };
 
@@ -127,9 +132,16 @@ export default function DetailStaff() {
             // Reset field add
             form.setValue("add_branch_id", undefined);
             form.setValue("add_branch_role", "receptionist");
-        } catch (error) {
-            toast.error("Gagal menambahkan staff ke cabang");
-            console.error(error);
+            router.push(`/owner/staffs/${staffId}`);
+        } catch (error: any) {
+
+            const message =
+                error?.response?.data?.error || 
+                error?.response?.data?.message || 
+                error?.message ||                 
+                "Failed to assign staff to branch";
+
+            toast.error(message);
         }
     };
 
@@ -154,7 +166,7 @@ export default function DetailStaff() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>User Management</li>
                             <li>
                                 <Link href="/owner/staffs">Staff</Link>
                             </li>
@@ -173,78 +185,85 @@ export default function DetailStaff() {
                             </button>
                             <div>
                                 <h1 className="text-2xl font-semibold">Edit Staff</h1>
-                                <p className="text-sm text-zinc-500">{staff.name}</p>
                             </div>
                         </div>
 
                         <div className="flex gap-2">
-                            <CustomButton type="button" className="bg-white border-zinc-300 text-zinc-700 hover:bg-zinc-50" onClick={() => router.push(`/owner/staffs/${staffId}`)}>
-                                Cancel
-                            </CustomButton>
-                            <CustomButton type="submit" className="px-4 py-2" disabled={updateMutation.isPending}>
-                                {updateMutation.isPending ? "Saving..." : "Save Changes"}
-                            </CustomButton>
+                            {!isEditMode ? (
+                                <CustomButton type="button" className=" text-white px-4 py-2.5 cursor-pointer" onClick={() => setIsEditMode(true)} >
+                                    <Icon name="edit" className="h-5 w-5 mr-1" />
+                                    Edit
+                                </CustomButton>
+                            ) : (
+                                <>
+                                    <CustomButton type="button" className=" px-4 py-2.5  text-white cursor-pointer" onClick={() => setIsEditMode(false)}>
+                                        Cancel
+                                    </CustomButton>
+                                    <CustomButton type="submit" className="px-4 py-2.5 cursor-pointer" disabled={updateMutation.isPending}>
+                                        {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                                    </CustomButton>
+                                </>
+                            )}
                         </div>
                     </div>
 
                     <hr />
 
-                    <div className="flex flex-col gap-6 mt-6">
+                    <div className="flex flex-col gap-5 mt-6">
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" />
+                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" disabled={!isEditMode} rules={{ required: "Name is required" }}/>
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email Address" type="email" />
+                                <TextInput name="email" label="Email Address" type="email" disabled={!isEditMode} rules={{ required: "Email is required" }} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Phone Number" placeholder="e.g +6281234567890" />
+                                <TextInput name="phone" label="Phone Number" placeholder="e.g +6281234567890" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="newPassword" label="New Password (optional)" type="password" placeholder="Leave blank to keep current" />
+                                <TextInput name="newPassword" label="New Password (optional)" type="password" placeholder="Leave blank to keep current" disabled={!isEditMode} />
                             </div>
                         </div>
 
                         {/* GLOBAL ROLE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} />
+                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} disabled={!isEditMode} />
                             </div>
                         </div>
 
                         {/* BRANCH ASSIGNMENT SECTION */}
                         {selectedRole === "staff" && (
                             <>
-                                <hr className="my-4" />
-
-                                {/* Current Assignments */}
-                                <div>
-                                    <h2 className="text-lg font-semibold text-zinc-800 mb-3">Current Branch Assignments</h2>
-                                    {staff.branches && staff.branches.length > 0 ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            {staff.branches.map((assignment) => (
-                                                <span key={assignment.id} className="inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-3 py-1 text-sm">
-                                                    {assignment.branch?.name || assignment.branch_id}
-                                                    <span className="text-xs font-medium text-zinc-500">({assignment.role})</span>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-zinc-400 text-sm">Belum ditugaskan ke cabang manapun</p>
-                                    )}
-                                </div>
-
+                                <hr className="mt-2" />
                                 {/* Add to New Branch */}
-                                <div className="mt-6">
+                                <div className="">
                                     <h2 className="text-lg font-semibold text-zinc-800 mb-1">Add to New Branch</h2>
                                     <p className="text-sm text-zinc-500 mb-4">Tambahkan staff ini ke cabang lain</p>
 
                                     <div className="grid grid-cols-12 gap-4">
-                                        <div className="col-span-6">
+                                        {/* Current Assignments */}
+                                        <div className="col-span-4">
+                                            <h2 className="text-sm font-semibold text-zinc-800 mb-1">Current Branch Assignments</h2>
+                                            {staff.branches && staff.branches.length > 0 ? (
+                                                <div className="flex flex-wrap  gap-2">
+                                                    {staff.branches.map((assignment) => (
+                                                        <span key={assignment.id} className="inline-flex items-center gap-2 rounded-lg bg-zinc-100 px-3  text-sm py-3.5 w-full text-zinc-900">
+                                                            {assignment.branch?.name || assignment.branch_id}
+                                                            <span className="text-sm font-medium text-zinc-900">({assignment.role})</span>
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-zinc-400 text-sm">Belum ditugaskan ke cabang manapun</p>
+                                            )}
+                                        </div>
+
+                                        <div className="col-span-3">
                                             <Controller
                                                 name="add_branch_id"
                                                 control={form.control}
@@ -259,17 +278,18 @@ export default function DetailStaff() {
                                                             subtitle: b.branch_code ? `(${b.branch_code})` : undefined,
                                                         }))}
                                                         placeholder="Pilih cabang..."
+                                                        disabled={!isEditMode}
                                                     />
                                                 )}
                                             />
                                         </div>
 
-                                        <div className="col-span-4">
-                                            <SearchableDropdown name="add_branch_role" label="Role in Branch" options={branchRoleOptions} />
+                                        <div className="col-span-3">
+                                            <SearchableDropdown name="add_branch_role" label="Role in Branch" options={branchRoleOptions} disabled={!isEditMode} />
                                         </div>
 
-                                        <div className="col-span-2 flex items-end">
-                                            <CustomButton type="button" onClick={handleAddBranch} className="w-full bg-aksen-secondary text-white">
+                                        <div className="col-span-2 flex items-start mt-7">
+                                            <CustomButton type="button" onClick={handleAddBranch} className="w-full bg-aksen-secondary border-none text-white px-3 py-3.5" disabled={!isEditMode}>
                                                 Add
                                             </CustomButton>
                                         </div>

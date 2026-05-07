@@ -1,6 +1,20 @@
 import tenantApiClient from "@/lib/tenant-api-client";
-import { ChangePasswordRequest, StaffLoginRequest, StaffLoginResponse } from "@/types/tenant/staff-auth";
+import {
+    ChangePasswordRequest,
+    StaffLoginRequest,
+    StaffLoginResponse,
+    LoginBranchData,
+} from "@/types/tenant/staff-auth";
 import { StaffData } from "@/types/tenant/staffs";
+
+// Tambah type untuk response /me
+export interface StaffMeResponse {
+    staff:          StaffData;
+    branches:       LoginBranchData[];
+    global_role:    "owner" | "staff";
+    current_role:   string | null;
+    dashboard_path: string;
+}
 
 export const staffAuthAPI = {
     login: async (payload: StaffLoginRequest): Promise<StaffLoginResponse> => {
@@ -12,7 +26,7 @@ export const staffAuthAPI = {
         await tenantApiClient.post("/tenant-auth/logout");
     },
 
-    me: async (): Promise<StaffData> => {
+    me: async (): Promise<StaffMeResponse> => {
         const response = await tenantApiClient.get("/tenant-auth/me");
         return response?.data.data;
     },
@@ -21,10 +35,6 @@ export const staffAuthAPI = {
         await tenantApiClient.post("/tenant-auth/change-password", payload);
     },
 
-    /**
-     * Ambil URL redirect Google dari BE
-     * Lalu frontend redirect ke URL tersebut
-     */
     getGoogleRedirectUrl: async (): Promise<string> => {
         const response = await tenantApiClient.get("/tenant-auth/google");
         return response?.data.data.url;

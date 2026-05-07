@@ -1,17 +1,25 @@
-// File: src/components/ui/dropdown/SearchableDropdown.tsx
 "use client";
 
 import { ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useFormContext, Controller, FieldValues, Path } from "react-hook-form";
+import {
+    useFormContext,
+    Controller,
+    FieldValues,
+    Path,
+    RegisterOptions,
+} from "react-hook-form";
 
 export interface DropdownOption<T = string | number | boolean> {
     label: string;
-    value: T; // value ke form (boleh boolean)
-    key: string | number; // khusus React key
+    value: T;
+    key: string | number;
 }
 
-interface SearchableDropdownProps<TForm extends FieldValues, TValue = string | number | boolean> {
+interface SearchableDropdownProps<
+    TForm extends FieldValues,
+    TValue = string | number | boolean
+> {
     name: Path<TForm>;
     label?: string;
     placeholder?: string;
@@ -20,9 +28,18 @@ interface SearchableDropdownProps<TForm extends FieldValues, TValue = string | n
     isSearchable?: boolean;
     isClearable?: boolean;
     className?: string;
+
+    // 🔥 TAMBAHAN (rules)
+    rules?: Omit<
+        RegisterOptions<TForm, Path<TForm>>,
+        "valueAsNumber" | "valueAsDate" | "setValueAs" | "disabled"
+    >;
 }
 
-export function SearchableDropdown<TForm extends FieldValues, TValue = string | number | boolean>({
+export function SearchableDropdown<
+    TForm extends FieldValues,
+    TValue = string | number | boolean
+>({
     name,
     label,
     placeholder = "Select an option...",
@@ -31,6 +48,7 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
     isSearchable = true,
     isClearable = true,
     className = "",
+    rules,
 }: SearchableDropdownProps<TForm, TValue>) {
     const { control } = useFormContext<TForm>();
     const [isOpen, setIsOpen] = useState(false);
@@ -38,11 +56,16 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const filteredOptions = options.filter((option) => option.label.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredOptions = options.filter((option) =>
+        option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target as Node)
+            ) {
                 setIsOpen(false);
             }
         }
@@ -61,12 +84,19 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
         <Controller
             control={control}
             name={name}
+            rules={rules} // 🔥 INI KUNCI NYA
             render={({ field, fieldState: { error } }) => {
-                const selectedOption = options.find((opt) => opt.value === field.value);
+                const selectedOption = options.find(
+                    (opt) => opt.value === field.value
+                );
 
                 return (
                     <div className={`w-full ${className}`}>
-                        {label && <label className="block text-sm font-semibold text-gray-900 mb-2">{label}</label>}
+                        {label && (
+                            <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                {label}
+                            </label>
+                        )}
 
                         <div className="relative" ref={dropdownRef}>
                             <button
@@ -77,11 +107,33 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
                                 }}
                                 disabled={disabled}
                                 className={`w-full h-12 px-3 border rounded-lg bg-white text-left text-sm flex items-center justify-between
-                                    ${disabled ? "opacity-50 cursor-not-allowed bg-gray-100" : "hover:border-gray-400"}
-                                    ${error ? "border-red-500" : "border-geonet-soft-gray"}`}
+                                    ${
+                                        disabled
+                                            ? "opacity-50 cursor-not-allowed bg-gray-100"
+                                            : "hover:border-gray-400"
+                                    }
+                                    ${
+                                        error
+                                            ? "border-red-500"
+                                            : "border-geonet-soft-gray"
+                                    }`}
                             >
-                                <span className={`truncate ${selectedOption ? "text-gray-900" : "text-zinc-400"}`}>{selectedOption ? selectedOption.label : placeholder}</span>
-                                <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                                <span
+                                    className={`truncate ${
+                                        selectedOption
+                                            ? "text-gray-900"
+                                            : "text-zinc-400"
+                                    }`}
+                                >
+                                    {selectedOption
+                                        ? selectedOption.label
+                                        : placeholder}
+                                </span>
+                                <ChevronDown
+                                    className={`h-5 w-5 text-gray-400 transition-transform ${
+                                        isOpen ? "rotate-180" : ""
+                                    }`}
+                                />
                             </button>
 
                             {isOpen && (
@@ -93,7 +145,9 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
                                                 type="text"
                                                 placeholder="Search..."
                                                 value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                onChange={(e) =>
+                                                    setSearchQuery(e.target.value)
+                                                }
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                                             />
                                         </div>
@@ -101,19 +155,28 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
 
                                     <ul className="max-h-60 overflow-y-auto">
                                         {filteredOptions.length === 0 ? (
-                                            <li className="px-4 py-3 text-sm text-gray-500 text-center">No options found</li>
+                                            <li className="px-4 py-3 text-sm text-gray-500 text-center">
+                                                No options found
+                                            </li>
                                         ) : (
                                             filteredOptions.map((option) => (
                                                 <li key={option.key}>
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            field.onChange(option.value);
+                                                            field.onChange(
+                                                                option.value
+                                                            );
                                                             setIsOpen(false);
                                                             setSearchQuery("");
                                                         }}
                                                         className={`w-full text-left px-4 py-2 text-sm
-                                                            ${field.value === option.value ? "bg-aksen-secondary/10 text-aksen-secondary font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                                                            ${
+                                                                field.value ===
+                                                                option.value
+                                                                    ? "bg-aksen-secondary/10 text-aksen-secondary font-medium"
+                                                                    : "text-gray-700 hover:bg-gray-100"
+                                                            }`}
                                                     >
                                                         {option.label}
                                                     </button>
@@ -122,25 +185,32 @@ export function SearchableDropdown<TForm extends FieldValues, TValue = string | 
                                         )}
                                     </ul>
 
-                                    {isClearable && field.value !== undefined && (
-                                        <div className="border-t border-gray-200 p-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    field.onChange(undefined);
-                                                    setSearchQuery("");
-                                                }}
-                                                className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
-                                            >
-                                                Clear Selection
-                                            </button>
-                                        </div>
-                                    )}
+                                    {isClearable &&
+                                        field.value !== undefined && (
+                                            <div className="border-t border-gray-200 p-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        field.onChange(
+                                                            undefined
+                                                        );
+                                                        setSearchQuery("");
+                                                    }}
+                                                    className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded"
+                                                >
+                                                    Clear Selection
+                                                </button>
+                                            </div>
+                                        )}
                                 </div>
                             )}
                         </div>
 
-                        {error && <p className="text-red-500 text-sm mt-1">{error.message}</p>}
+                        {error && (
+                            <p className="text-red-500 text-sm mt-1">
+                                {error.message}
+                            </p>
+                        )}
                     </div>
                 );
             }}

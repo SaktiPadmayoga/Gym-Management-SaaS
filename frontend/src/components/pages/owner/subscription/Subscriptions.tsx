@@ -1,8 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast, Toaster } from "sonner";
 import { useCurrentSubscription, useSubscriptionHistory } from "@/hooks/useSubscriptionTenant";
+import { useEffect, useRef } from "react";
 
 /* =====================================
  * STATUS BADGE
@@ -46,9 +47,40 @@ function formatPrice(price?: number | null) {
  * ===================================== */
 export default function Subscription() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const hasShownToast = useRef(false);
 
     const { data: current, isLoading: currentLoading, isError: currentError } = useCurrentSubscription();
     const { data: history, isLoading: historyLoading } = useSubscriptionHistory();
+
+    // Toast handler
+        useEffect(() => {
+            const success = searchParams.get("success");
+            const failed = searchParams.get("failed");
+            const pending = searchParams.get("pending");
+
+            if (!success && !failed && !pending) {
+                hasShownToast.current = false;
+                return;
+            }
+    
+            if (success === "true" && !hasShownToast.current) {
+                toast.success("Subscription plan upgraded successfully");
+                hasShownToast.current = true;
+            }
+    
+            if (failed === "true" && !hasShownToast.current) {
+                toast.error("Failed to upgrade subscription plan");
+                hasShownToast.current = true;
+            }
+            
+            if (pending === "true" && !hasShownToast.current) {
+                toast.info("Payment not completed");
+                hasShownToast.current = true;
+            }
+    
+            window.history.replaceState({}, "", "/owner/subscription");
+        }, [searchParams]);
 
     return (
         <div className="font-figtree">
@@ -58,7 +90,7 @@ export default function Subscription() {
                 {/* Breadcrumb */}
                 <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                     <ul>
-                        <li>Management</li>
+                        <li>Tenant & Subscription</li>
                         <li className="text-aksen-secondary">Subscription</li>
                     </ul>
                 </div>
@@ -155,7 +187,7 @@ export default function Subscription() {
 
                 {/* Subscription History */}
                 <div>
-                    <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-4">
+                    <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide my-4">
                         Subscription History
                     </h3>
 
