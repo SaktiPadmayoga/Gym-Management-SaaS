@@ -18,7 +18,16 @@ class PtSessionController extends Controller
      */
     public function index(Request $request)
     {
+        $staff = $request->user();
         $query = PtSession::with(['member', 'trainer', 'package.plan']);
+
+        // Filter: Trainer hanya melihat sesinya sendiri, kecuali dia manager/owner
+        $isBranchTrainer = $staff->branches()->where('staff_branches.role', 'trainer')->exists();
+        $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->branches()->whereIn('staff_branches.role', ['branch_manager'])->exists();
+
+        if ($isBranchTrainer && !$isManager) {
+            $query->where('trainer_id', $staff->id);
+        }
 
         // Filter berdasarkan tanggal (untuk Kalender atau List)
         if ($request->filled('date')) {
@@ -72,7 +81,7 @@ class PtSessionController extends Controller
         $request->validate([
             'pt_package_id' => 'required|uuid|exists:pt_packages,id',
             'trainer_id'    => 'required|uuid',
-            'date'          => 'required|date|after_or_equal:today',
+            'date'          => 'required|date',
             'start_at'      => 'required',
             'end_at'        => 'required|after:start_at',
         ]);
@@ -93,11 +102,16 @@ class PtSessionController extends Controller
             return ApiResponse::error("Kuota paket tidak mencukupi untuk membuat jadwal baru.", null, 422);
         }
 
+        $branchId = $request->header('X-Branch-Id') ?? $package->branch_id;
+        if (empty($branchId)) {
+            return ApiResponse::error("Cabang tidak terdeteksi. Silakan pilih cabang Anda terlebih dahulu.", null, 422);
+        }
+
         $session = PtSession::create([
             'pt_package_id' => $package->id,
             'member_id'     => $package->member_id,
             'trainer_id'    => $request->trainer_id,
-            'branch_id'     => $request->header('X-Branch-Id') ?? $package->branch_id,
+            'branch_id'     => $branchId,
             'date'          => $request->date,
             'start_at'      => $request->start_at,
             'end_at'        => $request->end_at,
@@ -139,5 +153,74 @@ class PtSessionController extends Controller
         ]);
 
         return ApiResponse::success(null, 'Jadwal berhasil dibatalkan');
+    }
+
+    public function getRequests(Request $request)
+    {
+        $staff = $request->user();
+        $query = PtSession::with(['member:id,name', 'package.plan'])
+            ->where('status', 'requested');
+
+        // Filter: Trainer hanya melihat request untuk dirinya sendiri,
+        // Branch manager bisa melihat semua request di cabang mereka (di-handle oleh global scope jika ada, atau tambahkan manual).
+        $isGlobalTrainer = $staff->role === 'trainer';
+        $isBranchTrainer = $staff->branches()->where('staff_branches.role', 'trainer')->exists();
+        $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->branches()->whereIn('staff_branches.role', ['branch_manager'])->exists();
+
+        if (($isGlobalTrainer || $isBranchTrainer) && !$isManager) {
+            $query->where('trainer_id', $staff->id);
+        }
+
+        $requests = $query->orderBy('created_at', 'desc')->paginate($request->get('per_page', 15));
+
+        return ApiResponse::success([
+            'data' => $requests->items(),
+            'meta' => [
+                'total'        => $requests->total(),
+                'per_page'     => $requests->perPage(),
+                'current_page' => $requests->currentPage(),
+            ]
+        ], 'Daftar request PT berhasil diambil');
+    }
+
+    public function approveRequest(Request $request, $id)
+    {
+        $session = PtSession::findOrFail($id);
+        
+        if ($session->status !== 'requested') {
+            return ApiResponse::error('Sesi ini tidak dalam status requested', null, 400);
+        }
+
+        $session->update([
+            'status' => 'scheduled'
+        ]);
+
+        // Kirim notifikasi ke member (bisa melalui table notifications terpisah untuk member jika ada, 
+        // atau kita gunakan logger/email untuk sementara).
+        Log::info("PT Session {$id} approved for member {$session->member_id}");
+
+        return ApiResponse::success($session, 'Request berhasil diterima menjadi scheduled');
+    }
+
+    public function rejectRequest(Request $request, $id)
+    {
+        $request->validate([
+            'cancelled_reason' => 'required|string|max:255'
+        ]);
+
+        $session = PtSession::findOrFail($id);
+        
+        if ($session->status !== 'requested') {
+            return ApiResponse::error('Sesi ini tidak dalam status requested', null, 400);
+        }
+
+        $session->update([
+            'status' => 'rejected',
+            'cancelled_reason' => $request->cancelled_reason
+        ]);
+
+        Log::info("PT Session {$id} rejected for member {$session->member_id}. Reason: {$request->cancelled_reason}");
+
+        return ApiResponse::success($session, 'Request berhasil ditolak');
     }
 }

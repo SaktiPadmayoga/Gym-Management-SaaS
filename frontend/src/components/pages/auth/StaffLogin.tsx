@@ -46,11 +46,16 @@ function LoginForm({ primaryColor }: LoginFormProps) {
     const onSubmit = async (data: { email: string; password: string }) => {
         try {
             await login(data.email, data.password);
-        } catch (err) {
-            let message = (err instanceof Error ? err.message : "Login gagal") ?? "Login gagal";
-
-            if (message.includes("tidak memiliki akses")) {
-                message = message;
+        } catch (err: any) {
+            let message = "Login gagal";
+            
+            if (err?.response?.data?.errors) {
+                const firstError = Object.values(err.response.data.errors)[0] as string[];
+                message = firstError[0] || "Validasi gagal";
+            } else if (err?.response?.data?.message) {
+                message = err.response.data.message;
+            } else if (err instanceof Error) {
+                message = err.message;
             }
 
             toast.error(message, { duration: 6000 });
@@ -93,7 +98,7 @@ function LoginForm({ primaryColor }: LoginFormProps) {
                         />
                         <span className="text-xs font-semibold text-zinc-500">Ingat saya</span>
                     </label>
-                    <a href="#" className="text-xs font-bold transition-colors hover:opacity-80" style={{ color: primaryColor }}>
+                    <a href="/tenant-auth/forgot-password" className="text-xs font-bold transition-colors hover:opacity-80" style={{ color: primaryColor }}>
                         Lupa sandi?
                     </a>
                 </div>

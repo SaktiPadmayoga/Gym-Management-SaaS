@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
-use App\Models\Tenant\ClassSchedule;
 use App\Models\Tenant\ClassAttendance;
+use App\Models\Tenant\ClassSchedule;
 use App\Models\Tenant\Member;
 use App\Models\Tenant\TenantInvoice;
-use App\Models\Tenant\TenantInvoiceItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -18,10 +17,14 @@ class ClassBookingService
 
     /**
      * Entry point utama.
-     * Ditambahkan parameter $paymentMethod ('midtrans' atau 'cash')
      */
-    public function book(ClassSchedule $schedule, Member $member, ?string $staffId = null, ?string $notes = null, string $paymentMethod = 'midtrans'): array
-    {
+    public function book(
+        ClassSchedule $schedule,
+        Member $member,
+        ?string $staffId = null,
+        ?string $notes = null,
+        string $paymentMethod = 'midtrans'
+    ): array {
         $this->assertBookable($schedule, $member);
 
         $plan = $schedule->classPlan;
@@ -69,9 +72,14 @@ class ClassBookingService
     // BOOKING BERBAYAR (CASH / MIDTRANS)
     // ------------------------------------------------------------------
 
-    private function bookPaid(ClassSchedule $schedule, Member $member, ?string $staffId, ?string $notes, string $paymentMethod): array
-    {
-        $plan = $schedule->classPlan;
+    private function bookPaid(
+        ClassSchedule $schedule,
+        Member $member,
+        ?string $staffId,
+        ?string $notes,
+        string $paymentMethod
+    ): array {
+        $plan   = $schedule->classPlan;
         $isCash = $paymentMethod === 'cash';
 
         return DB::transaction(function () use ($schedule, $plan, $member, $staffId, $notes, $paymentMethod, $isCash) {
@@ -87,20 +95,20 @@ class ClassBookingService
                 'total_amount'    => $plan->price,
                 'currency'        => $plan->currency ?? 'IDR',
                 'payment_gateway' => $paymentMethod,
-                'status'          => $isCash ? 'paid' : 'pending', // Lunas jika cash
+                'status'          => $isCash ? 'paid' : 'pending',
                 'issued_at'       => now(),
                 'due_date'        => now()->addHours(2),
-                'paid_at'         => $isCash ? now() : null,       // Catat waktu bayar jika cash
+                'paid_at'         => $isCash ? now() : null,
             ]);
 
             // 2. Invoice Item
             $invoice->items()->create([
-                'item_type'  => ClassSchedule::class,
-                'item_id'    => $schedule->id,
-                'item_name'  => "{$plan->name} — " . $schedule->date . ' ' . $schedule->start_at,
-                'quantity'   => 1,
-                'unit_price' => $plan->price,
-                'total_price'=> $plan->price,
+                'item_type'   => ClassSchedule::class,
+                'item_id'     => $schedule->id,
+                'item_name'   => "{$plan->name} — " . $schedule->date . ' ' . $schedule->start_at,
+                'quantity'    => 1,
+                'unit_price'  => $plan->price,
+                'total_price' => $plan->price,
             ]);
 
             // 3. Buat ClassAttendance
@@ -108,37 +116,43 @@ class ClassBookingService
                 'class_schedule_id' => $schedule->id,
                 'member_id'         => $member->id,
                 'checked_in_by'     => $staffId,
-                'status'            => 'booked', // Atau bisa langsung 'attended' jika maunya lgsg hadir
+                'status'            => 'booked',
                 'payment_status'    => $isCash ? 'paid' : 'pending',
                 'tenant_invoice_id' => $invoice->id,
                 'booked_at'         => now(),
                 'notes'             => $notes,
             ]);
 
-            // 4. Update eksternal reference
+            // 4. Update external reference
             $invoice->update([
                 'external_reference' => $invoice->invoice_number,
             ]);
 
-            // 5. Jika CASH: Kurangi kuota lalu langsung return (skip Midtrans)
+            // 5. CASH: slot langsung terkurangi, tidak perlu Midtrans
             if ($isCash) {
                 $schedule->increment('total_booked');
                 $attendance->load(['member', 'checkedInBy']);
-                
+
                 return [
                     'attendance' => $attendance,
                     'invoice'    => $invoice->fresh(['items']),
-                    'snap_token' => null, // Tidak butuh popup Midtrans
+                    'snap_token' => null,
                 ];
             }
 
-            // 6. Jika MIDTRANS: Minta Snap Token
+            // 6. MIDTRANS: minta Snap Token
             $snapToken = $this->midtrans->getSnapToken(
                 orderId:     $invoice->invoice_number,
                 grossAmount: (int) $plan->price,
                 member:      $member,
                 plan:        $plan,
             );
+
+            // ✅ PERBAIKAN: Untuk Midtrans, total_booked juga di-increment
+            // agar kapasitas langsung terkurangi saat booking dibuat (status pending).
+            // Jika payment gagal/expired, webhook Midtrans / job cleanup akan
+            // cancel attendance dan decrement kembali.
+            $schedule->increment('total_booked');
 
             $attendance->load(['member', 'checkedInBy']);
 
@@ -160,16 +174,13 @@ class ClassBookingService
             throw new \InvalidArgumentException('Jadwal sudah dibatalkan.');
         }
 
-        $plan = $schedule->classPlan;
+        $plan     = $schedule->classPlan;
         $capacity = $schedule->max_capacity ?? $plan->max_capacity;
 
-        $effectiveBooked = $schedule->total_booked
-            + ClassAttendance::where('class_schedule_id', $schedule->id)
-                ->where('payment_status', 'pending')
-                ->whereHas('invoice', fn ($q) => $q->where('status', 'pending'))
-                ->count();
-
-        if ($effectiveBooked >= $capacity) {
+        // ✅ PERBAIKAN: Karena total_booked sekarang langsung di-increment
+        // saat booking (termasuk pending Midtrans), cukup cek total_booked saja.
+        // Tidak perlu double-count pending attendance lagi.
+        if ($schedule->total_booked >= $capacity) {
             throw new \InvalidArgumentException('Kapasitas kelas sudah penuh.');
         }
 

@@ -111,7 +111,8 @@ export const MemberUpdateRequestSchema = z.object({
     date_of_birth: z.string().nullable().optional(),
     address: z.string().nullable().optional(),
     id_card_number: z.string().nullable().optional(),
-    password: z.string().optional(),
+    new_password: z.string().optional(),
+    new_password_confirmation: z.string().optional(),
     status: MemberStatusEnum.optional(),
     is_active: z.boolean().optional(),
 });

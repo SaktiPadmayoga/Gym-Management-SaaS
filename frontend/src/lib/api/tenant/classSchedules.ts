@@ -111,23 +111,47 @@ export const classSchedulesAPI = {
                 ...(params?.class_plan_id && { class_plan_id: params.class_plan_id }),
             },
         });
-        return {
-            data: response.data.data?.data ?? [],
-            meta: response.data.data?.meta ?? null,
-        };
+
+        // ✅ PERBAIKAN: Normalise response structure dari Laravel pagination.
+        // Backend ApiResponse membungkus data dalam { data: { data: [...], meta: {} } }
+        // Tapi beberapa controller mungkin langsung return array tanpa pagination.
+        const payload = response.data?.data;
+
+        // Case 1: Ada pagination → { data: [...], meta: {} }
+        if (payload && Array.isArray(payload.data)) {
+            return {
+                data: payload.data,
+                meta: payload.meta ?? null,
+            };
+        }
+
+        // Case 2: Langsung array (tanpa pagination)
+        if (Array.isArray(payload)) {
+            return { data: payload, meta: null };
+        }
+
+        // Fallback: kosong
+        return { data: [], meta: null };
     },
 
     /**
      * Booking Kelas oleh Member
-     * Bisa mengembalikan snap_token jika kelas berbayar
+     * ✅ PERBAIKAN: Return { data: { attendance, invoice, snap_token } }
+     * yang konsisten antara kelas gratis dan berbayar.
      */
-    memberBook: async (scheduleId: string) => {
-        const response = await memberApiClient.post(`/member/class-schedules/${scheduleId}/book`);
-        return response.data;   // Kembalikan full response agar bisa ambil snap_token
+    memberBook: async (scheduleId: string): Promise<{
+        attendance: ClassAttendanceData;
+        invoice: { id: string; invoice_number: string; total_amount: number; due_date: string } | null;
+        snap_token: string | null;
+    }> => {
+        const response = await memberApiClient.post(`/member/class-schedules/${scheduleId}/book-v2`);
+        // Backend ApiResponse.success() membungkus dalam { success, message, data: {...} }
+        // Jadi response.data.data = { attendance, invoice, snap_token }
+        return response.data.data;
     },
 
     memberCancelBook: async (scheduleId: string): Promise<void> => {
-        await memberApiClient.delete(`/member/class-schedules/${scheduleId}/book`);
+        await memberApiClient.delete(`/member/class-schedules/${scheduleId}/book-v2`);
     },
 
     memberMyClasses: async (params?: {
@@ -142,9 +166,20 @@ export const classSchedulesAPI = {
                 ...(params?.status && { status: params.status }),
             },
         });
-        return {
-            data: response.data.data?.data ?? [],
-            meta: response.data.data?.meta ?? null,
-        };
+
+        const payload = response.data?.data;
+
+        if (payload && Array.isArray(payload.data)) {
+            return {
+                data: payload.data,
+                meta: payload.meta ?? null,
+            };
+        }
+
+        if (Array.isArray(payload)) {
+            return { data: payload, meta: null };
+        }
+
+        return { data: [], meta: null };
     },
 };

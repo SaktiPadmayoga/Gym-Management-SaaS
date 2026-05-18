@@ -292,7 +292,7 @@ class ClassScheduleController extends Controller
      * POST /api/class-schedules/{id}/book-by-staff
      * Endpoint khusus Staff/POS untuk mendaftarkan member dan bayar di tempat.
      */
-    public function bookByStaff(Request $request, $id, \App\Services\ClassBookingService $bookingService)
+    public function bookByStaff(Request $request, $id, ClassBookingService $bookingService)
     {
         $request->validate([
             'member_id'      => 'required|uuid|exists:members,id',
@@ -300,7 +300,7 @@ class ClassScheduleController extends Controller
         ]);
 
         try {
-            $schedule = \App\Models\Tenant\ClassSchedule::with('classPlan')->findOrFail($id);
+            $schedule = ClassSchedule::with('classPlan')->findOrFail($id);
             $member   = \App\Models\Tenant\Member::findOrFail($request->member_id);
             
             // Ambil ID staff yang sedang login (sesuaikan dengan guard auth kamu)
@@ -311,20 +311,20 @@ class ClassScheduleController extends Controller
             // Panggil service yang sudah kita update
             $result = $bookingService->book($schedule, $member, $staffId, 'Booked via Staff POS', $paymentMethod);
 
-            return \App\Http\Responses\ApiResponse::success([
+            return ApiResponse::success([
                 'attendance' => $result['attendance'],
                 'invoice'    => $result['invoice'],
                 'snap_token' => $result['snap_token'], // Frontend butuh ini untuk memunculkan popup
             ], 'Pendaftaran kelas berhasil diproses.', 201);
 
         } catch (\InvalidArgumentException $e) {
-            return \App\Http\Responses\ApiResponse::error($e->getMessage(), null, 422);
+            return ApiResponse::error($e->getMessage(), null, 422);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('[StaffClassBooking] Gagal', [
                 'schedule_id' => $id,
                 'error'       => $e->getMessage()
             ]);
-            return \App\Http\Responses\ApiResponse::error('Gagal memproses pendaftaran. Silakan coba lagi.', null, 500);
+            return ApiResponse::error('Gagal memproses pendaftaran. Silakan coba lagi.', null, 500);
         }
     }
 }

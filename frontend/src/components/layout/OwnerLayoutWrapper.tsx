@@ -7,6 +7,10 @@ import Header from "./Header";
 import { GripVertical } from "lucide-react";
 import OwnerSidebar from "./OwnerSidebar";
 import TenantHeader from "./TenantHeader";
+import { useTenantHeader } from "@/hooks/useTenantHeader";
+import { AlertCircle, ArrowRight } from "lucide-react";
+import dayjs from "dayjs";
+import Link from "next/link";
 
 interface OwnerLayoutWrapperProps {
     children: React.ReactNode;
@@ -41,6 +45,21 @@ const OwnerLayoutWrapper: React.FC<OwnerLayoutWrapperProps> = ({ children }) => 
 
     const toggleSidebar = () => setIsOpen((prev) => !prev);
 
+    const { data: tenantData } = useTenantHeader();
+
+    let isExpired = false;
+    if (tenantData?.status === 'expired' || tenantData?.status === 'suspended') {
+        isExpired = true;
+    } else if (tenantData?.subscription_ends_at) {
+        const endDate = dayjs(tenantData.subscription_ends_at);
+        if (endDate.diff(dayjs(), "day") < 0) {
+            isExpired = true;
+        }
+    }
+
+    // Allow access to these routes even if expired
+    const isBillingRoute = pathname.startsWith("/owner/subscription") || pathname.startsWith("/owner/plans");
+
     // Show loading state while mounting
     if (!mounted) {
         return (
@@ -64,8 +83,30 @@ const OwnerLayoutWrapper: React.FC<OwnerLayoutWrapperProps> = ({ children }) => 
                 <TenantHeader/>
 
                 {/* Main Container */}
-                <div className="flex flex-1 overflow-visible">
-                    <div className="relative">
+                <div className="flex flex-1 overflow-visible relative">
+                    
+                    {/* --- EXPIRED BLOCKING OVERLAY --- */}
+                    {isExpired && !isBillingRoute && (
+                        <div className="absolute inset-0 z-50 bg-zinc-100/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 rounded-tl-2xl border-t border-l border-white/50">
+                            <div className="md:-mt-90 bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-zinc-200 animate-in fade-in zoom-in-95 duration-300">
+                                <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <AlertCircle size={32} />
+                                </div>
+                                <h2 className="text-2xl font-black text-zinc-900 mb-2">Subscription Habis</h2>
+                                <p className="text-zinc-600 mb-8 leading-relaxed">
+                                    Layanan aplikasi saat ini dibatasi karena masa aktif subscription Anda telah berakhir. Silakan perbarui layanan untuk kembali mengakses seluruh fitur.
+                                </p>
+                                <Link 
+                                    href="/owner/subscription"
+                                    className="inline-flex items-center justify-center gap-2 w-full bg-aksen-secondary hover:bg-teal-700 text-white font-bold py-3.5 px-6 rounded-xl transition-colors shadow-sm shadow-teal-700/20"
+                                >
+                                    Perbarui Subscription
+                                    <ArrowRight size={18} />
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+                    <div className="relative ">
                         {/* SIDEBAR */}
                         <OwnerSidebar isOpen={isOpen} pathname={pathname} />
 

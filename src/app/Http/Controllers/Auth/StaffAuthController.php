@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 use App\Services\CookieService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\StaffResetPasswordMail;
 
 class StaffAuthController extends Controller
 {
@@ -292,5 +295,73 @@ public function login(Request $request)
             "&dashboard_path={$dashboardPath}"
             // token TIDAK ada di URL
         )->withCookie(CookieService::makeStaffCookie($token));
+    }
+
+    // =============================================
+    // Password Reset
+    // =============================================
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $staff = Staff::where('email', $request->email)->first();
+
+        if (!$staff) {
+            return ApiResponse::success(null, 'Jika email terdaftar, link reset kata sandi telah dikirim.');
+        }
+
+        $token = Str::random(60);
+
+        // Langsung gunakan koneksi default tenant (tidak perlu specify 'central')
+        DB::table('staff_password_reset_tokens')->updateOrInsert(
+            ['email' => $staff->email],
+            ['token' => Hash::make($token), 'created_at' => now()]
+        );
+
+        // Ambil URL frontend dari header Origin atau fungsi internal
+        $frontendUrl = $request->header('origin') ?? $this->getFrontendUrl($request);
+
+        Mail::to($staff->email)->send(new StaffResetPasswordMail($token, $staff->email, $frontendUrl));
+
+        return ApiResponse::success(null, 'Jika email terdaftar, link reset kata sandi telah dikirim.');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'token' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $resetToken = DB::table('staff_password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$resetToken) {
+            return ApiResponse::error('Token tidak valid atau sudah kedaluwarsa.', null, 422);
+        }
+
+        if (now()->diffInMinutes($resetToken->created_at) > 60) {
+            DB::table('staff_password_reset_tokens')->where('email', $request->email)->delete();
+            return ApiResponse::error('Token sudah kedaluwarsa. Silakan minta link reset baru.', null, 422);
+        }
+
+        if (!Hash::check($request->token, $resetToken->token)) {
+            return ApiResponse::error('Token tidak valid.', null, 422);
+        }
+
+        $staff = Staff::where('email', $request->email)->first();
+        if (!$staff) {
+            return ApiResponse::error('Staff tidak ditemukan.', null, 404);
+        }
+
+        $staff->update(['password' => Hash::make($request->password)]);
+
+        $staff->tokens()->delete();
+        DB::table('staff_password_reset_tokens')->where('email', $request->email)->delete();
+
+        return ApiResponse::success(null, 'Kata sandi berhasil direset. Silakan login kembali.');
     }
 }

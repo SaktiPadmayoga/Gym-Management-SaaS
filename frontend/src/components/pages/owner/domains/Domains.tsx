@@ -4,13 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { toast, Toaster } from "sonner";
+import { AxiosError } from "axios";
 
 import { Icon } from "@/components/icon";
 import CustomButton from "@/components/ui/button/CustomButton";
 import { TextInput } from "@/components/ui/input/Input";
 
 // ✅ Import useTenantHeader untuk mendapatkan current_domain_id
-import { useTenantHeader } from "@/hooks/useTenantHeader"; 
+import { useTenantHeader } from "@/hooks/useTenantHeader";
 // ✅ Menggunakan useDomain (singular) untuk mengambil detail berdasarkan ID
 import { useDomain, useDeleteDomain, useTogglePrimaryDomain } from "@/hooks/useDomains";
 import { useCreateDomainRequest, useMyDomainRequests, useCancelDomainRequest } from "@/hooks/useDomainRequests";
@@ -25,27 +26,13 @@ function StatusBadge({ status }: { status: string }) {
         approved: "text-green-700 bg-green-100",
         rejected: "text-red-700 bg-red-100",
     };
-    return (
-        <span className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${colors[status as keyof typeof colors] ?? "text-gray-700 bg-gray-100"}`}>
-            {status}
-        </span>
-    );
+    return <span className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${colors[status as keyof typeof colors] ?? "text-gray-700 bg-gray-100"}`}>{status}</span>;
 }
 
 /* =====================================
  * REQUEST DOMAIN MODAL
  * ===================================== */
-function RequestDomainModal({
-    isOpen,
-    onClose,
-    currentDomain,
-    branchId,
-}: {
-    isOpen: boolean;
-    onClose: () => void;
-    currentDomain: string;
-    branchId?: string | null;
-}) {
+function RequestDomainModal({ isOpen, onClose, currentDomain, branchId }: { isOpen: boolean; onClose: () => void; currentDomain: string; branchId?: string | null }) {
     const createMutation = useCreateDomainRequest();
 
     const form = useForm<CreateDomainRequest>({
@@ -61,8 +48,9 @@ function RequestDomainModal({
             toast.success("Domain request submitted successfully");
             form.reset();
             onClose();
-        } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to submit domain request";
+        } catch (err) {
+            const error = err as AxiosError<{ message: string }>;
+            const message = error.response?.data?.message || "Failed to submit domain request";
             toast.error(message);
         }
     };
@@ -72,10 +60,7 @@ function RequestDomainModal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div
-                className="absolute inset-0 bg-black/40"
-                onClick={onClose}
-            />
+            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
             {/* Modal */}
             <div className="relative z-10 bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 font-figtree">
@@ -98,27 +83,17 @@ function RequestDomainModal({
                             label="Requested Domain"
                             placeholder="e.g. mygym.com"
                             rules={{
-                                required: "Requested Domain is required"  
+                                required: "Requested Domain is required",
                             }}
                         />
 
-                        <p className="text-xs text-zinc-400">
-                            Your request will be reviewed by our team. You will be notified once it is approved or rejected.
-                        </p>
+                        <p className="text-xs text-zinc-400">Your request will be reviewed by our team. You will be notified once it is approved or rejected.</p>
 
                         <div className="flex gap-2 justify-end mt-2">
-                            <CustomButton
-                                type="button"
-                                className="border px-4 py-2"
-                                onClick={onClose}
-                            >
+                            <CustomButton type="button" className="border px-4 py-2" onClick={onClose}>
                                 Cancel
                             </CustomButton>
-                            <CustomButton
-                                type="submit"
-                                className="bg-aksen-secondary text-white px-4 py-2"
-                                disabled={createMutation.isPending}
-                            >
+                            <CustomButton type="submit" className="bg-aksen-secondary text-white px-4 py-2" disabled={createMutation.isPending}>
                                 {createMutation.isPending ? "Submitting..." : "Submit Request"}
                             </CustomButton>
                         </div>
@@ -144,25 +119,31 @@ export default function OwnerDomainPage() {
     const togglePrimaryMutation = useTogglePrimaryDomain();
     const cancelMutation = useCancelDomainRequest();
 
-    const { 
-        data: requestsData, 
-        isLoading: requestsLoading, 
-        isError: requestsError 
-    } = useMyDomainRequests({ per_page: 5 });
+    const { data: requestsData, isLoading: requestsLoading, isError: requestsError } = useMyDomainRequests({ per_page: 5 });
 
-    const domainRequests = requestsData?.data?.filter(
-        (r) => r.current_domain === domain?.domain || r.requested_domain === domain?.domain
-    ) ?? [];
+    const domainRequests = requestsData?.data?.filter((r) => r.current_domain === domain?.domain || r.requested_domain === domain?.domain) ?? [];
 
-    const handleCancelRequest = async (id: string) => {
-        if (!confirm("Are you sure you want to cancel this request?")) return;
-        try {
-            await cancelMutation.mutateAsync(id);
-            toast.success("Domain request cancelled successfully");
-        } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to cancel domain request";
-            toast.error(message);
-        }
+    const handleCancelRequest = (id: string) => {
+        toast("Are you sure you want to cancel this request?", {
+            action: {
+                label: "Confirm",
+                onClick: async () => {
+                    try {
+                        await cancelMutation.mutateAsync(id);
+                        toast.success("Domain request cancelled successfully");
+                    } catch (err) {
+                        const error = err as AxiosError<{ message: string }>;
+                        const message = error.response?.data?.message || "Failed to cancel domain request";
+                        toast.error(message);
+                    }
+                },
+            },
+            cancel: {
+                label: "Cancel",
+                onClick: () => console.log("Cancellation aborted"),
+            },
+            duration: 5000,
+        });
     };
 
     if (tenantLoading || domainLoading) {
@@ -170,11 +151,7 @@ export default function OwnerDomainPage() {
     }
 
     if (tenantError || domainError || !domain) {
-        return (
-            <div className="flex justify-center items-center h-64 text-red-500">
-                Error loading domain details. Please try again.
-            </div>
-        );
+        return <div className="flex justify-center items-center h-64 text-red-500">Error loading domain details. Please try again.</div>;
     }
 
     return (
@@ -197,10 +174,7 @@ export default function OwnerDomainPage() {
                         </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        <CustomButton
-                            className="bg-aksen-secondary border-none text-white px-4 py-2"
-                            onClick={() => setIsModalOpen(true)}
-                        >
+                        <CustomButton className="bg-aksen-secondary border-none text-white px-4 py-2" onClick={() => setIsModalOpen(true)}>
                             Request Change
                         </CustomButton>
                     </div>
@@ -219,29 +193,37 @@ export default function OwnerDomainPage() {
                                     <span className="text-zinc-500">Domain name </span>
                                     <span className="font-medium text-zinc-800">{domain.domain}</span>
                                 </div>
-                                
+
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500">Tenant</span>
                                     <span className="font-medium text-zinc-800">{domain.tenant?.name || "—"}</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500">Created at</span>
-                                    <span className="text-zinc-800">{domain.created_at 
-                                    ? new Date(domain.created_at).toLocaleString("en-US", {
-                                        month: "short", day: "numeric", year: "numeric",
-                                        hour: "2-digit", minute: "2-digit"
-                                      }) 
-                                    : "—"}
+                                    <span className="text-zinc-800">
+                                        {domain.created_at
+                                            ? new Date(domain.created_at).toLocaleString("en-US", {
+                                                  month: "short",
+                                                  day: "numeric",
+                                                  year: "numeric",
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                              })
+                                            : "—"}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span className="text-zinc-500">Updated at</span>
-                                    <span className="text-zinc-800">{domain.updated_at 
-                                    ? new Date(domain.updated_at).toLocaleString("en-US", {
-                                        month: "short", day: "numeric", year: "numeric",
-                                        hour: "2-digit", minute: "2-digit"
-                                      }) 
-                                    : "—"}
+                                    <span className="text-zinc-800">
+                                        {domain.updated_at
+                                            ? new Date(domain.updated_at).toLocaleString("en-US", {
+                                                  month: "short",
+                                                  day: "numeric",
+                                                  year: "numeric",
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                              })
+                                            : "—"}
                                     </span>
                                 </div>
                             </div>
@@ -260,31 +242,27 @@ export default function OwnerDomainPage() {
                             ) : domainRequests.length > 0 ? (
                                 <div className="flex flex-col gap-3">
                                     {domainRequests.map((req) => (
-                                        <div
-                                            key={req.id}
-                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border rounded-lg px-4 py-3 text-sm gap-3"
-                                        >
+                                        <div key={req.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border rounded-lg px-4 py-3 text-sm gap-3">
                                             <div className="flex flex-col gap-1 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <span className="text-zinc-500">Requested:</span>
                                                     <span className="font-medium text-zinc-800">{req.requested_domain}</span>
                                                     <StatusBadge status={req.status} />
                                                 </div>
-                                                {req.rejection_reason && (
-                                                    <p className="text-xs text-red-500 mt-1">
-                                                        Reason: {req.rejection_reason}
-                                                    </p>
-                                                )}
+                                                {req.rejection_reason && <p className="text-xs text-red-500 mt-1">Reason: {req.rejection_reason}</p>}
                                                 <p className="text-xs text-zinc-400 mt-1">
-                                                    Submitted: {new Date(req.created_at).toLocaleDateString("en-US", {
-                                                        month: "short", day: "numeric", year: "numeric",
+                                                    Submitted:{" "}
+                                                    {new Date(req.created_at).toLocaleDateString("en-US", {
+                                                        month: "short",
+                                                        day: "numeric",
+                                                        year: "numeric",
                                                     })}
                                                 </p>
                                             </div>
 
                                             {req.status === "pending" && (
                                                 <CustomButton
-                                                    className="text-white border-none  text-xs px-3 py-1.5 mt-2 sm:mt-0 whitespace-nowrap"
+                                                    className="text-white border-none  text-xs px-3 py-1.5 mt-2 sm:mt-0 whitespace-nowrap bg-red-500 hover:bg-red-600"
                                                     onClick={() => handleCancelRequest(req.id)}
                                                     disabled={cancelMutation.isPending}
                                                 >
@@ -298,10 +276,7 @@ export default function OwnerDomainPage() {
                                 <div className="text-center py-6 text-zinc-500">
                                     No domain change requests yet for this domain.
                                     <br />
-                                    <button 
-                                        className="text-green-600 hover:underline mt-2 text-sm"
-                                        onClick={() => setIsModalOpen(true)}
-                                    >
+                                    <button className="text-green-600 hover:underline mt-2 text-sm" onClick={() => setIsModalOpen(true)}>
                                         Request a change now →
                                     </button>
                                 </div>
@@ -310,12 +285,7 @@ export default function OwnerDomainPage() {
                     </div>
                 </div>
 
-                <RequestDomainModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    currentDomain={domain.domain}
-                    branchId={domain.branch?.id ?? null}
-                />
+                <RequestDomainModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} currentDomain={domain.domain} branchId={domain.branch?.id ?? null} />
             </div>
         </>
     );

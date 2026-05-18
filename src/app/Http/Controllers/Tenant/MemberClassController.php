@@ -21,8 +21,7 @@ class MemberClassController extends Controller
         $branchId = $request->header('X-Branch-Id');
 
         $query = ClassSchedule::with(['classPlan', 'instructor', 'branch'])
-            ->where('status', 'scheduled')
-            ->where('date', '>=', now()->toDateString());
+            ->where('status', 'scheduled');
 
         if ($branchId) {
             $query->where('branch_id', $branchId);
@@ -30,6 +29,8 @@ class MemberClassController extends Controller
 
         if ($request->filled('date')) {
             $query->whereDate('date', $request->date);
+        } else {
+            $query->where('date', '>=', now()->toDateString());
         }
 
         if ($request->filled('class_plan_id')) {
@@ -160,7 +161,17 @@ class MemberClassController extends Controller
             'schedule.branch',
         ])
         ->where('member_id', $member->id)
-        ->when($request->status, fn($q) => $q->where('status', $request->status))
+        ->when($request->status, function ($q) use ($request) {
+            if ($request->status === 'scheduled') {
+                // "Akan Datang" = attendance yang booked & jadwalnya belum lewat
+                $q->where('status', 'booked')
+                ->whereHas('schedule', fn($sq) => $sq->where('date', '>=', now()->toDateString()));
+            } elseif ($request->status === 'completed') {
+                $q->where('status', 'attended');
+            } elseif ($request->status === 'cancelled') {
+                $q->where('status', 'cancelled');
+            }
+        })
         ->orderByDesc('created_at')
         ->paginate($request->per_page ?? 15);
 

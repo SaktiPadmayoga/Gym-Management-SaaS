@@ -12,7 +12,6 @@ export const CurrentSubscriptionSchema = z.object({
     plan_id: z.string(),
     plan_name: z.string(),
     plan_code: z.string(),
-    // ✅ sesuaikan dengan struktur actual dari backend
     price_monthly: z.number().nullable().optional(),
     price_yearly: z.number().nullable().optional(),
     max_branches: z.number().nullable().optional(),

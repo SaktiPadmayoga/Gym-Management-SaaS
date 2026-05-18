@@ -12,6 +12,7 @@ export const ClassAttendanceSchema = z.object({
     booked_at: z.string().nullable().optional(),
     attended_at: z.string().nullable().optional(),
     cancelled_at: z.string().nullable().optional(),
+    payment_status: z.string().nullable().optional(),
     notes: z.string().nullable().optional(),
     member: z.object({
         id: z.string(),

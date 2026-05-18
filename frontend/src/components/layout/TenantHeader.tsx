@@ -9,6 +9,8 @@ import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { useRouter } from "next/navigation";
 import { Bell, Settings, User, LogOut } from "lucide-react"; // Tambahkan User & LogOut
 import TenantNotificationBell from "../pages/tenant/transaction/notification/TenantNotification";
+import dayjs from "dayjs";
+import { AlertTriangle } from "lucide-react";
 
 function StatusBadge({ status }: { status: string }) {
     const map: Record<string, string> = {
@@ -98,7 +100,54 @@ export default function TenantHeader() {
 
     if (!data) return null;
 
+    // Calculate days left
+    let daysLeft = null;
+    let isWarning = false;
+    let isExpired = false;
+
+    if (data.subscription_ends_at) {
+        const endDate = dayjs(data.subscription_ends_at);
+        daysLeft = endDate.diff(dayjs(), "day");
+        
+        if (daysLeft < 0) {
+            isExpired = true;
+        } else if (daysLeft <= 7) {
+            isWarning = true;
+        }
+    }
+
     return (
+        <div className="flex flex-col relative z-40">
+            {/* --- WARNING BANNER --- */}
+            {(isWarning || isExpired) && isOwner && (
+                <div className={`mx-4 mb-3 px-4 py-2.5 rounded-lg border flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 ${
+                    isExpired 
+                        ? "bg-red-50 border-red-200 text-red-800" 
+                        : "bg-orange-50 border-orange-200 text-orange-800"
+                }`}>
+                    <div className="flex items-center gap-3">
+                        <AlertTriangle size={18} className={isExpired ? "text-red-600" : "text-orange-600"} />
+                        <div className="text-sm font-medium">
+                            {isExpired ? (
+                                <span>Subscription Anda telah <strong className="font-bold">kedaluwarsa</strong>. Akses aplikasi dibatasi.</span>
+                            ) : (
+                                <span>Subscription Anda akan kedaluwarsa dalam <strong className="font-bold">{daysLeft} hari</strong>.</span>
+                            )}
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => router.push('/owner/subscription')}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-md transition-colors ${
+                            isExpired 
+                                ? "bg-red-600 hover:bg-red-700 text-white" 
+                                : "bg-orange-600 hover:bg-orange-700 text-white"
+                        }`}
+                    >
+                        Perbarui Sekarang
+                    </button>
+                </div>
+            )}
+
         <header 
             className="h-16 mx-4 rounded-lg border flex items-center justify-between px-5 font-sans transition-all duration-300 relative z-40" 
             style={{ backgroundColor: primaryColor, borderColor }}
@@ -235,5 +284,6 @@ export default function TenantHeader() {
 
             </div>
         </header>
+        </div>
     );
 }

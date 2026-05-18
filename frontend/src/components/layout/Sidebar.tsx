@@ -12,7 +12,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
-    const { hasPermission } = useStaffAuth(); // ← tambah
+    const { hasPermission, selectedBranch } = useStaffAuth(); // ← tambah
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
     // Helper: cek apakah item boleh ditampilkan
@@ -57,7 +57,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
         return result;
     };
 
-    const visibleItems = getVisibleItems(sidebarData);
+    const visibleItems = getVisibleItems(sidebarData).map(item => {
+        if (item.id === "nav-dashboard" && selectedBranch?.role === 'trainer') {
+            return { ...item, path: "/dashboard/trainer" };
+        }
+        return item;
+    });
 
     const findActiveItem = (items: SidebarItem[], currentPath: string): SidebarItem | null => {
         for (const item of items) {

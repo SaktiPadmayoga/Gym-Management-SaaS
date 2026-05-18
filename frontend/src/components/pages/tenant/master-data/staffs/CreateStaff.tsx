@@ -58,6 +58,8 @@ export default function BranchCreateStaff() {
         },
     });
 
+    const selectedRole = form.watch("role");
+
     const onSubmit = async (formData: CreateStaffFormData) => {
         try {
             const payload: StaffCreateRequest = {
@@ -66,22 +68,29 @@ export default function BranchCreateStaff() {
                 password: formData.password,
                 phone: formData.phone || undefined,
                 role: formData.role,
-                // branch_id otomatis dari context, tidak perlu input manual
-                ...(branchId
-                    ? {
-                          branch_id: branchId,
-                          branch_role: formData.branch_role,
-                      }
-                    : {}),
             };
+
+            if (formData.role === "staff") {
+                if (!branchId) {
+                    toast.error("Cabang aktif tidak terdeteksi");
+                    return;
+                }
+                payload.branch_id = branchId;
+                payload.branch_role = formData.branch_role;
+            }
 
             await createMutation.mutateAsync(payload);
 
             toast.success("Staff created successfully");
-            router.push("/dashboard/staff?success=true");
-        } catch (err) {
-            toast.error("Failed to create staff");
-            console.error(err);
+            router.push("/staffs?success=true");
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.error ||
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to create staff";
+
+            toast.error(message);
         }
     };
 
@@ -96,7 +105,7 @@ export default function BranchCreateStaff() {
                         <ul>
                             <li>Management</li>
                             <li>
-                                <Link href="/dashboard/staff">Staff</Link>
+                                <Link href="/staffs">Staff</Link>
                             </li>
                             <li className="text-aksen-secondary">Create new</li>
                         </ul>
@@ -105,7 +114,7 @@ export default function BranchCreateStaff() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/dashboard/staff")}>
+                            <button type="button" onClick={() => router.push("/staffs")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div>
@@ -130,17 +139,17 @@ export default function BranchCreateStaff() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" />
+                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" rules={{ required: "Name is required" }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email" placeholder="e.g staff@gym.com" />
+                                <TextInput name="email" label="Email Address" type="email" placeholder="e.g staff@gym.com" rules={{ required: "Email is required" }} />
                             </div>
                         </div>
 
                         {/* SECURITY & PHONE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="password" label="Password" type="password" placeholder="Minimum 8 characters" />
+                                <TextInput name="password" label="Password" type="password" placeholder="Minimum 8 characters" rules={{ required: "Password is required", minLength: { value: 8, message: "Password must be at least 8 characters" } }} />
                             </div>
                             <div className="col-span-6">
                                 <TextInput name="phone" label="Phone (optional)" placeholder="e.g +62812345678" />
@@ -150,12 +159,12 @@ export default function BranchCreateStaff() {
                         {/* ROLE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} />
+                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} rules={{ required: "Global role is required" }} />
                             </div>
                         </div>
 
-                        {/* BRANCH ROLE — hanya tampil jika branch context tersedia */}
-                        {branchId && (
+                        {/* BRANCH ROLE — hanya tampil jika branch context tersedia dan role adalah staff */}
+                        {selectedRole === "staff" && (
                             <>
                                 <hr />
                                 <div>
@@ -166,10 +175,19 @@ export default function BranchCreateStaff() {
                                 </div>
                                 <div className="grid grid-cols-12 gap-4">
                                     <div className="col-span-6">
-                                        <SearchableDropdown name="branch_role" label="Role in Branch" options={branchRoleOptions} />
+                                        <SearchableDropdown name="branch_role" label="Role in Branch" options={branchRoleOptions} rules={{ required: "Branch role is required" }} />
                                     </div>
                                 </div>
                             </>
+                        )}
+
+                        {/* Informasi untuk Owner */}
+                        {selectedRole === "owner" && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700 mt-2">
+                                <p>
+                                    <strong>Catatan:</strong> Akun dengan role <strong>Owner</strong> akan memiliki akses penuh ke semua cabang dan fitur Owner Dashboard. Tidak diperlukan penugasan cabang spesifik.
+                                </p>
+                            </div>
                         )}
                     </div>
                 </div>

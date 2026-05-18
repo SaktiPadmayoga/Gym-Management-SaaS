@@ -112,6 +112,8 @@ export function middleware(request: NextRequest) {
                     "/member/login",
                     "/member/register",
                     "/member/registration-success",
+                    "/member/forgot-password",
+                    "/member/forgot-password/reset",
                     "/tenant-auth/member/callback",
                 ];
 
@@ -156,6 +158,8 @@ export function middleware(request: NextRequest) {
                 "/tenant-auth/login",
                 "/tenant-auth/callback",
                 "/tenant-auth/select-branch",
+                "/tenant-auth/forgot-password",
+                "/tenant-auth/reset-password",
             ];
 
             const isStaffPublic =

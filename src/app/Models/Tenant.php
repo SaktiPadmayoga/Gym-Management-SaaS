@@ -103,6 +103,6 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         return $this->hasOne(Subscription::class)
             ->where('status', 'active')
-            ->ofMany('started_at', 'max');
+            ->orderBy('started_at', 'desc');
     }
 }

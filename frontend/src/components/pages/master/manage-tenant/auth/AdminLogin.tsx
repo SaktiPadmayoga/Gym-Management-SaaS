@@ -37,8 +37,18 @@ export default function AdminLogin() {
         try {
             await login(data.email, data.password);
         } catch (err: any) {
-            const message = err?.response?.data?.message ?? "Login failed";
-            toast.error(message);
+            let message = "Login gagal";
+            
+            if (err?.response?.data?.errors) {
+                const firstError = Object.values(err.response.data.errors)[0] as string[];
+                message = firstError[0] || "Validasi gagal";
+            } else if (err?.response?.data?.message) {
+                message = err.response.data.message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+
+            toast.error(message, { duration: 6000 });
         }
     };
 
@@ -151,6 +161,16 @@ export default function AdminLogin() {
                                         <Eye className="mt-1.5 w-4 h-4" />
                                     )}
                                 </button>
+                                
+                                <div className="flex justify-end mt-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => router.push('/auth/forgot-password')}
+                                        className="text-xs font-bold text-slate-400 hover:text-teal-500 transition-colors uppercase tracking-wider"
+                                    >
+                                        Lupa Kata Sandi?
+                                    </button>
+                                </div>
                             </div>
 
                             <CustomButton

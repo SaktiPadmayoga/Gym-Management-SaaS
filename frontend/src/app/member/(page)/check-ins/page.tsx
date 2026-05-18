@@ -55,12 +55,12 @@ export default function MemberQRCheckInPage() {
     };
 
     return (
-        <div className="max-w-md mx-auto py-8 px-4 font-figtree">
+        <div className="space-y-6 font-figtree pb-10 bg-white p-5 rounded-xl border border-gray-500/20 max-w-md mx-auto mt-10">
             <Toaster position="top-center" />
             
-            <div className="text-center mb-8">
-                <h1 className="text-3xl font-black text-zinc-900 tracking-tight">Check-In</h1>
-                <p className="text-zinc-500 mt-2 text-sm">Arahkan kode QR ini ke scanner di meja resepsionis.</p>
+            <div className="text-center">
+                <h1 className="text-2xl font-bold text-zinc-900">Check-In</h1>
+                <p className="text-zinc-500 mt-1 text-sm">Arahkan kode QR ini ke scanner di meja resepsionis.</p>
             </div>
 
             {/* KARTU QR CODE UTAMA */}

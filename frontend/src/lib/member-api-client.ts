@@ -45,8 +45,13 @@ memberApiClient.interceptors.response.use(
         const status = error.response?.status;
         if (status === 401 && !error.config?.url?.includes('/login')) {
             if (typeof window !== "undefined") {
-                // Jangan redirect kalau sudah di login page
-                if (!window.location.pathname.includes('/member/login')) {
+                const path = window.location.pathname;
+                // Jangan redirect kalau sudah di login page atau reset password
+                const isAuthPage = path.includes('/member/login')
+                    || path.includes('/member/forgot-password')
+                    || path.includes('/member/forgot-password/reset');
+
+                if (!isAuthPage) {
                     window.location.href = '/member/login';
                 }
             }

@@ -183,7 +183,11 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
                     const branch = buildSelectedBranch(staffBranches[0]);
                     dispatch({ type: "SELECT_BRANCH", payload: branch });
                     saveSelectedBranch(branch);
-                    router.push("/dashboard");
+                    if (branch.role === 'trainer') {
+                        router.push("/dashboard/trainer");
+                    } else {
+                        router.push("/dashboard");
+                    }
                     return;
                 }
 
@@ -211,7 +215,11 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
         (branch: SelectedBranch) => {
             dispatch({ type: "SELECT_BRANCH", payload: branch });
             saveSelectedBranch(branch);
-            router.push("/dashboard");
+            if (branch.role === 'trainer') {
+                router.push("/dashboard/trainer");
+            } else {
+                router.push("/dashboard");
+            }
         },
         [router],
     );

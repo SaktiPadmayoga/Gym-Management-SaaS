@@ -17,15 +17,16 @@ class SubscriptionTenantController extends Controller
             $subscription = DB::connection('central')
                 ->table('subscriptions')
                 ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
+                ->join('tenants', 'subscriptions.tenant_id', '=', 'tenants.id')
                 ->where('subscriptions.tenant_id', $tenant->id)
-                ->where('subscriptions.status', 'active')
+                ->whereIn('subscriptions.status', ['active', 'expired', 'trial', 'pending'])
                 ->select(
                     'subscriptions.id',
-                    'subscriptions.status',
+                    'tenants.status as status', // Gunakan status dari tenant agar konsisten dengan Header
                     'subscriptions.billing_cycle',
                     'subscriptions.started_at',
-                    'subscriptions.current_period_ends_at',
-                    'subscriptions.trial_ends_at',
+                    'tenants.subscription_ends_at as current_period_ends_at', // Gunakan ends_at dari tenant
+                    'tenants.trial_ends_at as trial_ends_at',
                     'plans.id as plan_id',
                     'plans.name as plan_name',
                     'plans.code as plan_code',
@@ -34,10 +35,22 @@ class SubscriptionTenantController extends Controller
                     'plans.max_branches',
                     'plans.description',
                 )
+                ->orderBy('subscriptions.created_at', 'desc')
                 ->first();
 
             if (!$subscription) {
-                return null;
+                // Fallback: Jika tidak ada record di subscriptions, ambil dari tenants (untuk trial awal)
+                $tenantData = DB::connection('central')->table('tenants')->where('id', $tenant->id)->first();
+                if ($tenantData) {
+                    return ApiResponse::success([
+                        'plan_name' => $tenantData->status === 'trial' ? 'Trial Plan' : 'No Plan',
+                        'status' => $tenantData->status,
+                        'current_period_ends_at' => $tenantData->subscription_ends_at,
+                        'trial_ends_at' => $tenantData->trial_ends_at,
+                        'billing_cycle' => 'monthly',
+                    ], 'Tenant basic info retrieved');
+                }
+                return ApiResponse::error('No subscription info found', null, 404);
             }
 
             return ApiResponse::success($subscription, 'Subscription retrieved successfully');

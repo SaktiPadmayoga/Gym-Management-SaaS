@@ -29,7 +29,8 @@ apiClient.interceptors.response.use(
     (error: AxiosError) => {
         if (error.response?.status === 401) {
             if (typeof window !== "undefined") {
-                if (!window.location.pathname.includes('/auth/login')) {
+                const path = window.location.pathname;
+                if (!path.includes('/auth/login') && !path.includes('/auth/forgot-password') && !path.includes('/auth/reset-password')) {
                     window.location.href = "/auth/login";
                 }
             }

@@ -227,12 +227,12 @@ public function current(Request $request)
             return ApiResponse::error('Tenant data not found', null, 404);
         }
 
-        // Ambil subscription aktif
+        // Ambil subscription terbaru
         $subscription = DB::connection('central')
             ->table('subscriptions')
             ->join('plans', 'subscriptions.plan_id', '=', 'plans.id')
             ->where('subscriptions.tenant_id', $tenant->id)
-            ->where('subscriptions.status', 'active')
+            ->whereIn('subscriptions.status', ['active', 'expired', 'trial', 'pending'])
             ->select(
                 'subscriptions.id',
                 'subscriptions.status',
@@ -241,6 +241,7 @@ public function current(Request $request)
                 'plans.name as plan_name',
                 'plans.code as plan_code',
             )
+            ->orderBy('subscriptions.created_at', 'desc')
             ->first();
 
         // Ambil branch yang sedang dipakai dari header/session
@@ -286,8 +287,8 @@ public function current(Request $request)
             'owner_email'          => $tenantData->owner_email,
             'max_branches'         => $tenantData->max_branches,
             'current_branch_count' => $tenantData->current_branch_count,
-            'subscription_ends_at' => $tenantData->subscription_ends_at,
-            'trial_ends_at'        => $tenantData->trial_ends_at,
+            'subscription_ends_at' => $subscription?->current_period_ends_at ?? $tenantData->subscription_ends_at,
+            'trial_ends_at'        => $subscription?->trial_ends_at ?? $tenantData->trial_ends_at,
             'subscription'         => $subscription,
             'current_branch'       => $currentBranch,
             'branches'             => $branches,

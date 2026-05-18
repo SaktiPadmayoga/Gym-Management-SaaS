@@ -35,6 +35,9 @@ class ClassAttendanceResource extends JsonResource
                 'date'     => $this->schedule->date?->format('Y-m-d'),
                 'start_at' => $this->schedule->start_at,
                 'end_at'   => $this->schedule->end_at,
+                'status'   => $this->schedule->status,
+                
+                'instructor' => $this->schedule->instructor,
             ]),
         ];
     }

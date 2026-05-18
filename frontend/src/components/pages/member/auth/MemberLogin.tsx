@@ -18,8 +18,18 @@ function LoginForm() {
     const onSubmit = async (data: { email: string; password: string }) => {
         try {
             await login(data.email, data.password);
-        } catch (err) {
-            const message = (err instanceof Error ? err.message : "Login failed") ?? "Login failed";
+        } catch (err: any) {
+            let message = "Login gagal";
+            
+            if (err?.response?.data?.errors) {
+                const firstError = Object.values(err.response.data.errors)[0] as string[];
+                message = firstError[0] || "Validasi gagal";
+            } else if (err?.response?.data?.message) {
+                message = err.response.data.message;
+            } else if (err instanceof Error) {
+                message = err.message;
+            }
+            
             toast.error(message, { duration: 6000 });
         }
     };
@@ -31,9 +41,12 @@ function LoginForm() {
 
                 <div className="relative">
                     <TextInput name="password" label="Password" placeholder="Enter your password" type={showPassword ? "text" : "password"} />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9 text-zinc-400 hover:text-zinc-600 text-xs">
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-zinc-400 hover:text-zinc-600 text-xs">
                         {showPassword ? "Hide" : "Show"}
                     </button>
+                    <div className="text-right mt-1">
+                        <a href="/member/forgot-password" className="text-xs text-blue-600 hover:text-blue-700 font-medium">Forgot password?</a>
+                    </div>
                 </div>
 
                 <CustomButton type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 disabled:opacity-50 transition-colors">

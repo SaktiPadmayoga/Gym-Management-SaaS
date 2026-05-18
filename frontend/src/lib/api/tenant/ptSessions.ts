@@ -1,10 +1,6 @@
 import tenantApiClient from "@/lib/tenant-api-client";
-import {
-    PtSessionData,
-    PtSessionCreateRequest,
-    PtSessionUpdateRequest,
-    PtSessionQueryParams,
-} from "@/types/tenant/pt";
+import memberApiClient from "@/lib/member-api-client";
+import { PtSessionData, PtSessionCreateRequest, PtSessionUpdateRequest, PtSessionQueryParams } from "@/types/tenant/pt";
 
 export const ptSessionsAPI = {
     // Ambil semua jadwal PT (Staff/Admin)
@@ -20,7 +16,7 @@ export const ptSessionsAPI = {
                 ...(params?.member_id && { member_id: params.member_id }),
             },
         });
-        
+
         return {
             data: response.data.data.data ?? [],
             meta: response.data.data.meta ?? null,
@@ -48,6 +44,29 @@ export const ptSessionsAPI = {
     // Hapus/Batalkan jadwal PT (Soft delete / Cancel)
     cancel: async (id: string, reason?: string): Promise<PtSessionData> => {
         const response = await tenantApiClient.patch(`/pt-sessions/${id}/cancel`, {
+            cancelled_reason: reason,
+        });
+        return response.data.data;
+    },
+
+    // Ambil daftar request sesi PT
+    getRequests: async (params?: { page?: number; per_page?: number }): Promise<{ data: PtSessionData[]; meta: any }> => {
+        const response = await tenantApiClient.get("/pt-sessions/requests", { params });
+        return {
+            data: response.data.data.data ?? [],
+            meta: response.data.data.meta ?? null,
+        };
+    },
+
+    // Approve request
+    approveRequest: async (id: string): Promise<PtSessionData> => {
+        const response = await tenantApiClient.patch(`/pt-sessions/${id}/approve`);
+        return response.data.data;
+    },
+
+    // Reject request
+    rejectRequest: async (id: string, reason: string): Promise<PtSessionData> => {
+        const response = await tenantApiClient.patch(`/pt-sessions/${id}/reject`, {
             cancelled_reason: reason,
         });
         return response.data.data;

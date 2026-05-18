@@ -93,7 +93,9 @@ Route::prefix('subscriptions')->group(function () {
  
 Route::prefix('admin/auth')->group(function () {
     // Public
-    Route::post('/login',  [AdminAuthController::class, 'login']);
+    Route::post('/login',           [AdminAuthController::class, 'login']);
+    Route::post('/forgot-password', [AdminAuthController::class, 'forgotPassword']);
+    Route::post('/reset-password',  [AdminAuthController::class, 'resetPassword']);
  
     // Protected
     Route::middleware('auth:admin')->group(function () {

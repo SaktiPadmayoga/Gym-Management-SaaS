@@ -65,8 +65,13 @@ tenantApiClient.interceptors.response.use(
             }
             if (typeof window !== "undefined") {
                 const path = window.location.pathname;
-                // Jangan redirect kalau sudah di halaman login
-                if (!path.includes('/tenant-auth/login') && !path.includes('/member/login')) {
+                // Jangan redirect kalau sudah di halaman login atau reset password
+                const isAuthPage = path.includes('/tenant-auth/login') 
+                    || path.includes('/tenant-auth/forgot-password') 
+                    || path.includes('/tenant-auth/reset-password')
+                    || path.includes('/member/login');
+                    
+                if (!isAuthPage) {
                     window.location.href = path.startsWith('/member')
                         ? '/member/login'
                         : '/tenant-auth/login';

@@ -119,4 +119,131 @@ class MemberPtController extends Controller
 
         return ApiResponse::success($packages, 'Daftar paket PT berhasil diambil');
     }
+
+    /**
+     * GET /api/tenant/member/my-pt-sessions
+     * Member melihat daftar sesi PT individual dari paket mereka.
+     */
+    public function mySessions(Request $request)
+    {
+        $member = $request->user();
+
+        $sessions = \App\Models\Tenant\PtSession::with(['package.plan', 'trainer:id,name', 'branch:id,name'])
+            ->where('member_id', $member->id)
+            ->when($request->status, fn($q) => $q->where('status', $request->status))
+            ->when($request->date, fn($q) => $q->whereDate('date', $request->date))
+            ->orderBy('date', 'desc')
+            ->orderBy('start_at', 'desc')
+            ->paginate($request->per_page ?? 15);
+
+        return ApiResponse::success([
+            'data' => $sessions->items(),
+            'meta' => [
+                'total'         => $sessions->total(),
+                'per_page'      => $sessions->perPage(),
+                'current_page'  => $sessions->currentPage(),
+                'next_page_url' => $sessions->nextPageUrl(),
+                'prev_page_url' => $sessions->previousPageUrl(),
+            ],
+        ], 'Daftar sesi PT berhasil diambil');
+    }
+    
+    public function getTrainers(Request $request)
+    {
+        $branchId = $request->header('X-Branch-Id');
+
+        $query = \App\Models\Tenant\Staff::where('is_active', true)
+            ->where(function($q) use ($branchId) {
+                $q->where('role', 'trainer')
+                  ->orWhereHas('branches', function($qb) use ($branchId) {
+                      $qb->where('role', 'trainer');
+                      if ($branchId) {
+                          $qb->where('branch_id', $branchId);
+                      }
+                  });
+            });
+
+        return ApiResponse::success($query->get(['id', 'name']), 'Daftar pelatih berhasil diambil');
+    }
+
+    public function getTrainerBookedSlots(Request $request, $trainerId)
+    {
+        $date = $request->get('date');
+        if (!$date) return ApiResponse::error('Date is required', null, 400);
+
+        $sessions = \App\Models\Tenant\PtSession::where('trainer_id', $trainerId)
+            ->where('date', $date)
+            ->whereIn('status', ['scheduled', 'ongoing', 'requested'])
+            ->get(['start_at', 'end_at']);
+
+        return ApiResponse::success($sessions, 'Slot pelatih berhasil diambil');
+    }
+
+    public function requestSession(Request $request)
+    {
+        $request->validate([
+            'pt_package_id' => 'required|uuid|exists:pt_packages,id',
+            'trainer_id'    => 'required|uuid|exists:staffs,id',
+            'date'          => 'required|date|after_or_equal:today',
+            'start_at'      => 'required|date_format:H:i',
+            'end_at'        => 'required|date_format:H:i|after:start_at',
+            'notes'         => 'nullable|string|max:500',
+        ]);
+
+        $member = $request->user();
+        
+        $package = PtPackage::where('id', $request->pt_package_id)
+            ->where('member_id', $member->id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$package) {
+            return ApiResponse::error('Paket PT tidak valid atau tidak aktif', null, 400);
+        }
+
+        if ($package->remaining_sessions <= 0) {
+            return ApiResponse::error('Kuota paket PT Anda sudah habis', null, 400);
+        }
+
+        // Cek bentrok jadwal
+        $overlap = \App\Models\Tenant\PtSession::where('trainer_id', $request->trainer_id)
+            ->where('date', $request->date)
+            ->whereIn('status', ['scheduled', 'ongoing', 'requested'])
+            ->where(function($q) use ($request) {
+                $q->where(function($q2) use ($request) {
+                    $q2->where('start_at', '<', $request->end_at)
+                       ->where('end_at', '>', $request->start_at);
+                });
+            })
+            ->exists();
+
+        if ($overlap) {
+            return ApiResponse::error('Pelatih sudah memiliki jadwal atau request lain di jam tersebut', null, 400);
+        }
+
+        $session = \App\Models\Tenant\PtSession::create([
+            'pt_package_id' => $package->id,
+            'member_id'     => $member->id,
+            'trainer_id'    => $request->trainer_id,
+            'branch_id'     => $package->branch_id ?? $member->home_branch_id,
+            'date'          => $request->date,
+            'start_at'      => $request->start_at,
+            'end_at'        => $request->end_at,
+            'status'        => 'requested',
+            'notes'         => $request->notes,
+        ]);
+
+        // Kirim Notifikasi
+        \App\Models\Tenant\TenantNotification::create([
+            'id'        => (string) \Illuminate\Support\Str::uuid(),
+            'branch_id' => $package->branch_id ?? $member->home_branch_id,
+            'staff_id'  => $request->trainer_id, // Untuk pelatih terkait
+            'type'      => 'pt_request',
+            'title'     => 'Request Jadwal PT Baru',
+            'message'   => "Member {$member->name} request jadwal PT pada {$request->date} jam {$request->start_at}.",
+            'is_read'   => false,
+        ]);
+
+        return ApiResponse::success($session, 'Request jadwal berhasil dikirim', 201);
+    }
 }

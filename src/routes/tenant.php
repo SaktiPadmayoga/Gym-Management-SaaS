@@ -32,6 +32,8 @@ use App\Http\Controllers\Tenant\TenantReportController;
 use App\Http\Controllers\Tenant\BranchReportController;
 use App\Http\Controllers\Tenant\TenantNotificationController;
 use App\Http\Controllers\Tenant\RoleController;
+use App\Http\Controllers\Tenant\MemberDashboardController;
+use App\Http\Controllers\Tenant\MemberReportController;
 
 
 // ============================================================================
@@ -47,25 +49,35 @@ Route::get('/branches/{branch}/settings/public', [BranchSettingController::class
 Route::prefix('member')->group(function () {
     Route::post('/register',    [MemberRegistrationController::class, 'register']);
     Route::post('/auth/login',  [MemberAuthController::class, 'login']);
+    Route::post('/auth/forgot-password', [MemberAuthController::class, 'forgotPassword']);
+    Route::post('/auth/reset-password',  [MemberAuthController::class, 'resetPassword']);
     Route::get('/auth/google',  [MemberAuthController::class, 'redirectToGoogle']);
     Route::get('/membershipAvailable', [MembershipPlanController::class, 'getAvailablePlans']);
 });
 
 Route::prefix('tenant-auth')->group(function () {
-    Route::post('/login',  [StaffAuthController::class, 'login']);
-    Route::get('/google',  [StaffAuthController::class, 'redirectToGoogle']);
+    Route::post('/login',           [StaffAuthController::class, 'login']);
+    Route::post('/forgot-password', [StaffAuthController::class, 'forgotPassword']);
+    Route::post('/reset-password',  [StaffAuthController::class, 'resetPassword']);
+    Route::get('/google',           [StaffAuthController::class, 'redirectToGoogle']);
 });
 
 // ============================================================================
 // MEMBER PROTECTED
 // ============================================================================
 
-Route::prefix('member')->middleware('auth:member')->group(function () {
+Route::prefix('member')->middleware(['auth:member', 'check_tenant_access'])->group(function () {
 
     // Auth
     Route::get('/auth/me',               [MemberAuthController::class, 'me']);
     Route::post('/auth/logout',          [MemberAuthController::class, 'logout']);
     Route::post('/auth/change-password', [MemberAuthController::class, 'changePassword']);
+
+    // Dashboard
+    Route::get('/dashboard', [MemberDashboardController::class, 'index']);
+
+    // Reports
+    Route::get('/reports/summary', [MemberReportController::class, 'summary']);
 
     // Check-ins
     Route::post('/check-ins', [CheckInController::class, 'store']);
@@ -85,6 +97,12 @@ Route::prefix('member')->middleware('auth:member')->group(function () {
     Route::post('/pt-packages/purchase',[MemberPtController::class, 'purchase']);
     Route::get('/my-pt-packages',       [MemberPtController::class, 'myPackages']);
 
+    // PT Sessions (individual sessions from purchased packages)
+    Route::get('/my-pt-sessions',       [MemberPtController::class, 'mySessions']);
+    Route::get('/trainers',             [MemberPtController::class, 'getTrainers']);
+    Route::get('/trainers/{id}/booked-slots', [MemberPtController::class, 'getTrainerBookedSlots']);
+    Route::post('/pt-sessions/request', [MemberPtController::class, 'requestSession']);
+
     // Membership
     Route::post('/memberships/upgrade', [MemberMembershipController::class, 'upgrade']);
 });
@@ -93,7 +111,7 @@ Route::prefix('member')->middleware('auth:member')->group(function () {
 // STAFF PROTECTED
 // ============================================================================
 
-Route::middleware('auth:staff')->group(function () {
+Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard/summary', [TenantDashboardController::class, 'getSummary']);
@@ -231,6 +249,9 @@ Route::middleware('auth:staff')->group(function () {
     Route::get('/products/{product}/stock/history',       [ProductController::class, 'stockHistory']);
 
     // PT sessions & packages
+    Route::get('/pt-sessions/requests', [PtSessionController::class, 'getRequests']);
+    Route::patch('/pt-sessions/{id}/approve', [PtSessionController::class, 'approveRequest']);
+    Route::patch('/pt-sessions/{id}/reject',  [PtSessionController::class, 'rejectRequest']);
     Route::get('/pt-sessions',          [PtSessionController::class, 'index']);
     Route::post('/pt-sessions',         [PtSessionController::class, 'store']);
     Route::get('/pt-sessions/{id}',     [PtSessionController::class, 'show']);

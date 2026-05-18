@@ -7,6 +7,9 @@ import Header from "./Header";
 import { GripVertical } from "lucide-react";
 import MemberSidebar from "./MemberSidebar";
 import MemberHeader from "./MemberHeader";
+import { useTenantHeader } from "@/hooks/useTenantHeader";
+import { AlertTriangle } from "lucide-react";
+import dayjs from "dayjs";
 
 interface MemberLayoutWrapperProps {
     children: React.ReactNode;
@@ -41,6 +44,18 @@ const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) =
 
     const toggleSidebar = () => setIsOpen((prev) => !prev);
 
+    const { data: tenantData } = useTenantHeader();
+
+    let isExpired = false;
+    if (tenantData?.status === 'expired' || tenantData?.status === 'suspended') {
+        isExpired = true;
+    } else if (tenantData?.subscription_ends_at) {
+        const endDate = dayjs(tenantData.subscription_ends_at);
+        if (endDate.diff(dayjs(), "day") < 0) {
+            isExpired = true;
+        }
+    }
+
     // Show loading state while mounting
     if (!mounted) {
         return (
@@ -52,13 +67,31 @@ const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) =
 
     return (
         <div className="bg-white">
-            <div className="flex flex-col h-full bg-zinc-100 ">
+            <div className="flex flex-col h-full bg-zinc-100 py-4">
                 {/* Header */}
 
                 <MemberHeader />
 
                 {/* Main Container */}
-                <div className="flex flex-1 overflow-visible">
+                <div className="flex flex-1 overflow-visible relative">
+                    
+                    {/* --- EXPIRED BLOCKING OVERLAY FOR MEMBER --- */}
+                    {isExpired && (
+                        <div className="absolute inset-0 z-50 bg-zinc-100/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 rounded-tl-2xl border-t border-l border-white/50">
+                            <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-zinc-200 animate-in fade-in zoom-in-95 duration-300">
+                                <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <AlertTriangle size={32} />
+                                </div>
+                                <h2 className="text-2xl font-black text-zinc-900 mb-2">Layanan Nonaktif</h2>
+                                <p className="text-zinc-600 mb-2 leading-relaxed">
+                                    Layanan aplikasi untuk gym ini sedang dinonaktifkan sementara.
+                                </p>
+                                <p className="text-sm text-zinc-500 font-medium">
+                                    Silakan hubungi staf atau pengelola gym Anda untuk informasi lebih lanjut.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <div className="relative">
                         {/* SIDEBAR */}
                         <MemberSidebar isOpen={isOpen} pathname={pathname} />
