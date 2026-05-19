@@ -12,7 +12,11 @@ const nextConfig: NextConfig = {
     // Images optimization
     images: {
         unoptimized: true,
-        domains: ["localhost", "gym1.localhost", "gym2.localhost"],
+        domains: [
+            "localhost",
+            "fitnice.com",
+            "*.fitnice.com",
+        ],
     },
 
     env: {

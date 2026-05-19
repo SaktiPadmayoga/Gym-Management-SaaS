@@ -1,0 +1,28 @@
+# =============================================
+# Caddyfile — Fitnice Production
+# =============================================
+# Caddy handles:
+#   1. SSL termination (wildcard *.fitnice.com + fitnice.com)
+#   2. Auto-renewal via Cloudflare DNS challenge
+#   3. Reverse proxy → Nginx internal container
+# =============================================
+
+{
+	email sakti14yoga@gmail.com
+}
+
+# Central domain + semua subdomain tenant
+*.fitnice.com, fitnice.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+
+	# Forward real client info ke Nginx/app
+	header_up Host {host}
+	header_up X-Real-IP {remote_host}
+	header_up X-Forwarded-For {remote_host}
+	header_up X-Forwarded-Proto {scheme}
+
+	# Semua request ke Nginx internal (port 80)
+	reverse_proxy nginx:80
+}

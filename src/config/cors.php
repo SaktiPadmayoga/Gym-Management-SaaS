@@ -7,11 +7,13 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',
-        'https://*.fitnice.id',
+        'https://fitnice.com',
+        'https://*.fitnice.com',
     ],
 
     'allowed_origins_patterns' => [
         '#^http://[a-z0-9-]+\.localhost(:\d+)?$#',
+        '#^https://[a-z0-9-]+\.fitnice\.com$#',
     ],
 
     'allowed_headers' => ['*'],

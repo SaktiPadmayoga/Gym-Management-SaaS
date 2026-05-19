@@ -22,6 +22,8 @@ return [
         '127.0.0.1',
         'localhost',
         'localhost:80',
+        'fitnice.com',
+        'www.fitnice.com',
     ],
 
     /**
