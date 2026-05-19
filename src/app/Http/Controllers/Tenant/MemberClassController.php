@@ -75,6 +75,10 @@ class MemberClassController extends Controller
             return ApiResponse::error('Jadwal sudah dibatalkan.', null, 422);
         }
 
+        if ($schedule->status === 'completed') {
+            return ApiResponse::error('Jadwal kelas sudah selesai.', null, 422);
+        }
+
         if (!$schedule->hasAvailableSlot()) {
             return ApiResponse::error('Kelas sudah penuh.', null, 422);
         }

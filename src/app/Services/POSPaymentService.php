@@ -11,9 +11,12 @@ use App\Models\Tenant\Membership;
 use App\Models\Tenant\PtPackage;
 use App\Models\Tenant\Member;
 use App\Models\Tenant\TenantNotification;
+use App\Mail\MemberWelcomeMail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str; // <-- 1. JANGAN LUPA IMPORT INI
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class POSPaymentService
 {
@@ -164,6 +167,8 @@ class POSPaymentService
         ]);
 
         Member::where('id', $invoice->member_id)->update(['status' => 'active']);
+
+        $this->sendWelcomeEmailIfNeeded($member, $plan->name);
     }
 
     private function handlePtPackageSold(string $planId, TenantInvoice $invoice): void
@@ -182,5 +187,29 @@ class POSPaymentService
             'purchased_at'       => now()->toDateString(),
             'activated_at'       => now()->toDateString(), 
         ]);
+    }
+
+    private function sendWelcomeEmailIfNeeded(Member $member, string $planName): void
+    {
+        if (is_null($member->last_login_at)) {
+            $resetToken = Str::random(60);
+            
+            DB::table('member_password_reset_tokens')->updateOrInsert(
+                ['email' => $member->email],
+                ['token' => Hash::make($resetToken), 'created_at' => now()]
+            );
+
+            $host = tenant()->domains->first()->domain ?? request()->getHost();
+            $scheme = str_contains($host, 'localhost') ? 'http' : 'https';
+            $frontendPort = env('FRONTEND_PORT');
+            
+            $frontendUrl = str_contains($host, 'localhost') && $frontendPort
+                ? "{$scheme}://{$host}:{$frontendPort}"
+                : "{$scheme}://{$host}";
+
+            Mail::to($member->email)->send(
+                new MemberWelcomeMail($member, $planName, $frontendUrl, $resetToken)
+            );
+        }
     }
 }

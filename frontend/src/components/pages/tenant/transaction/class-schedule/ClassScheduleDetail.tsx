@@ -77,6 +77,7 @@ export default function ClassScheduleDetail() {
     }
 
     const isCancelled = schedule.status === "cancelled";
+    const isCompleted = schedule.status === "completed";
     
     // Deteksi apakah kelas ini berbayar
     const classPrice = Number(schedule.price ?? schedule.class_plan?.price ?? 0);
@@ -298,7 +299,7 @@ export default function ClassScheduleDetail() {
                         </p>
                     </div>
 
-                    {!isCancelled && (
+                    {!isCancelled && !isCompleted && (
                         <div className="flex gap-2">
                             <CustomButton
                                 className="border-none bg-red-600 text-white px-4 py-2"
@@ -400,7 +401,7 @@ export default function ClassScheduleDetail() {
                     <h2 className="text-base font-semibold text-zinc-800">
                         Daftar Peserta ({attendances.length})
                     </h2>
-                    {!isCancelled && (
+                    {!isCancelled && !isCompleted && (
                         <CustomButton
                             iconName="plus"
                             className="text-white px-3 py-2 text-sm"
@@ -514,7 +515,7 @@ export default function ClassScheduleDetail() {
                     <CustomTable
                         columns={columns}
                         data={attendances}
-                        actions={isCancelled ? [] : actions}
+                        actions={isCancelled || isCompleted ? [] : actions}
                     />
                 )}
             </div>

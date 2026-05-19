@@ -36,6 +36,14 @@ class ClassSchedule extends Model
         'total_attended' => 'integer',
     ];
 
+    public function getStatusAttribute($value)
+    {
+        if ($value === 'scheduled' && $this->date && $this->date < now()->startOfDay()) {
+            return 'completed';
+        }
+        return $value;
+    }
+
     // =============================================
     // Relationships
     // =============================================

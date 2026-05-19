@@ -3,13 +3,6 @@
 # =============================================
 # Arsitektur:
 #   Internet:443 → Caddy (SSL) → Nginx:80 → PHP-FPM / Next.js
-#
-# Perbedaan dengan docker-compose.yml (dev):
-#   - Caddy sebagai entry point publik (port 80/443)
-#   - Nginx TIDAK expose port ke luar
-#   - Next.js mode production (npm start)
-#   - Postgres TIDAK expose port ke luar
-#   - Semua secrets via environment variables
 # =============================================
 
 services:
@@ -97,10 +90,8 @@ services:
             TENANCY_DATABASE_MANAGER: postgres
             TENANCY_CACHE_DRIVER: database
 
-            # Kosong di production karena HTTPS default port 443
             FRONTEND_PORT: ""
 
-            # Mail (diisi via Komodo environment variables)
             MAIL_MAILER: ${MAIL_MAILER:-smtp}
             MAIL_HOST: ${MAIL_HOST:-}
             MAIL_PORT: ${MAIL_PORT:-587}
@@ -110,7 +101,6 @@ services:
             MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@fitnice.com}
             MAIL_FROM_NAME: "Fitnice"
 
-            # Google OAuth (opsional, diisi via Komodo)
             GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
             GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
             GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-}
@@ -154,7 +144,6 @@ services:
             context: ./docker/nginx
             dockerfile: Dockerfile
         container_name: gym-nginx
-        # Production: TIDAK expose port ke luar — hanya Caddy yang publik
         volumes:
             - ./src:/var/www/html:ro
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro

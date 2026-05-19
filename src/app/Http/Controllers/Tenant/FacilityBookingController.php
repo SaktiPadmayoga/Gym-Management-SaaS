@@ -73,6 +73,23 @@ class FacilityBookingController extends Controller
             $member   = Member::findOrFail($request->member_id);
             $staffId  = auth('staff')->id();
 
+            $headerBranchId = $request->header('X-Branch-Id');
+
+            if (!$headerBranchId && $staffId) {
+                $staff = \App\Models\Tenant\Staff::find($staffId);
+                if ($staff && !$staff->isOwner()) {
+                    $headerBranchId = $staff->branches()->first()?->id;
+                }
+            }
+
+            if (!$headerBranchId && !$facility->branch_id) {
+                $headerBranchId = \App\Models\Branch::first()?->id;
+            }
+
+            if (!$headerBranchId && !$facility->branch_id) {
+                throw new \Exception("Sistem tidak dapat menentukan lokasi cabang untuk transaksi ini.");
+            }
+
             $result = $service->book(
                 $facility, 
                 $member, 
@@ -80,7 +97,8 @@ class FacilityBookingController extends Controller
                 $request->start_time, 
                 $staffId, 
                 $request->notes, 
-                $request->payment_method ?? 'midtrans'
+                $request->payment_method ?? 'midtrans',
+                $headerBranchId
             );
 
             return ApiResponse::success([
@@ -92,7 +110,7 @@ class FacilityBookingController extends Controller
         } catch (\InvalidArgumentException $e) {
             return ApiResponse::error($e->getMessage(), null, 422);
         } catch (\Exception $e) {
-            return ApiResponse::error('Gagal memproses pesanan.', null, 500);
+            return ApiResponse::error('Gagal memproses pesanan: ' . $e->getMessage(), null, 500);
         }
     }
 

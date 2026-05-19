@@ -14,7 +14,7 @@ class FacilityBookingService
 {
     public function __construct(protected MidtransService $midtrans) {}
 
-    public function book(Facility $facility, Member $member, string $date, string $startTime, ?string $staffId = null, ?string $notes = null, string $paymentMethod = 'midtrans'): array
+    public function book(Facility $facility, Member $member, string $date, string $startTime, ?string $staffId = null, ?string $notes = null, string $paymentMethod = 'midtrans', ?string $branchId = null): array
     {
         // 1. Hitung End Time
         $start = Carbon::parse("$date $startTime");
@@ -28,7 +28,9 @@ class FacilityBookingService
 
         $isPaid = $facility->price > 0;
 
-        return DB::transaction(function () use ($facility, $member, $date, $startTimeStr, $endTimeStr, $staffId, $notes, $paymentMethod, $isPaid) {
+        $finalBranchId = $branchId ?? $facility->branch_id;
+
+        return DB::transaction(function () use ($facility, $member, $date, $startTimeStr, $endTimeStr, $staffId, $notes, $paymentMethod, $isPaid, $finalBranchId) {
             
             $isCash = $paymentMethod === 'cash';
 
@@ -36,7 +38,7 @@ class FacilityBookingService
             $booking = FacilityBooking::create([
                 'facility_id'    => $facility->id,
                 'member_id'      => $member->id,
-                'branch_id'      => $facility->branch_id,
+                'branch_id'      => $finalBranchId,
                 'date'           => $date,
                 'start_time'     => $startTimeStr,
                 'end_time'       => $endTimeStr,
@@ -55,7 +57,7 @@ class FacilityBookingService
             $invoice = TenantInvoice::create([
                 'tenant_id'       => tenant('id'),
                 'member_id'       => $member->id,
-                'branch_id'       => $facility->branch_id,
+                'branch_id'       => $finalBranchId,
                 'invoice_number'  => TenantInvoice::generateInvoiceNumber('FCL'), // Prefix FCL
                 'subtotal'        => $facility->price,
                 'total_amount'    => $facility->price,

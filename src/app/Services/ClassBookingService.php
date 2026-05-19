@@ -174,6 +174,10 @@ class ClassBookingService
             throw new \InvalidArgumentException('Jadwal sudah dibatalkan.');
         }
 
+        if ($schedule->status === 'completed') {
+            throw new \InvalidArgumentException('Jadwal kelas sudah selesai.');
+        }
+
         $plan     = $schedule->classPlan;
         $capacity = $schedule->max_capacity ?? $plan->max_capacity;
 
