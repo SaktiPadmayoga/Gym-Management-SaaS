@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
         unoptimized: true,
         domains: [
             "localhost",
-            "fitnice.com",
-            "*.fitnice.com",
+            "gymfit.id",
+            "*.gymfit.id",
         ],
     },
 

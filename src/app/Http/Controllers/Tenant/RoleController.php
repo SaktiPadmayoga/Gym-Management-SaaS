@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
+use App\Models\Tenant\Permission;
+use App\Models\Tenant\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -11,24 +13,24 @@ use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
+    /**
+     * GET /roles
+     * List all roles with their permissions.
+     */
     public function index()
     {
         try {
-            $roles = DB::table('roles')->orderBy('created_at', 'desc')->get();
-            
-            $permissions = DB::table('role_permissions')->get()->groupBy('role_id');
+            $roles = Role::with('permissions')->orderBy('created_at', 'desc')->get();
 
-            $data = $roles->map(function ($role) use ($permissions) {
+            $data = $roles->map(function ($role) {
                 return [
                     'id'           => $role->id,
                     'name'         => $role->name,
                     'display_name' => $role->display_name,
                     'description'  => $role->description,
                     'is_active'    => (bool) $role->is_active,
-                    // Pluck hanya nama permission-nya saja jadi array flat: ['pos', 'members']
-                    'permissions'  => isset($permissions[$role->id]) 
-                                        ? $permissions[$role->id]->pluck('permission')->toArray() 
-                                        : []
+                    'permissions'  => $role->permissionList(),
+                    'permission_ids' => $role->permissionIds(),
                 ];
             });
 
@@ -39,16 +41,42 @@ class RoleController extends Controller
     }
 
     /**
-     * Simpan role baru beserta permissions-nya
+     * GET /roles/{id}
+     * Show detail of a single role.
+     */
+    public function show($id)
+    {
+        $role = Role::with('permissions')->find($id);
+
+        if (!$role) {
+            return ApiResponse::error('Role tidak ditemukan', null, 404);
+        }
+
+        $data = [
+            'id'             => $role->id,
+            'name'           => $role->name,
+            'display_name'   => $role->display_name,
+            'description'    => $role->description,
+            'is_active'      => (bool) $role->is_active,
+            'permissions'    => $role->permissionList(),
+            'permission_ids' => $role->permissionIds(),
+        ];
+
+        return ApiResponse::success($data, 'Detail role berhasil dimuat');
+    }
+
+    /**
+     * POST /roles
+     * Create a new role with permissions.
      */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'         => 'required|string|unique:roles,name', // ex: branch_manager
-            'display_name' => 'required|string',                   // ex: Branch Manager
-            'description'  => 'nullable|string',
-            'permissions'  => 'required|array',
-            'permissions.*'=> 'string' // ex: 'pos', 'members', dll
+            'name'           => 'required|string|unique:roles,name',
+            'display_name'   => 'required|string',
+            'description'    => 'nullable|string',
+            'permission_ids' => 'sometimes|array',
+            'permission_ids.*' => 'uuid|exists:permissions,id',
         ]);
 
         if ($validator->fails()) {
@@ -58,38 +86,22 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            $roleId = Str::uuid()->toString();
-
-            // 1. Insert ke tabel roles
-            DB::table('roles')->insert([
-                'id'           => $roleId,
+            $role = Role::create([
                 'name'         => $request->name,
                 'display_name' => $request->display_name,
                 'description'  => $request->description,
                 'is_active'    => true,
-                'created_at'   => now(),
-                'updated_at'   => now(),
             ]);
 
-            // 2. Insert ke tabel role_permissions
-            $permissionsData = [];
-            foreach ($request->permissions as $permission) {
-                $permissionsData[] = [
-                    'id'         => Str::uuid()->toString(),
-                    'role_id'    => $roleId,
-                    'permission' => $permission,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            if (!empty($permissionsData)) {
-                DB::table('role_permissions')->insert($permissionsData);
+            if ($request->has('permission_ids')) {
+                $role->permissions()->sync($request->permission_ids);
             }
 
             DB::commit();
 
-            return ApiResponse::success(['id' => $roleId], 'Role dan permissions berhasil dibuat', 201);
+            return ApiResponse::success([
+                'id' => $role->id,
+            ], 'Role berhasil dibuat', 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return ApiResponse::error('Gagal membuat role: ' . $e->getMessage(), null, 500);
@@ -97,57 +109,29 @@ class RoleController extends Controller
     }
 
     /**
-     * Lihat detail satu role
-     */
-    public function show($id)
-    {
-        $role = DB::table('roles')->where('id', $id)->first();
-
-        if (!$role) {
-            return ApiResponse::error('Role tidak ditemukan', null, 404);
-        }
-
-        $permissions = DB::table('role_permissions')
-            ->where('role_id', $id)
-            ->pluck('permission')
-            ->toArray();
-
-        $data = [
-            'id'           => $role->id,
-            'name'         => $role->name,
-            'display_name' => $role->display_name,
-            'description'  => $role->description,
-            'is_active'    => (bool) $role->is_active,
-            'permissions'  => $permissions
-        ];
-
-        return ApiResponse::success($data, 'Detail role berhasil dimuat');
-    }
-
-    /**
-     * Update role dan sinkronisasi (sync) ulang permissions-nya
+     * PUT /roles/{id}
+     * Update role details and optionally sync permissions.
      */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'name'         => 'required|string|unique:roles,name,' . $id,
-            'display_name' => 'required|string',
-            'description'  => 'nullable|string',
-            'is_active'    => 'boolean',
-            'permissions'  => 'required|array',
-            'permissions.*'=> 'string'
+            'name'           => 'required|string|unique:roles,name,' . $id,
+            'display_name'   => 'required|string',
+            'description'    => 'nullable|string',
+            'is_active'      => 'boolean',
+            'permission_ids' => 'sometimes|array',
+            'permission_ids.*' => 'uuid|exists:permissions,id',
         ]);
 
         if ($validator->fails()) {
             return ApiResponse::error('Validasi gagal', $validator->errors(), 422);
         }
 
-        $role = DB::table('roles')->where('id', $id)->first();
+        $role = Role::find($id);
         if (!$role) {
             return ApiResponse::error('Role tidak ditemukan', null, 404);
         }
 
-        // Proteksi tambahan: Jangan biarkan Owner diotak-atik!
         if ($role->name === 'owner') {
             return ApiResponse::error('Role Owner tidak dapat diubah!', null, 403);
         }
@@ -155,31 +139,15 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Update tabel roles
-            DB::table('roles')->where('id', $id)->update([
+            $role->update([
                 'name'         => $request->name,
                 'display_name' => $request->display_name,
                 'description'  => $request->description,
                 'is_active'    => $request->has('is_active') ? $request->is_active : $role->is_active,
-                'updated_at'   => now(),
             ]);
 
-            // 2. "Sync" tabel role_permissions (Hapus yang lama, masukkan yang baru)
-            DB::table('role_permissions')->where('role_id', $id)->delete();
-
-            $permissionsData = [];
-            foreach ($request->permissions as $permission) {
-                $permissionsData[] = [
-                    'id'         => Str::uuid()->toString(),
-                    'role_id'    => $id,
-                    'permission' => $permission,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            if (!empty($permissionsData)) {
-                DB::table('role_permissions')->insert($permissionsData);
+            if ($request->has('permission_ids')) {
+                $role->permissions()->sync($request->permission_ids);
             }
 
             DB::commit();
@@ -192,24 +160,22 @@ class RoleController extends Controller
     }
 
     /**
-     * Hapus role
+     * DELETE /roles/{id}
      */
     public function destroy($id)
     {
-        $role = DB::table('roles')->where('id', $id)->first();
-        
+        $role = Role::find($id);
+
         if (!$role) {
             return ApiResponse::error('Role tidak ditemukan', null, 404);
         }
 
-        // Proteksi owner
         if ($role->name === 'owner') {
             return ApiResponse::error('Role Owner tidak dapat dihapus!', null, 403);
         }
 
         try {
-            DB::table('roles')->where('id', $id)->delete();
-
+            $role->delete();
             return ApiResponse::success(null, 'Role berhasil dihapus');
         } catch (\Exception $e) {
             return ApiResponse::error('Gagal menghapus role: ' . $e->getMessage(), null, 500);
@@ -217,58 +183,133 @@ class RoleController extends Controller
     }
 
     /**
-     * Assign atau Sync permissions ke sebuah role
-     * Endpoint: PUT /roles/{id}/permissions
+     * PUT /roles/{id}/permissions
+     * Sync all permissions for a role (full replace).
      */
     public function syncPermissions(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'permissions'   => 'required|array',
-            'permissions.*' => 'string'
+            'permission_ids'   => 'required|array',
+            'permission_ids.*' => 'uuid|exists:permissions,id',
         ]);
 
         if ($validator->fails()) {
             return ApiResponse::error('Validasi gagal', $validator->errors(), 422);
         }
 
-        $role = DB::table('roles')->where('id', $id)->first();
+        $role = Role::find($id);
         if (!$role) {
             return ApiResponse::error('Role tidak ditemukan', null, 404);
         }
 
-        // Proteksi mutlak: Owner punya kuasa penuh, tidak boleh diotak-atik
         if ($role->name === 'owner') {
             return ApiResponse::error('Permission untuk Role Owner tidak dapat diubah!', null, 403);
         }
 
         try {
-            DB::beginTransaction();
-
-            // 1. Bersihkan semua permission lama untuk role ini
-            DB::table('role_permissions')->where('role_id', $id)->delete();
-
-            // 2. Siapkan data permission baru
-            $permissionsData = [];
-            foreach ($request->permissions as $permission) {
-                $permissionsData[] = [
-                    'id'         => Str::uuid()->toString(),
-                    'role_id'    => $id,
-                    'permission' => $permission,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-
-            if (!empty($permissionsData)) {
-                DB::table('role_permissions')->insert($permissionsData);
-            }
-
-            DB::commit();
-
+            $role->permissions()->sync($request->permission_ids);
             return ApiResponse::success(null, 'Permissions berhasil di-assign ke role');
         } catch (\Exception $e) {
-            DB::rollBack();
             return ApiResponse::error('Gagal assign permissions: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * PATCH /roles/{id}/permissions/access
+     * Set access level for a specific resource group.
+     *
+     * Body: { "group": "members", "level": "view" | "manage" | "none" }
+     *
+     * - "none"   → remove all permissions from this group
+     * - "view"   → grant only .view, remove .manage
+     * - "manage" → grant both .view and .manage
+     */
+    public function updateAccessLevel(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'group' => 'required|string',
+            'level' => 'required|in:none,view,manage',
+        ]);
+
+        if ($validator->fails()) {
+            return ApiResponse::error('Validasi gagal', $validator->errors(), 422);
+        }
+
+        $role = Role::find($id);
+        if (!$role) {
+            return ApiResponse::error('Role tidak ditemukan', null, 404);
+        }
+
+        if ($role->name === 'owner') {
+            return ApiResponse::error('Permission untuk Role Owner tidak dapat diubah!', null, 403);
+        }
+
+        $group = $request->group;
+        $level = $request->level;
+
+        // Get all permission IDs for this group
+        $groupPermissions = Permission::where('group', $group)->get();
+        if ($groupPermissions->isEmpty()) {
+            return ApiResponse::error("Group '{$group}' tidak ditemukan", null, 404);
+        }
+
+        $viewPerm   = $groupPermissions->firstWhere('action', 'view');
+        $managePerm = $groupPermissions->firstWhere('action', 'manage');
+
+        try {
+            // Detach all permissions from this group first
+            $groupPermissionIds = $groupPermissions->pluck('id')->toArray();
+            $role->permissions()->detach($groupPermissionIds);
+
+            // Attach based on level
+            if ($level === 'view' && $viewPerm) {
+                $role->permissions()->attach($viewPerm->id);
+            } elseif ($level === 'manage') {
+                $attachIds = [];
+                if ($viewPerm) $attachIds[] = $viewPerm->id;
+                if ($managePerm) $attachIds[] = $managePerm->id;
+                $role->permissions()->attach($attachIds);
+            }
+            // level === 'none' → nothing to attach
+
+            // Return updated permission state
+            $role->load('permissions');
+
+            return ApiResponse::success([
+                'permissions'    => $role->permissionList(),
+                'permission_ids' => $role->permissionIds(),
+            ], 'Access level berhasil diperbarui');
+        } catch (\Exception $e) {
+            return ApiResponse::error('Gagal memperbarui access level: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * GET /permissions
+     * Return all available permissions, grouped by resource.
+     */
+    public function availablePermissions()
+    {
+        try {
+            $permissions = Permission::orderBy('sort_order')->get();
+            $groupLabels = Permission::groupLabels();
+
+            $grouped = $permissions->groupBy('group')->map(function ($perms, $group) use ($groupLabels) {
+                return [
+                    'group'       => $group,
+                    'label'       => $groupLabels[$group] ?? ucfirst($group),
+                    'permissions' => $perms->map(fn($p) => [
+                        'id'           => $p->id,
+                        'name'         => $p->name,
+                        'display_name' => $p->display_name,
+                        'action'       => $p->action,
+                    ])->values(),
+                ];
+            })->values();
+
+            return ApiResponse::success($grouped, 'Permissions berhasil dimuat');
+        } catch (\Exception $e) {
+            return ApiResponse::error('Gagal memuat permissions: ' . $e->getMessage(), null, 500);
         }
     }
 }

@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+use App\Models\Tenant\BranchSetting;
+
 class MemberController extends Controller
 {
     // =============================================
@@ -153,57 +155,57 @@ class MemberController extends Controller
      * Assign paket baru ke member (Langkah 2)
      */
     public function assignMembership(Request $request, string $id)
-{
-    $member = Member::findOrFail($id);
+    {
+        $member = Member::findOrFail($id);
 
-    $request->validate([
-        'plan_id'    => ['required', 'uuid', 'exists:membership_plans,id'],
-        'start_date' => ['nullable', 'date'],
-        'started_at' => ['nullable', 'date'],
-        'end_date'   => ['nullable', 'date'],
-        'expires_at' => ['nullable', 'date'],
-        'notes'      => ['nullable', 'string'],
-    ]);
+        $request->validate([
+            'plan_id'    => ['required', 'uuid', 'exists:membership_plans,id'],
+            'start_date' => ['nullable', 'date'],
+            'started_at' => ['nullable', 'date'],
+            'end_date'   => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date'],
+            'notes'      => ['nullable', 'string'],
+        ]);
 
-    $plan = MembershipPlan::findOrFail($request->plan_id);
+        $plan = MembershipPlan::findOrFail($request->plan_id);
 
-    $startDate = $request->start_date ?? $request->started_at ?? now()->toDateString();
-    $endDate   = $request->end_date ?? $request->expires_at;
+        $startDate = $request->start_date ?? $request->started_at ?? now()->toDateString();
+        $endDate   = $request->end_date ?? $request->expires_at;
 
-    if (!$endDate) {
-        $unit = match($plan->duration_unit) {
-            'year'  => 'years',
-            'month' => 'months',
-            'week'  => 'weeks',
-            default => 'days',
-        };
+        if (!$endDate) {
+            $unit = match($plan->duration_unit) {
+                'year'  => 'years',
+                'month' => 'months',
+                'week'  => 'weeks',
+                default => 'days',
+            };
 
-        $endDate = \Carbon\Carbon::parse($startDate)
-            ->add($plan->duration, $unit)
-            ->toDateString();
+            $endDate = \Carbon\Carbon::parse($startDate)
+                ->add($plan->duration, $unit)
+                ->toDateString();
+        }
+
+        $membership = Membership::create([
+            'member_id'               => $member->id,
+            'membership_plan_id'      => $plan->id,
+            'branch_id'               => $request->header('X-Branch-Id'),
+            'start_date'              => $startDate,
+            'end_date'                => $endDate,
+            'unlimited_checkin'       => $plan->unlimited_checkin ?? false,
+            'remaining_checkin_quota' => $plan->checkin_quota_per_month ?? null,
+            'status'                  => 'active',
+            'notes'                   => $request->notes,
+        ]);
+
+        $this->syncMemberStatus($member->id);
+
+        $membership->load('plan');
+
+        return ApiResponse::success(
+            new MembershipResource($membership),
+            'Membership assigned successfully'
+        );
     }
-
-    $membership = Membership::create([
-        'member_id'               => $member->id,
-        'membership_plan_id'      => $plan->id, // ✅ FIX DISINI
-        'branch_id'           => $request->header('X-Branch-Id'),
-        'start_date'              => $startDate,
-        'end_date'                => $endDate,
-        'unlimited_checkin'       => $plan->unlimited_checkin ?? false,
-        'remaining_checkin_quota' => $plan->checkin_quota_per_month ?? null,
-        'status'                  => 'active',
-        'notes'                   => $request->notes,
-    ]);
-
-    $this->syncMemberStatus($member->id);
-
-    $membership->load('plan');
-
-    return ApiResponse::success(
-        new MembershipResource($membership),
-        'Membership assigned successfully'
-    );
-}
 
     /**
      * Update status & masa berlaku membership (Extend, Freeze, dll)
@@ -225,15 +227,103 @@ class MemberController extends Controller
         if ($request->filled('frozen_until')) $updateData['frozen_until'] = $request->frozen_until;
         if ($request->has('notes'))           $updateData['notes']        = $request->notes;
 
-        // Auto extend logic jika status diubah dari frozen menjadi active bisa ditambahkan disini
-        // ...
-
         $membership->update($updateData);
 
         // Sync ulang status profil member
         $this->syncMemberStatus($memberId);
 
         return ApiResponse::success(new MembershipResource($membership->fresh('plan')), 'Membership updated');
+    }
+
+    /**
+     * POST /members/{member}/memberships/{membership}/freeze
+     * Freeze a membership for a specified number of days.
+     *
+     * Business rules:
+     * - Branch setting `freeze_allowed` must be true
+     * - Cannot exceed `max_freeze_days` (total cumulative)
+     * - Membership must be active
+     * - Membership must not already be frozen
+     */
+    public function freezeMembership(Request $request, string $memberId, string $membershipId)
+    {
+        $request->validate([
+            'days'   => ['required', 'integer', 'min:1', 'max:365'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $branchId = $request->header('X-Branch-Id');
+        $membership = Membership::where('member_id', $memberId)->findOrFail($membershipId);
+
+        // Check: membership must be active
+        if ($membership->status !== 'active') {
+            return ApiResponse::error('Hanya membership aktif yang bisa di-freeze.', null, 422);
+        }
+
+        // Check: membership must not be expired
+        if ($membership->isExpired()) {
+            return ApiResponse::error('Membership sudah expired, tidak bisa di-freeze.', null, 422);
+        }
+
+        // Check: branch allows freeze
+        $freezeAllowed = BranchSetting::where('branch_id', $branchId)
+            ->where('key', 'freeze_allowed')
+            ->value('value');
+
+        if ($freezeAllowed === 'false' || $freezeAllowed === false) {
+            return ApiResponse::error('Fitur freeze membership tidak diaktifkan untuk cabang ini.', null, 422);
+        }
+
+        // Check: max freeze days limit
+        $maxFreezeDays = (int) BranchSetting::where('branch_id', $branchId)
+            ->where('key', 'max_freeze_days')
+            ->value('value') ?: 30;
+
+        $totalFreezeDaysAfter = ($membership->freeze_days_used ?? 0) + $request->days;
+
+        if ($totalFreezeDaysAfter > $maxFreezeDays) {
+            $remaining = $maxFreezeDays - ($membership->freeze_days_used ?? 0);
+            return ApiResponse::error(
+                "Melebihi batas freeze. Maksimal {$maxFreezeDays} hari, sudah digunakan {$membership->freeze_days_used} hari. Sisa: {$remaining} hari.",
+                ['remaining_freeze_days' => $remaining],
+                422
+            );
+        }
+
+        // Execute freeze
+        $membership->freeze($request->days, $request->reason);
+
+        // Sync member status
+        $this->syncMemberStatus($memberId);
+
+        return ApiResponse::success(
+            new MembershipResource($membership->fresh('plan')),
+            "Membership berhasil di-freeze selama {$request->days} hari"
+        );
+    }
+
+    /**
+     * POST /members/{member}/memberships/{membership}/unfreeze
+     * Unfreeze a membership and compensate the end_date.
+     */
+    public function unfreezeMembership(Request $request, string $memberId, string $membershipId)
+    {
+        $membership = Membership::where('member_id', $memberId)->findOrFail($membershipId);
+
+        if ($membership->status !== 'frozen') {
+            return ApiResponse::error('Membership ini tidak sedang dalam status freeze.', null, 422);
+        }
+
+        // Execute unfreeze (auto-extends end_date)
+        $membership->unfreeze();
+
+        // Sync member status
+        $this->syncMemberStatus($memberId);
+
+        return ApiResponse::success(
+            new MembershipResource($membership->fresh('plan')),
+            'Membership berhasil di-unfreeze. Tanggal berakhir telah diperpanjang.'
+        );
     }
 
     /**

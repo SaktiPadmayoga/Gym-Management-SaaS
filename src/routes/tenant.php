@@ -129,6 +129,9 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
     // Branch Reports
     Route::get('/branch-reports/{type}', [BranchReportController::class, 'show']);
 
+    // Master permission list (any authenticated staff can read)
+    Route::get('/permissions', [RoleController::class, 'availablePermissions']);
+
     Route::middleware('permission:settings')->prefix('roles')->group(function () {
         Route::get('/', [RoleController::class, 'index']);
         Route::post('/', [RoleController::class, 'store']);
@@ -136,6 +139,7 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
         Route::put('/{id}', [RoleController::class, 'update']);
         Route::delete('/{id}', [RoleController::class, 'destroy']);
         Route::put('/{id}/permissions', [RoleController::class, 'syncPermissions']);
+        Route::patch('/{id}/permissions/access', [RoleController::class, 'updateAccessLevel']);
     });
 
     // Auth
@@ -193,6 +197,8 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
         Route::post('/{member}/memberships',                [MemberController::class, 'assignMembership']);
         Route::patch('/{member}/memberships/{membership}',  [MemberController::class, 'updateMembership']);
         Route::delete('/{member}/memberships/{membership}', [MemberController::class, 'cancelMembership']);
+        Route::post('/{member}/memberships/{membership}/freeze',   [MemberController::class, 'freezeMembership']);
+        Route::post('/{member}/memberships/{membership}/unfreeze', [MemberController::class, 'unfreezeMembership']);
 
         // 3. Standard CRUD (Pengganti apiResource agar urutan tidak ditimpa Laravel)
         Route::get('/',           [MemberController::class, 'index']);

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { membersAPI } from "@/lib/api/tenant/members";
-import { AssignMembershipRequest, MemberCreateRequest, MemberData, MemberUpdateRequest, UpdateMembershipRequest } from "@/types/tenant/members";
+import { AssignMembershipRequest, MemberCreateRequest, MemberData, MemberUpdateRequest, UpdateMembershipRequest, FreezeMembershipRequest } from "@/types/tenant/members";
 
 export type MembersQueryParams = {
     page?: number;
@@ -126,6 +126,36 @@ export function useCancelMembership() {
 
     return useMutation({
         mutationFn: ({ memberId, membershipId }: { memberId: string; membershipId: string }) => membersAPI.cancelMembership(memberId, membershipId),
+        onSuccess: (_, { memberId }) => {
+            queryClient.invalidateQueries({ queryKey: memberKeys.memberships(memberId) });
+            queryClient.invalidateQueries({ queryKey: memberKeys.detail(memberId) });
+        },
+    });
+}
+
+/* =====================
+ * FREEZE / UNFREEZE
+ * ===================== */
+
+export function useFreezeMembership() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ memberId, membershipId, payload }: { memberId: string; membershipId: string; payload: FreezeMembershipRequest }) =>
+            membersAPI.freezeMembership(memberId, membershipId, payload),
+        onSuccess: (_, { memberId }) => {
+            queryClient.invalidateQueries({ queryKey: memberKeys.memberships(memberId) });
+            queryClient.invalidateQueries({ queryKey: memberKeys.detail(memberId) });
+        },
+    });
+}
+
+export function useUnfreezeMembership() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ memberId, membershipId }: { memberId: string; membershipId: string }) =>
+            membersAPI.unfreezeMembership(memberId, membershipId),
         onSuccess: (_, { memberId }) => {
             queryClient.invalidateQueries({ queryKey: memberKeys.memberships(memberId) });
             queryClient.invalidateQueries({ queryKey: memberKeys.detail(memberId) });

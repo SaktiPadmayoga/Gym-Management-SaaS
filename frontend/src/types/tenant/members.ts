@@ -23,8 +23,13 @@ export const MembershipSchema = z.object({
     unlimited_checkin: z.boolean(),
     remaining_checkin_quota: z.number().nullable().optional(),
     total_checkins: z.number().default(0),
+    frozen_at: z.string().nullable().optional(),
     frozen_until: z.string().nullable().optional(),
+    freeze_days_used: z.number().default(0),
     notes: z.string().nullable().optional(),
+    is_frozen: z.boolean().optional(),
+    is_expired: z.boolean().optional(),
+    days_remaining: z.number().nullable().optional(),
     // Relasi yang di-load
     plan: z
         .object({
@@ -144,3 +149,12 @@ export const UpdateMembershipRequestSchema = z.object({
 });
 
 export type UpdateMembershipRequest = z.infer<typeof UpdateMembershipRequestSchema>;
+
+/* =========================
+ * FREEZE / UNFREEZE REQUEST
+ * ========================= */
+
+export interface FreezeMembershipRequest {
+    days: number;
+    reason?: string;
+}

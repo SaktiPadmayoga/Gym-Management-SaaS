@@ -2,7 +2,7 @@
 # Caddyfile — Fitnice Production
 # =============================================
 # Caddy handles:
-#   1. SSL termination (wildcard *.fitnice.com + fitnice.com)
+#   1. SSL termination (wildcard *.gymfit.id + gymfit.id)
 #   2. Auto-renewal via Cloudflare DNS challenge
 #   3. Reverse proxy → Nginx internal container
 # =============================================
@@ -12,7 +12,7 @@
 }
 
 # Central domain + semua subdomain tenant
-*.fitnice.com, fitnice.com {
+*.gymfit.id, gymfit.id {
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 	}

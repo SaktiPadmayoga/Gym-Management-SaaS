@@ -99,8 +99,9 @@ class Staff extends Authenticatable
         $role = $this->getRoleInBranch($branchId);
         if (!$role) return [];
 
-        return RolePermission::whereHas('role', fn($q) => $q->where('name', $role))
-            ->pluck('permission')
+        // Query granular permission names via the permissions master table
+        return Permission::whereHas('roles', fn($q) => $q->where('name', $role))
+            ->pluck('name')
             ->toArray();
     }
 
@@ -109,7 +110,19 @@ class Staff extends Authenticatable
         if ($this->isOwner()) return true;
 
         $permissions = $this->getPermissionsInBranch($branchId);
-        return in_array($permission, $permissions);
+
+        // Exact match (granular): "members.view"
+        if (in_array($permission, $permissions)) return true;
+
+        // Coarse match (backward compat): "members" → true if any "members.*" exists
+        if (!str_contains($permission, '.')) {
+            $prefix = $permission . '.';
+            foreach ($permissions as $p) {
+                if (str_starts_with($p, $prefix)) return true;
+            }
+        }
+
+        return false;
     }
 
     public function isOwner(): bool

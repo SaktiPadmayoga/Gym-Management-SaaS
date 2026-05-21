@@ -69,7 +69,7 @@ services:
             APP_ENV: production
             APP_DEBUG: "false"
             APP_KEY: ${APP_KEY}
-            APP_URL: https://fitnice.com
+            APP_URL: https://gymfit.id
 
             DB_CONNECTION: pgsql
             DB_HOST: postgres
@@ -82,10 +82,10 @@ services:
             CACHE_DRIVER: database
             QUEUE_CONNECTION: sync
             SESSION_DRIVER: file
-            SESSION_DOMAIN: .fitnice.com
+            SESSION_DOMAIN: .gymfit.id
             SESSION_SECURE_COOKIE: "true"
 
-            SANCTUM_STATEFUL_DOMAINS: "fitnice.com,*.fitnice.com"
+            SANCTUM_STATEFUL_DOMAINS: "gymfit.id,*.gymfit.id"
 
             TENANCY_DATABASE_MANAGER: postgres
             TENANCY_CACHE_DRIVER: database
@@ -98,7 +98,7 @@ services:
             MAIL_USERNAME: ${MAIL_USERNAME:-}
             MAIL_PASSWORD: ${MAIL_PASSWORD:-}
             MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
-            MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@fitnice.com}
+            MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@gymfit.id}
             MAIL_FROM_NAME: "Fitnice"
 
             GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
@@ -127,11 +127,11 @@ services:
             NODE_ENV: production
             HOSTNAME: "0.0.0.0"
             PORT: "3000"
-            NEXT_PUBLIC_API_URL: https://fitnice.com/api
-            NEXT_PUBLIC_API_BASE_URL: https://fitnice.com/api
-            NEXT_PUBLIC_ROOT_DOMAIN: fitnice.com
+            NEXT_PUBLIC_API_URL: https://gymfit.id/api
+            NEXT_PUBLIC_API_BASE_URL: https://gymfit.id/api
+            NEXT_PUBLIC_ROOT_DOMAIN: gymfit.id
             NEXT_PUBLIC_APP_NAME: Fitnice
-            NEXT_PUBLIC_TENANT_DOMAIN: fitnice.com
+            NEXT_PUBLIC_TENANT_DOMAIN: gymfit.id
         networks:
             - gym-network
         restart: unless-stopped

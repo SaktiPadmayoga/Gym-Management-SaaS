@@ -1,5 +1,5 @@
 import tenantApiClient from "@/lib/tenant-api-client";
-import { AssignMembershipRequest, MemberCreateRequest, MemberData, MembershipData, MemberUpdateRequest, UpdateMembershipRequest } from "@/types/tenant/members";
+import { AssignMembershipRequest, MemberCreateRequest, MemberData, MembershipData, MemberUpdateRequest, UpdateMembershipRequest, FreezeMembershipRequest } from "@/types/tenant/members";
 
 export const membersAPI = {
     getAll: async (params?: { page?: number; per_page?: number; search?: string; status?: string; is_active?: boolean; home_branch_id?: string }): Promise<MemberData[]> => {
@@ -67,5 +67,19 @@ export const membersAPI = {
 
     cancelMembership: async (memberId: string, membershipId: string): Promise<void> => {
         await tenantApiClient.delete(`/members/${memberId}/memberships/${membershipId}`);
+    },
+
+    // ==========================================
+    // FREEZE / UNFREEZE
+    // ==========================================
+
+    freezeMembership: async (memberId: string, membershipId: string, payload: FreezeMembershipRequest): Promise<MembershipData> => {
+        const response = await tenantApiClient.post(`/members/${memberId}/memberships/${membershipId}/freeze`, payload);
+        return response?.data.data;
+    },
+
+    unfreezeMembership: async (memberId: string, membershipId: string): Promise<MembershipData> => {
+        const response = await tenantApiClient.post(`/members/${memberId}/memberships/${membershipId}/unfreeze`);
+        return response?.data.data;
     },
 };

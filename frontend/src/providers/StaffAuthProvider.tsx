@@ -239,7 +239,16 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
         (permission: string): boolean => {
             if (state.globalRole === "owner") return true;
             if (currentPermissions.includes("*")) return true;
-            return currentPermissions.includes(permission);
+
+            // Exact match (granular): "members.view", "members.manage"
+            if (currentPermissions.includes(permission)) return true;
+
+            // Coarse match (backward compat): "members" → true if any "members.*" exists
+            if (!permission.includes('.')) {
+                return currentPermissions.some(p => p.startsWith(permission + '.'));
+            }
+
+            return false;
         },
         [state.globalRole, currentPermissions],
     );

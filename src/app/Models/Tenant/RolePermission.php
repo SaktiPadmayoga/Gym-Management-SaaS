@@ -10,10 +10,15 @@ class RolePermission extends Model
 {
     use HasUuids;
 
-    protected $fillable = ['role_id', 'permission'];
+    protected $fillable = ['role_id', 'permission_id'];
 
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
+    }
+
+    public function permission(): BelongsTo
+    {
+        return $this->belongsTo(Permission::class);
     }
 }

@@ -7,8 +7,8 @@ return [
 
     'allowed_origins' => [
         'http://localhost:3000',
-        'https://fitnice.com',
-        'https://*.fitnice.com',
+        'https://gymfit.id',
+        'https://*.gymfit.id',
     ],
 
     'allowed_origins_patterns' => [
