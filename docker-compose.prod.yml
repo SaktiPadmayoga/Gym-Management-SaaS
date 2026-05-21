@@ -1,5 +1,5 @@
 # =============================================
-# Docker Compose — Fitnice Production
+# Docker Compose — Gymfit Production
 # =============================================
 # Arsitektur:
 #   Internet:443 → Caddy (SSL) → Nginx:80 → PHP-FPM / Next.js
@@ -65,7 +65,7 @@ services:
         container_name: gym-php
         working_dir: /var/www/html
         environment:
-            APP_NAME: "Fitnice"
+            APP_NAME: "Gymfit"
             APP_ENV: production
             APP_DEBUG: "false"
             APP_KEY: ${APP_KEY}
@@ -99,7 +99,7 @@ services:
             MAIL_PASSWORD: ${MAIL_PASSWORD:-}
             MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
             MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@gymfit.id}
-            MAIL_FROM_NAME: "Fitnice"
+            MAIL_FROM_NAME: "Gymfit"
 
             GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
             GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
@@ -130,7 +130,7 @@ services:
             NEXT_PUBLIC_API_URL: https://gymfit.id/api
             NEXT_PUBLIC_API_BASE_URL: https://gymfit.id/api
             NEXT_PUBLIC_ROOT_DOMAIN: gymfit.id
-            NEXT_PUBLIC_APP_NAME: Fitnice
+            NEXT_PUBLIC_APP_NAME: Gymfit
             NEXT_PUBLIC_TENANT_DOMAIN: gymfit.id
         networks:
             - gym-network
