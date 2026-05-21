@@ -7,7 +7,9 @@
 
 services:
     # ========================================
-    # Caddy — SSL Termination & Reverse Proxy
+    # Caddy — Tenant Domain Router
+    # SSL ditangani oleh reverse proxy utama VPS
+    # Caddy bertugas routing wildcard subdomain tenant
     # ========================================
     caddy:
         build:
@@ -15,12 +17,9 @@ services:
             dockerfile: Dockerfile
         container_name: gym-caddy
         ports:
-            - "80:80"
-            - "443:443"
+            - "3100:80"
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile:ro
-            - caddy_data:/data
-            - caddy_config:/config
         environment:
             CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
         depends_on:
@@ -169,10 +168,6 @@ volumes:
     postgres_data:
         driver: local
     postgres_backups:
-        driver: local
-    caddy_data:
-        driver: local
-    caddy_config:
         driver: local
     laravel_storage:
         driver: local

@@ -1,28 +1,22 @@
 # =============================================
-# Caddyfile — Fitnice Production
+# Caddyfile — Gymfit Production
 # =============================================
-# Caddy handles:
-#   1. SSL termination (wildcard *.gymfit.id + gymfit.id)
-#   2. Auto-renewal via Cloudflare DNS challenge
-#   3. Reverse proxy → Nginx internal container
+# Mode: HTTP only (port 80 di dalam container)
+# SSL ditangani oleh reverse proxy utama VPS
+# Caddy bertugas routing wildcard subdomain tenant
 # =============================================
 
 {
-	email sakti14yoga@gmail.com
+	auto_https off
 }
 
-# Central domain + semua subdomain tenant
-*.gymfit.id, gymfit.id {
-	tls {
-		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-	}
-
+:80 {
 	# Forward real client info ke Nginx/app
 	header_up Host {host}
 	header_up X-Real-IP {remote_host}
 	header_up X-Forwarded-For {remote_host}
 	header_up X-Forwarded-Proto {scheme}
 
-	# Semua request ke Nginx internal (port 80)
+	# Semua request ke Nginx internal
 	reverse_proxy nginx:80
 }
