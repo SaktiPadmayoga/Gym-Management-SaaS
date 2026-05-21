@@ -19,6 +19,11 @@ const nextConfig: NextConfig = {
         ],
     },
 
+    // ⚡ Optimasi RAM untuk Server Low-Spec (Mencegah OOM Crash)
+    experimental: {
+        webpackBuildWorker: false, // Nonaktifkan worker terpisah agar hemat RAM (single-thread build)
+    },
+
     env: {
         NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost/api",
     },

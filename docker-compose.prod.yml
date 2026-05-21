@@ -132,6 +132,7 @@ services:
             NEXT_PUBLIC_ROOT_DOMAIN: gymfit.id
             NEXT_PUBLIC_APP_NAME: Gymfit
             NEXT_PUBLIC_TENANT_DOMAIN: gymfit.id
+            NODE_OPTIONS: "--max-old-space-size=1024" # ← Batasi RAM Node.js maksimal 1GB
         networks:
             - gym-network
         restart: unless-stopped
