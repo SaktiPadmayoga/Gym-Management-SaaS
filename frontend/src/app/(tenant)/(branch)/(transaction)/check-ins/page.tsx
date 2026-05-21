@@ -1,6 +1,8 @@
 // app/(tenant)/check-ins/page.tsx
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useRef, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast, Toaster } from "sonner";
