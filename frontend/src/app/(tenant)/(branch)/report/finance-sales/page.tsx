@@ -130,7 +130,7 @@ export default function FinanceSalesReportPage() {
                             <div className="p-3 bg-green-50 text-green-600 rounded-lg"><TrendingUp size={22} /></div>
                             <div>
                                 <p className="text-sm font-medium text-zinc-500">Total Pendapatan</p>
-                                <h3 className="text-xl font-bold text-zinc-900">{formatRp(totalRevenue)}</h3>
+                                <h3 className="text-xl font-bold text-zinc-900">{formatRp(toNumber(totalRevenue))}</h3>
                             </div>
                         </div>
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">
@@ -151,7 +151,7 @@ export default function FinanceSalesReportPage() {
                             <div className="p-3 bg-orange-50 text-orange-600 rounded-lg"><DollarSign size={22} /></div>
                             <div>
                                 <p className="text-sm font-medium text-zinc-500">Menunggu Pembayaran (Rp)</p>
-                                <h3 className="text-xl font-bold text-zinc-900">{formatRp(pendingRevenue)}</h3>
+                                <h3 className="text-xl font-bold text-zinc-900">{formatRp(toNumber(pendingRevenue))}</h3>
                             </div>
                         </div>
                     </div>
@@ -244,7 +244,7 @@ export default function FinanceSalesReportPage() {
                                                     <td className="py-3 px-2 text-zinc-500 text-xs">{m.item_type_label || m.item_type}</td>
                                                     <td className="py-3 px-2 text-right font-semibold text-blue-600">{m.qty}x</td>
                                                     <td className="py-3 px-2 text-right text-green-600 font-medium">
-                                                        {formatRp(m.revenue)}
+                                                        {formatRp(toNumber(m.revenue))}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -279,7 +279,7 @@ export default function FinanceSalesReportPage() {
                                                         {dayjs(m.paid_at).format("DD/MM/YY HH:mm")}
                                                     </td>
                                                     <td className="py-3 px-2 text-right font-medium text-zinc-900">
-                                                        {formatRp(m.total_amount)}
+                                                        {formatRp(toNumber(m.total_amount))}
                                                     </td>
                                                 </tr>
                                             ))}

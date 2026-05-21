@@ -48,7 +48,7 @@ const movementTypeColor: Record<string, string> = {
 
 interface ProductFormData {
     name:          string;
-    sku:           string;
+    code:           string;
     category:      string;
     description:   string;
     selling_price: number;
@@ -95,7 +95,7 @@ export default function ProductDetail() {
         setAdjustQty(product.stock);
         form.reset({
             name:          product.name,
-            sku:           product.sku           ?? "",
+            code:           product.code           ?? "",
             category:      product.category,
             description:   product.description   ?? "",
             selling_price: Number(product.selling_price),
@@ -119,7 +119,7 @@ export default function ProductDetail() {
             const formData = form.getValues();
             const payload: ProductUpdateRequest = {
                 name:          formData.name,
-                sku:           formData.sku         || undefined,
+                code:           formData.code         || undefined,
                 category:      formData.category,
                 description:   formData.description || undefined,
                 selling_price: formData.selling_price,
@@ -145,7 +145,7 @@ export default function ProductDetail() {
         setPreviewImage(null);
         form.reset({
             name:          product.name,
-            sku:           product.sku           ?? "",
+            code:           product.code           ?? "",
             category:      product.category,
             description:   product.description   ?? "",
             selling_price: Number(product.selling_price),
@@ -244,7 +244,7 @@ export default function ProductDetail() {
 
                     <div className="flex flex-col gap-6 mt-6">
 
-                        {/* NAME, CATEGORY, SKU */}
+                        {/* NAME, CATEGORY, code */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
                                 <TextInput name="name" label="Product Name" disabled={!isEditMode} />
@@ -253,7 +253,7 @@ export default function ProductDetail() {
                                 <TextInput name="category" label="Category" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <TextInput name="sku" label="SKU" disabled={!isEditMode} />
+                                <TextInput name="code" label="code" disabled={!isEditMode} />
                             </div>
                         </div>
 
