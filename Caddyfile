@@ -11,12 +11,12 @@
 }
 
 :80 {
-	# Forward real client info ke Nginx/app
-	header_up Host {host}
-	header_up X-Real-IP {remote_host}
-	header_up X-Forwarded-For {remote_host}
-	header_up X-Forwarded-Proto {scheme}
-
 	# Semua request ke Nginx internal
-	reverse_proxy nginx:80
+	reverse_proxy nginx:80 {
+		# Forward real client info ke Nginx/app
+		header_up Host {host}
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
 }
