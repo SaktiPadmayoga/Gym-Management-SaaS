@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#3B82F6", "#F59E0B", "#EF4444", "#10B981"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -15,6 +16,7 @@ const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p;
 export default function ClassReportPage() {
     const [startDate, setStartDate] = useState(dayjs().subtract(30, "day").format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const { data, isLoading, isError } = useBranchReport("class", startDate, endDate);
     const report = data?.data;
 
@@ -69,6 +71,69 @@ export default function ClassReportPage() {
         ], `Laporan_Kelas_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Kelas",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("Kelas", startDate, endDate),
+                summary: [
+                    { label: "Total Kelas", value: totalClasses },
+                    { label: "Total Booking", value: totalBooked },
+                    { label: "Total Hadir", value: totalAttended },
+                    { label: "Kehadiran", value: `${attendanceRate}%` },
+                ],
+                tables: [
+                    {
+                        title: "Kelas Paling Populer (Berdasarkan Kehadiran)",
+                        columns: [
+                            { header: "Nama Kelas", key: "name" },
+                            { header: "Total Sesi", key: "total_sessions", align: "right" },
+                            { header: "Total Hadir", key: "total_attended", align: "right" },
+                        ],
+                        rows: popularClasses.map((c: any) => ({
+                            name: c.name,
+                            total_sessions: c.total_sessions,
+                            total_attended: c.total_attended,
+                        })),
+                    },
+                    {
+                        title: "Status Kelas",
+                        columns: [
+                            { header: "Status", key: "name" },
+                            { header: "Jumlah", key: "value", align: "right" },
+                        ],
+                        rows: statusDistribution.map((s: any) => ({
+                            name: s.name,
+                            value: s.value,
+                        })),
+                    },
+                    {
+                        title: "Beban Mengajar Instruktur",
+                        columns: [
+                            { header: "Nama Instruktur", key: "name" },
+                            { header: "Total Sesi", key: "total_sessions", align: "right" },
+                            { header: "Total Member Hadir", key: "total_attended", align: "right" },
+                            { header: "Rata-rata Hadir / Sesi", key: "avg", align: "right" },
+                        ],
+                        rows: instructorLoad.map((i: any) => ({
+                            name: i.name,
+                            total_sessions: i.total_sessions,
+                            total_attended: i.total_attended,
+                            avg: i.total_sessions > 0 ? (i.total_attended / i.total_sessions).toFixed(1) : "0",
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan Kelas"
@@ -77,10 +142,12 @@ export default function ClassReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-class" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

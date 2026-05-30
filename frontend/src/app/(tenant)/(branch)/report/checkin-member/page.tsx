@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#3B82F6", "#F59E0B", "#10B981"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -15,6 +16,7 @@ const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p;
 export default function CheckinMemberReportPage() {
     const [startDate, setStartDate] = useState(dayjs().subtract(30, "day").format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const { data, isLoading, isError } = useBranchReport("checkin-member", startDate, endDate);
     const report = data?.data;
 
@@ -58,6 +60,53 @@ export default function CheckinMemberReportPage() {
         ], `Laporan_Aktivitas_Member_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Check-in Member",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("CheckIn_Member", startDate, endDate),
+                summary: [
+                    { label: "Total Check-in", value: String(totalCheckins) },
+                    { label: "Member Unik", value: String(uniqueMembers) },
+                    { label: "Rata-rata per Member", value: `${avgPerMember}x` },
+                ],
+                tables: [
+                    {
+                        title: "Distribusi Frekuensi Kunjungan",
+                        columns: [
+                            { header: "Frekuensi", key: "name" },
+                            { header: "Jumlah Member", key: "value", align: "right" as const },
+                        ],
+                        rows: frequencyDistribution.map((f: any) => ({
+                            name: f.name,
+                            value: String(f.value),
+                        })),
+                    },
+                    {
+                        title: "Top 10 Member Paling Aktif",
+                        columns: [
+                            { header: "Nama", key: "name" },
+                            { header: "Email", key: "email" },
+                            { header: "Total Kunjungan", key: "total_checkins", align: "right" as const },
+                        ],
+                        rows: topMembers.map((m: any) => ({
+                            name: m.name,
+                            email: m.email ?? "-",
+                            total_checkins: `${m.total_checkins}x`,
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Aktivitas Member"
@@ -66,10 +115,12 @@ export default function CheckinMemberReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-checkin-member" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

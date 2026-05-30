@@ -13,7 +13,7 @@ return [
 
     'allowed_origins_patterns' => [
         '#^http://[a-z0-9-]+\.localhost(:\d+)?$#',
-        '#^https://[a-z0-9-]+\.fitnice\.com$#',
+        '#^https://[a-z0-9-]+\.gymfit\.(id|com)$#',
     ],
 
     'allowed_headers' => ['*'],

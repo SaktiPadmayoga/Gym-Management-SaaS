@@ -50,6 +50,29 @@ class CheckTenantAccess
             }
         }
 
+        // 0. Check jika tenant disuspend atau expired di level Tenant model
+        if ($tenant->status === 'suspended') {
+            if ($isOwner && $isWhitelisted) {
+                 // Izinkan owner mengakses rute whitelist (seperti logout dsb)
+            } else {
+                if (!$isOwner && ($request->is('api/tenant-auth/logout') || $request->is('api/member/auth/logout'))) {
+                    return $next($request);
+                }
+                return $this->denyAccess($tenant, 'Layanan gym Anda ditangguhkan (suspended). Silakan hubungi Customer Support.', 'suspended');
+            }
+        }
+
+        if ($tenant->status === 'expired') {
+            if ($isOwner && $isWhitelisted) {
+                 // Izinkan owner mengakses rute whitelist (seperti logout dsb)
+            } else {
+                if (!$isOwner && ($request->is('api/tenant-auth/logout') || $request->is('api/member/auth/logout'))) {
+                    return $next($request);
+                }
+                return $this->denyAccess($tenant, 'Layanan gym Anda telah kedaluwarsa. Silakan perbarui langganan Anda.', 'expired');
+            }
+        }
+
         // 1. Check jika pending (belum bayar)
         if ($subscription && $subscription->status === 'pending') {
             if ($isOwner && $isWhitelisted) {
@@ -108,7 +131,7 @@ class CheckTenantAccess
             $plan = $subscription->plan;
             if ($plan) {
                 $tenant->run(function () use ($plan) {
-                    if (!$plan->isUnlimitedMembers() && \App\Models\Member::count() >= $plan->max_membership) {
+                    if (!$plan->isUnlimitedMembers() && \App\Models\Tenant\Member::count() >= $plan->max_membership) {
                         // Jangan abort, tapi berikan warning atau batasi pembuatan (biasanya di create endpoint)
                         // Untuk middleware general, kita lewati saja agar tidak memblokir GET request.
                     }

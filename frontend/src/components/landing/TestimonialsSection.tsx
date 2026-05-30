@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 const testimonials = [
   {
     name: "Alexandra Chen",
-    role: "Owner, FitFactory Jakarta",
-    content: "FitNice transformed how we run our gym. Member retention went up 40% in the first quarter. The analytics dashboard alone is worth the investment.",
+    role: "Pemilik, FitFactory Jakarta",
+    content: "GYMFIT mengubah total cara kami mengelola gym. Retensi anggota naik 40% di kuartal pertama. Dasbor analitiknya saja sudah sangat sebanding dengan investasinya.",
     initials: "AC",
     span: "lg:col-span-8",
     theme: "bg-teal-500 text-slate-950 border-teal-600",
@@ -16,8 +16,8 @@ const testimonials = [
   },
   {
     name: "Rizky Pratama",
-    role: "Manager, PowerGym",
-    content: "The automated billing saved us 15 hours per week. We've seen a 3x increase in class bookings since launch.",
+    role: "Manajer, PowerGym",
+    content: "Sistem auto-billing menghemat waktu kami hingga 15 jam per minggu. Kami juga mencatat kenaikan pemesanan kelas hingga 3x lipat sejak pertama kali diluncurkan.",
     initials: "RP",
     span: "lg:col-span-4",
     theme: "bg-slate-950 text-white border-slate-800",
@@ -27,7 +27,7 @@ const testimonials = [
   {
     name: "Sarah Williams",
     role: "CEO, GymChain Asia",
-    content: "We evaluated 12 platforms before choosing FitNice. Best decision we made — ROI was visible within 3 months across all 8 branches.",
+    content: "Kami mengevaluasi 12 platform sebelum akhirnya memilih GYMFIT. Keputusan terbaik yang pernah kami ambil — ROI sudah terlihat nyata dalam waktu 3 bulan di seluruh 8 cabang kami.",
     initials: "SW",
     span: "lg:col-span-12",
     theme: "bg-slate-50 text-slate-900 border-slate-200",
@@ -56,11 +56,11 @@ const TestimonialsSection = () => {
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
             <Star className="w-3 h-3 text-teal-400 fill-teal-400" />
-            Social Proof
+            Testimoni Mitra
           </div>
           <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900 mb-6">
-            Trusted By <br />
-            <span className="text-slate-300">Industry Leaders.</span>
+            Dipercaya Oleh <br />
+            <span className="text-slate-300">Pemimpin Industri.</span>
           </h2>
         </motion.div>
 

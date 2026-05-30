@@ -14,6 +14,7 @@ import { SearchableDropdown, DropdownOption } from "@/components/ui/input/Custom
 import { StaffData, StaffUpdateRequest } from "@/types/tenant/staffs";
 import { useAssignBranch, useStaffDetail, useUpdateStaff } from "@/hooks/tenant/useStaffs";
 import { useTenantBranches } from "@/hooks/useTenantBranches";
+import { useRoles } from "@/hooks/tenant/useRoles";
 
 /* =====================
  * OPTIONS
@@ -21,13 +22,6 @@ import { useTenantBranches } from "@/hooks/useTenantBranches";
 const globalRoleOptions: DropdownOption<string>[] = [
     { key: "staff", label: "Staff", value: "staff" },
     { key: "owner", label: "Owner", value: "owner" },
-];
-
-const branchRoleOptions: DropdownOption<string>[] = [
-    { key: "branch_manager", label: "Branch Manager", value: "branch_manager" },
-    { key: "trainer", label: "Trainer", value: "trainer" },
-    { key: "receptionist", label: "Receptionist", value: "receptionist" },
-    { key: "cashier", label: "Cashier", value: "cashier" },
 ];
 
 interface EditStaffFormData {
@@ -38,7 +32,7 @@ interface EditStaffFormData {
     role: "owner" | "staff";
     // Untuk menambah branch baru
     add_branch_id?: string;
-    add_branch_role?: "branch_manager" | "trainer" | "receptionist" | "cashier";
+    add_branch_role?: string;
 }
 
 export default function DetailStaff() {
@@ -52,6 +46,16 @@ export default function DetailStaff() {
     const { data: branchesResponse } = useTenantBranches();
     const branches = branchesResponse?.data ?? [];
     const assignBranchMutation = useAssignBranch();
+    const { data: rolesData } = useRoles();
+
+    // Map dynamic roles except owner role
+    const branchRoleOptions: DropdownOption<string>[] = (rolesData ?? [])
+        .filter((r) => r.name !== "owner")
+        .map((r) => ({
+            key: r.id,
+            label: r.display_name,
+            value: r.name,
+        }));
 
     const form = useForm<EditStaffFormData>({
         mode: "onChange",

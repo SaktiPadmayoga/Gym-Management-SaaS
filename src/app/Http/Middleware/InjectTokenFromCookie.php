@@ -34,19 +34,28 @@ class InjectTokenFromCookie
     {
         $path = $request->getPathInfo();
 
-        $cookieName = match(true) {
-            (bool) preg_match('#^/api/member(/|$)#', $path) => 'member_token',
-            (bool) preg_match('#^/api/admin(/|$)#', $path)  => 'admin_token',
-            default                                         => 'staff_token',
-        };
+        // Member & admin routes punya cookie khusus
+        if (preg_match('#^/api/member(/|$)#', $path)) {
+            $cookieName = 'member_token';
+            $token = $request->cookie($cookieName);
+        } elseif (preg_match('#^/api/admin(/|$)#', $path)) {
+            $cookieName = 'admin_token';
+            $token = $request->cookie($cookieName);
+        } else {
+            // Staff & owner route: coba owner_token dulu, fallback ke staff_token.
+            // Ini memungkinkan owner & staff login bersamaan di tab berbeda
+            // karena masing-masing punya cookie terpisah.
+            $ownerToken = $request->cookie('owner_token');
+            $staffToken = $request->cookie('staff_token');
+            $token      = $ownerToken ?? $staffToken;
+            $cookieName = $ownerToken ? 'owner_token' : 'staff_token';
+        }
 
         Log::info('[Cookie Check]', [
             'path'        => $path,
             'cookie_name' => $cookieName,
             'all_cookies' => array_keys($request->cookies->all()),
         ]);
-
-        $token = $request->cookie($cookieName);
 
         Log::info('[Cookie Step 1] via request->cookie()', [
             'cookie_name' => $cookieName,
@@ -58,14 +67,14 @@ class InjectTokenFromCookie
             try {
                 // Token is still encrypted, decrypt it manually
                 $token = \Illuminate\Support\Facades\Crypt::decryptString($token);
-                
+
                 // Laravel's EncryptCookies middleware adds a CookieValuePrefix to the string before encrypting.
                 // The prefix is hash_hmac('sha1', $cookieName, $key) . '|' which is exactly 41 characters.
                 // We need to strip this prefix to get the actual Sanctum token.
                 if (strpos($token, '|') === 40) {
                     $token = substr($token, 41);
                 }
-                
+
                 Log::info('[Cookie Step 2] decrypt sukses', ['prefix' => substr($token, 0, 15)]);
             } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
                 Log::error('[Cookie Step 2] decrypt GAGAL', ['error' => $e->getMessage()]);
@@ -74,7 +83,7 @@ class InjectTokenFromCookie
         }
 
         // Cek apakah Authorization header berhasil di-set
-        Log::info('[Cookie] final token', ['prefix' => substr($token, 0, 15)]);
+        Log::info('[Cookie] final token', ['prefix' => substr($token ?? '', 0, 15)]);
         return $token;
     }
 }

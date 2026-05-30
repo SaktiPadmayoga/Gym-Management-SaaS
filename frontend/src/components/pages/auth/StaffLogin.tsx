@@ -15,6 +15,7 @@ import CustomButton from "@/components/ui/button/CustomButton";
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { useTenantHeader } from "@/hooks/useTenantHeader";
 import { usePublicBranchSettings } from "@/hooks/tenant/useBranchSettings";
+import Link from "next/link";
 
 /* =========================
  * UTILS
@@ -98,9 +99,9 @@ function LoginForm({ primaryColor }: LoginFormProps) {
                         />
                         <span className="text-xs font-semibold text-zinc-500">Ingat saya</span>
                     </label>
-                    <a href="/tenant-auth/forgot-password" className="text-xs font-bold transition-colors hover:opacity-80" style={{ color: primaryColor }}>
+                    <Link href="/tenant-auth/forgot-password" className="text-xs font-bold transition-colors hover:opacity-80" style={{ color: primaryColor }}>
                         Lupa sandi?
-                    </a>
+                    </Link>
                 </div>
 
                 <CustomButton 
@@ -160,26 +161,17 @@ export default function StaffLoginPage() {
         router.prefetch("/owner/dashboard");
     }, [router]);
 
-    // Redirect logic
-    useEffect(() => {
-        if (!isReady) return;
-        if (!staff) return;
-
-        if (globalRole === "owner") {
-            router.replace("/owner/dashboard");
-        } else if (selectedBranch) {
-            router.replace("/dashboard");
-        }
-    }, [isReady, staff, selectedBranch, globalRole, router]);
-
-    // Loading State
-    if (!isReady || (staff && (selectedBranch || globalRole === "owner")) || isTenantLoading) {
+    // Hanya loading state saat auth belum siap (pertama kali mount)
+    if (!isReady || isTenantLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white">
                 <div className="w-10 h-10 border-4 border-zinc-200 border-t-teal-500 rounded-full animate-spin" />
             </div>
         );
     }
+
+    // Tentukan URL dashboard berdasarkan role
+    const dashboardUrl = globalRole === "owner" ? "/owner/dashboard" : "/dashboard";
 
     return (
         <div className="min-h-screen bg-white flex font-sans overflow-hidden">
@@ -236,9 +228,9 @@ export default function StaffLoginPage() {
                             <CheckCircle2 size={22} className="text-white" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Active Check-ins</p>
+                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Check-in Aktif</p>
                             <p className="text-2xl font-black text-white leading-none mt-1">
-                                48 <span className="text-sm font-bold ml-1 opacity-80">Members</span>
+                                48 <span className="text-sm font-bold ml-1 opacity-80">Anggota</span>
                             </p>
                         </div>
                     </motion.div>
@@ -253,8 +245,8 @@ export default function StaffLoginPage() {
                             <Dumbbell size={20} />
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Classes Today</p>
-                            <p className="text-2xl font-black text-white leading-none mt-1">12 <span className="text-sm font-bold ml-1 opacity-80">Sessions</span></p>
+                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Kelas Hari Ini</p>
+                            <p className="text-2xl font-black text-white leading-none mt-1">12 <span className="text-sm font-bold ml-1 opacity-80">Sesi</span></p>
                         </div>
                     </motion.div>
                 </div>
@@ -269,7 +261,7 @@ export default function StaffLoginPage() {
                         Sistem terpusat untuk memantau kehadiran, jadwal kelas, dan operasional harian fasilitas {tenantName}.
                     </p>
                     <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-6">
-                        Powered by Fitnice OS
+                        Powered by GYMFIT OS
                     </p>
                 </div>
             </div>
@@ -302,13 +294,33 @@ export default function StaffLoginPage() {
                     <div className="mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6">
                             <Activity className="w-3 h-3" style={{ color: primaryColor }} />
-                            Staff Portal
+                            Portal Staf
                         </div>
-                        <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Welcome Back</h2>
+                        <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Selamat Datang Kembali</h2>
                         <p className="text-sm font-medium text-zinc-500">
                             Silakan masuk menggunakan kredensial staf Anda.
                         </p>
                     </div>
+
+                    {/* Banner Sesi Aktif — tampil jika sudah login */}
+                    {staff && (
+                        <div className="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <Users className="w-4 h-4 text-amber-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Sesi Aktif</p>
+                                <p className="text-sm font-semibold text-amber-900 truncate mt-0.5">{staff.name}</p>
+                                <p className="text-xs text-amber-600 truncate">{staff.email}</p>
+                                <button
+                                    onClick={() => router.push(dashboardUrl)}
+                                    className="mt-2 text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 transition-colors"
+                                >
+                                    Kembali ke Dashboard →
+                                </button>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Mengoper primaryColor ke form komponen */}
                     <LoginForm primaryColor={primaryColor} />

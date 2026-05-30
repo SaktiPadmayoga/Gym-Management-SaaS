@@ -86,21 +86,28 @@ class Staff extends Authenticatable
 
     public function getRoleInBranch(string $branchId): ?string
     {
-        return $this->staffBranches()
+        $staffBranch = $this->staffBranches()
             ->where('branch_id', $branchId)
             ->where('is_active', true)
-            ->value('role');
+            ->with('role')
+            ->first();
+
+        return $staffBranch?->role?->name;
     }
 
     public function getPermissionsInBranch(string $branchId): array
     {
         if ($this->isOwner()) return ['*'];
 
-        $role = $this->getRoleInBranch($branchId);
-        if (!$role) return [];
+        $staffBranch = $this->staffBranches()
+            ->where('branch_id', $branchId)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$staffBranch || !$staffBranch->role_id) return [];
 
         // Query granular permission names via the permissions master table
-        return Permission::whereHas('roles', fn($q) => $q->where('name', $role))
+        return Permission::whereHas('roles', fn($q) => $q->where('roles.id', $staffBranch->role_id))
             ->pluck('name')
             ->toArray();
     }

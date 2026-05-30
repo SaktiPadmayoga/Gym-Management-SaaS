@@ -9,6 +9,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6"];
 const toNumber = (v: unknown) => {
@@ -60,6 +61,7 @@ export default function PosReportPage() {
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
     const { data, isLoading, isError } = useBranchReport("pos", startDate, endDate);
     const report = data?.data;
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
 
     const handleFilterChange = useCallback((range: { start: string; end: string }) => {
         setStartDate(range.start);
@@ -100,6 +102,122 @@ export default function PosReportPage() {
         ], `Laporan_POS_Produk_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan POS & Produk",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("POS", startDate, endDate),
+                summary: [
+                    { label: "Pendapatan Produk", value: formatRp(toNumber(summary.total_revenue)) },
+                    { label: "Transaksi POS", value: String(summary.total_transactions ?? 0) },
+                    { label: "Produk Terjual", value: String(summary.units_sold ?? 0) },
+                    { label: "Rata-rata Order", value: formatRp(toNumber(summary.average_order_value)) },
+                    { label: "Profit Kotor", value: formatRp(toNumber(summary.gross_profit)) },
+                    { label: "Margin Kotor", value: `${summary.gross_margin ?? 0}%` },
+                    { label: "Stok Rendah", value: String(summary.low_stock_count ?? 0) },
+                    { label: "Stok Habis", value: String(summary.out_of_stock_count ?? 0) },
+                ],
+                tables: [
+                    {
+                        title: "Tren Penjualan Produk",
+                        columns: [
+                            { header: "Tanggal", key: "date" },
+                            { header: "Pendapatan", key: "revenue", align: "right" },
+                            { header: "Qty Terjual", key: "qty", align: "right" },
+                        ],
+                        rows: dailySales.map((i) => ({
+                            date: i.date,
+                            revenue: formatRp(toNumber(i.revenue)),
+                            qty: String(toNumber(i.qty)),
+                        })),
+                    },
+                    {
+                        title: "Penjualan per Kategori",
+                        columns: [
+                            { header: "Kategori", key: "name" },
+                            { header: "Pendapatan", key: "value", align: "right" },
+                        ],
+                        rows: salesByCategory.map((i) => ({
+                            name: i.name,
+                            value: formatRp(toNumber(i.value)),
+                        })),
+                    },
+                    {
+                        title: "Metode Pembayaran",
+                        columns: [
+                            { header: "Metode", key: "name" },
+                            { header: "Total", key: "value", align: "right" },
+                        ],
+                        rows: paymentMethods.map((i) => ({
+                            name: i.name,
+                            value: formatRp(toNumber(i.value)),
+                        })),
+                    },
+                    {
+                        title: "Top Produk",
+                        columns: [
+                            { header: "Produk", key: "item_name" },
+                            { header: "Kategori", key: "category" },
+                            { header: "Qty", key: "qty", align: "right" },
+                            { header: "Pendapatan", key: "revenue", align: "right" },
+                            { header: "Profit Kotor", key: "gross_profit", align: "right" },
+                        ],
+                        rows: topProducts.map((i) => ({
+                            item_name: i.item_name,
+                            category: i.category,
+                            qty: String(toNumber(i.qty)),
+                            revenue: formatRp(toNumber(i.revenue)),
+                            gross_profit: formatRp(toNumber(i.gross_profit)),
+                        })),
+                    },
+                    {
+                        title: "Produk Stok Rendah",
+                        columns: [
+                            { header: "Produk", key: "name" },
+                            { header: "Kode", key: "code" },
+                            { header: "Kategori", key: "category" },
+                            { header: "Stok", key: "stock", align: "right" },
+                            { header: "Minimum", key: "min_stock", align: "right" },
+                            { header: "Unit", key: "unit" },
+                        ],
+                        rows: lowStockProducts.map((i) => ({
+                            name: i.name,
+                            code: i.code || "-",
+                            category: i.category,
+                            stock: String(toNumber(i.stock)),
+                            min_stock: String(toNumber(i.min_stock)),
+                            unit: i.unit,
+                        })),
+                    },
+                    {
+                        title: "Transaksi POS Terbaru",
+                        columns: [
+                            { header: "Invoice", key: "invoice_number" },
+                            { header: "Pelanggan", key: "customer_name" },
+                            { header: "Metode", key: "payment_method" },
+                            { header: "Total", key: "total_amount", align: "right" },
+                            { header: "Waktu", key: "paid_at" },
+                        ],
+                        rows: recentTransactions.map((i) => ({
+                            invoice_number: i.invoice_number,
+                            customer_name: i.customer_name,
+                            payment_method: i.payment_method || "-",
+                            total_amount: formatRp(toNumber(i.total_amount)),
+                            paid_at: dayjs(i.paid_at).format("YYYY-MM-DD HH:mm"),
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan POS & Produk"
@@ -108,10 +226,12 @@ export default function PosReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-pos" className="space-y-6">
                     <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
                         <SummaryCard icon={<DollarSign size={22} />} label="Pendapatan Produk" value={formatRp(toNumber(summary.total_revenue))} tone="green" />
                         <SummaryCard icon={<Receipt size={22} />} label="Transaksi POS" value={summary.total_transactions ?? 0} tone="blue" />

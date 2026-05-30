@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 
 const MetricsSection = () => {
   const metrics = [
-    { icon: <Users className="w-6 h-6" />, value: "500+", label: "Gyms Powered", desc: "Active businesses on Fitnice" },
-    { icon: <TrendingUp className="w-6 h-6" />, value: "3x", label: "Revenue Growth", desc: "Average increase in year 1" },
-    { icon: <Award className="w-6 h-6" />, value: "98.7%", label: "SLA Uptime", desc: "Enterprise-grade reliability" },
-    { icon: <Globe className="w-6 h-6" />, value: "12", label: "Countries", desc: "Serving gyms across APAC" },
+    { icon: <Users className="w-6 h-6" />, value: "500+", label: "Gym Mitra", desc: "Bisnis aktif di GYMFIT" },
+    { icon: <TrendingUp className="w-6 h-6" />, value: "3x", label: "Pertumbuhan Omzet", desc: "Rata-rata kenaikan di tahun ke-1" },
+    { icon: <Award className="w-6 h-6" />, value: "98.7%", label: "SLA Uptime", desc: "Keandalan tingkat enterprise" },
+    { icon: <Globe className="w-6 h-6" />, value: "12", label: "Negara", desc: "Melayani gym di seluruh APAC" },
   ];
 
   return (

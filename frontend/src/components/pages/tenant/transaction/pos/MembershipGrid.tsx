@@ -34,7 +34,8 @@ export const MembershipGrid: React.FC<MembershipGridProps> = ({
             price: Number(p.price || 0),
             // Agar utility calcSubtotal tetap bisa membaca harga
             sellingPrice: Number(p.price || 0), 
-            durationDays: p.duration_days,
+            duration: p.duration,
+            durationUnit: p.duration_unit,
         }));
     }, [plansResponse]);
 
@@ -69,7 +70,15 @@ export const MembershipGrid: React.FC<MembershipGridProps> = ({
                     <div className="mb-4">
                         <h3 className="font-bold text-gray-900 text-lg mb-1">{plan.name}</h3>
                         <p className="text-xs font-medium text-purple-600 bg-purple-100 inline-block px-2 py-1 rounded">
-                            {plan.durationDays ? `${plan.durationDays} Hari` : 'Lifetime / Bebas'}
+                            {plan.duration && plan.durationUnit ? (
+                                `${plan.duration} ${
+                                    plan.durationUnit === "day" ? "Hari" :
+                                    plan.durationUnit === "week" ? "Minggu" :
+                                    plan.durationUnit === "month" ? "Bulan" :
+                                    plan.durationUnit === "year" ? "Tahun" :
+                                    plan.durationUnit
+                                }`
+                            ) : 'Lifetime / Bebas'}
                         </p>
                     </div>
 

@@ -98,11 +98,11 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             ->orderBy('started_at', 'desc');
     }
 
-    /** Subscription aktif */
+    /** Subscription aktif (termasuk trial) */
     public function activeSubscription()
     {
         return $this->hasOne(Subscription::class)
-            ->where('status', 'active')
+            ->whereIn('status', ['active', 'trial'])
             ->orderBy('started_at', 'desc');
     }
 }

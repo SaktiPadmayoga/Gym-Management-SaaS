@@ -46,6 +46,14 @@ export const rolesApi = {
     },
 
     /**
+     * Create a new dynamic permission group.
+     */
+    createPermission: async (payload: { group: string; label: string; description?: string }): Promise<any> => {
+        const response = await tenantApiClient.post("/permissions", payload);
+        return response.data;
+    },
+
+    /**
      * Update access level for a specific resource group on a role.
      * level: "none" | "view" | "manage"
      */

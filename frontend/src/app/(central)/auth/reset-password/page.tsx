@@ -1,3 +1,5 @@
+"use client";
+
 import { Suspense } from "react";
 import AdminResetForm from "@/components/pages/master/manage-tenant/auth/AdminResetForm";
 
@@ -8,3 +10,4 @@ export default function ResetPasswordPage() {
         </Suspense>
     );
 }
+

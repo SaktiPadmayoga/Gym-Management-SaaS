@@ -20,7 +20,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <p class="logo">Fitnice<span>.</span></p>
+            <p class="logo">GYMFIT<span>.</span></p>
         </div>
         <div class="content">
             <h1 class="h1">Reset Kata Sandi Akun Member</h1>
@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} Fitnice OS. Hak Cipta Dilindungi.
+            &copy; {{ date('Y') }} GYMFIT OS. Hak Cipta Dilindungi.
         </div>
     </div>
 </body>

@@ -88,7 +88,7 @@ export default function AdminResetForm() {
                             <Dumbbell className="w-5 h-5 text-teal-400" />
                         </div>
                         <span className="text-xl font-black text-slate-900 uppercase tracking-tighter">
-                            Fitnice<span className="text-teal-500">.</span>
+                            GYMFIT<span className="text-teal-500">.</span>
                         </span>
                     </div>
 

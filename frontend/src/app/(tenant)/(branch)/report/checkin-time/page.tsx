@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#F59E0B", "#EF4444"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -15,6 +16,7 @@ const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p;
 export default function CheckinTimeReportPage() {
     const [startDate, setStartDate] = useState(dayjs().subtract(7, "day").format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const { data, isLoading, isError } = useBranchReport("checkin-time", startDate, endDate);
     const report = data?.data;
 
@@ -64,6 +66,62 @@ export default function CheckinTimeReportPage() {
         ], `Laporan_Waktu_Checkin_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Waktu Check-in",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("CheckIn_Waktu", startDate, endDate),
+                summary: [
+                    { label: "Total Check-in", value: String(totalCheckins) },
+                    { label: "Jam Paling Ramai", value: String(peakHour) },
+                    { label: "Rata-rata di Jam Sibuk", value: String(peakCount) },
+                ],
+                tables: [
+                    {
+                        title: "Tren Check-in Harian",
+                        columns: [
+                            { header: "Tanggal", key: "date" },
+                            { header: "Total", key: "total", align: "right" as const },
+                        ],
+                        rows: dailyTrend.map((d: any) => ({
+                            date: d.date,
+                            total: String(d.total),
+                        })),
+                    },
+                    {
+                        title: "Distribusi Hari dalam Minggu",
+                        columns: [
+                            { header: "Hari", key: "name" },
+                            { header: "Total Check-in", key: "value", align: "right" as const },
+                        ],
+                        rows: dayOfWeekDistribution.map((d: any) => ({
+                            name: d.name,
+                            value: String(d.value),
+                        })),
+                    },
+                    {
+                        title: "Heatmap Jam Sibuk (Akumulasi)",
+                        columns: [
+                            { header: "Jam", key: "hour" },
+                            { header: "Total", key: "total", align: "right" as const },
+                        ],
+                        rows: hourlyDistribution.map((h: any) => ({
+                            hour: h.hour,
+                            total: String(h.total),
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan Waktu Check-in"
@@ -72,10 +130,12 @@ export default function CheckinTimeReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-checkin-time" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

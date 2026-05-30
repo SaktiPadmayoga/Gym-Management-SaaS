@@ -22,8 +22,9 @@ class TenantRegistrationService
                 $tenant = $this->provisionTenant($data, 'trial');
 
                 // 2. Catat subscription di tabel sentral
+                $subscriptionId = (string) Str::uuid();
                 DB::connection('central')->table('subscriptions')->insert([
-                    'id'                     => (string) Str::uuid(),
+                    'id'                     => $subscriptionId,
                     'tenant_id'              => $tenant->id,
                     'plan_id'                => $trialPlan->id,
                     'status'                 => 'trial',
@@ -32,10 +33,17 @@ class TenantRegistrationService
                     'max_branches'           => 1,
                     'auto_renew'             => false,
                     'started_at'             => now(),
+                    'trial_ends_at'          => now()->addDays(14),
                     'current_period_ends_at' => now()->addDays(14),
                     'created_at'             => now(),
                     'updated_at'             => now(),
                 ]);
+
+                // Sync tanggal trial ke tabel tenants
+                $subscription = \App\Models\Subscription::find($subscriptionId);
+                if ($subscription) {
+                    $subscription->syncToTenant();
+                }
 
                 DB::connection('central')->table('notifications')->insert([
                     'id'         => (string) Str::uuid(),

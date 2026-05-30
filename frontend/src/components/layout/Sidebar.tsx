@@ -3,6 +3,20 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+    Squares2X2Icon,
+    CalendarDaysIcon,
+    ClockIcon,
+    UserGroupIcon,
+    UsersIcon,
+} from "@heroicons/react/24/outline";
+import {
+    Squares2X2Icon as Squares2X2IconSolid,
+    CalendarDaysIcon as CalendarDaysIconSolid,
+    ClockIcon as ClockIconSolid,
+    UserGroupIcon as UserGroupIconSolid,
+    UsersIcon as UsersIconSolid,
+} from "@heroicons/react/24/solid";
 import { sidebarData, type SidebarItem } from "@/types/sidebar-menu";
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
 
@@ -57,12 +71,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
         return result;
     };
 
-    const visibleItems = getVisibleItems(sidebarData).map(item => {
-        if (item.id === "nav-dashboard" && selectedBranch?.role === 'trainer') {
-            return { ...item, path: "/dashboard/trainer" };
-        }
-        return item;
-    });
+    const isTrainer = selectedBranch?.role === 'trainer';
+
+    // Menu khusus trainer — bypass permission system
+    const trainerMenu: SidebarItem[] = [
+        { id: "header-trainer", title: "Trainer Menu", isHeader: true },
+        { id: "t-dashboard",  title: "Dashboard",       path: "/dashboard/trainer", Icon: Squares2X2Icon, IconSolid: Squares2X2IconSolid },
+        { id: "t-schedule",   title: "Jadwal Saya",     path: "/pt-sessions",       Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
+        { id: "t-requests",   title: "Request Sesi",    path: "/pt-sessions/requests", Icon: ClockIcon, IconSolid: ClockIconSolid },
+        { id: "t-members",    title: "Member Saya",     path: "/trainer/members",   Icon: UsersIcon, IconSolid: UsersIconSolid },
+    ];
+
+    const visibleItems = isTrainer
+        ? trainerMenu
+        : getVisibleItems(sidebarData).map(item => {
+            if (item.id === "nav-dashboard") return item;
+            return item;
+        });
 
     const findActiveItem = (items: SidebarItem[], currentPath: string): SidebarItem | null => {
         for (const item of items) {

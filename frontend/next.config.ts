@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
     /* config options here */
     output: "standalone",
+    outputFileTracingRoot: __dirname,
 
     // Skip ESLint during production builds (run lint separately)
     eslint: {

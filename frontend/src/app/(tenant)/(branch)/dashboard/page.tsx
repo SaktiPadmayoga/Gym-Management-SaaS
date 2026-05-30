@@ -23,6 +23,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import dayjs from "dayjs";
+import { useRouter } from "next/navigation";
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
+import { useEffect } from "react";
 
 // Helper format Rupiah
 const formatRupiah = (angka: number) => {
@@ -44,9 +47,17 @@ const statusColor: Record<string, string> = {
 };
 
 export default function DashboardBranch() {
+  const router = useRouter();
+  const { selectedBranch, isReady } = useStaffAuth();
   const { data, isLoading, isError } = useTenantDashboard();
 
-  if (isLoading) {
+  useEffect(() => {
+    if (isReady && selectedBranch?.role === "trainer") {
+      router.replace("/dashboard/trainer");
+    }
+  }, [isReady, selectedBranch, router]);
+
+  if (isLoading || (isReady && selectedBranch?.role === "trainer")) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-800"></div>

@@ -95,7 +95,7 @@ export default function MemberResetForm() {
                                     className="absolute right-3 top-[34px] text-zinc-400 hover:text-zinc-600 text-xs font-medium bg-transparent"
                                     tabIndex={-1}
                                 >
-                                    {showPassword ? "Hide" : "Show"}
+                                    {showPassword ? "Sembunyikan" : "Tampilkan"}
                                 </button>
                             </div>
 
@@ -112,7 +112,7 @@ export default function MemberResetForm() {
                                     className="absolute right-3 top-[34px] text-zinc-400 hover:text-zinc-600 text-xs font-medium bg-transparent"
                                     tabIndex={-1}
                                 >
-                                    {showConfirmPassword ? "Hide" : "Show"}
+                                    {showConfirmPassword ? "Sembunyikan" : "Tampilkan"}
                                 </button>
                             </div>
 

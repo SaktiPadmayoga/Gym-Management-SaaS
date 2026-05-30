@@ -94,8 +94,7 @@ const DashboardPreview = () => {
             </div>
             <div className="flex-1 flex justify-center">
               <div className="px-32 py-1.5 rounded-md bg-slate-50 border border-slate-100 text-[10px] font-bold text-slate-400 flex items-center gap-2">
-                <Lock size={10} className="text-teal-500" /> app.fitnice.io
-
+                <Lock size={10} className="text-teal-500" /> app.gymfit.io
               </div>
             </div>
             <div className="w-20" />

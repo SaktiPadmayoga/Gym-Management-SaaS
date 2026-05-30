@@ -17,7 +17,7 @@ class StaffBranch extends Model
     protected $fillable = [
         'staff_id',
         'branch_id',
-        'role',
+        'role_id',
         'is_active',
         'joined_at',
     ];
@@ -35,5 +35,10 @@ class StaffBranch extends Model
     public function branch()
     {
         return $this->belongsTo(Branch::class, 'branch_id');
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
     }
 }

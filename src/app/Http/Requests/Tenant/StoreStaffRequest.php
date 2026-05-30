@@ -24,7 +24,7 @@ class StoreStaffRequest extends FormRequest
 
             // Branch assignment saat create (opsional)
             'branch_id'    => ['nullable', 'uuid', 'exists:branches,id'],
-            'branch_role'  => ['required_with:branch_id', 'in:branch_manager,trainer,receptionist,cashier'],
+            'branch_role'  => ['required_with:branch_id', 'string', 'exists:roles,name'],
         ];
     }
 }

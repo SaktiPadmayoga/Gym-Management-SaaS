@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -33,6 +34,7 @@ export default function MemberAnalyticsPage() {
     const statusDistribution = (report?.charts?.status_distribution || []).map((i: any) => ({ ...i, value: toNumber(i.value) }));
     const newMembersList = report?.tables?.new_members || [];
 
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [page, setPage] = useState(1);
     const perPage = 5;
     const totalPages = Math.ceil(newMembersList.length / perPage);
@@ -74,6 +76,69 @@ export default function MemberAnalyticsPage() {
         ], `Laporan_Analitik_Member_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Analitik Member",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("Member", startDate, endDate),
+                summary: [
+                    { label: "Member Baru", value: String(newMembers) },
+                    { label: "Churn", value: String(churnedMembers) },
+                    { label: "Net Growth", value: netGrowth > 0 ? `+${netGrowth}` : String(netGrowth) },
+                    { label: "Churn Rate", value: `${churnRate}%` },
+                ],
+                tables: [
+                    {
+                        title: "Tren Pendaftaran",
+                        columns: [
+                            { header: "Tanggal", key: "date" },
+                            { header: "Pendaftar", key: "total", align: "right" as const },
+                        ],
+                        rows: registrationTrend.map((t: any) => ({
+                            date: t.date,
+                            total: String(t.total),
+                        })),
+                    },
+                    {
+                        title: "Distribusi Status Member",
+                        columns: [
+                            { header: "Status", key: "name" },
+                            { header: "Jumlah", key: "value", align: "right" as const },
+                        ],
+                        rows: statusDistribution.map((s: any) => ({
+                            name: s.name,
+                            value: String(s.value),
+                        })),
+                    },
+                    {
+                        title: "Daftar Member Baru",
+                        columns: [
+                            { header: "Nama", key: "name" },
+                            { header: "Email", key: "email" },
+                            { header: "Telepon", key: "phone" },
+                            { header: "Status", key: "status" },
+                            { header: "Bergabung", key: "created_at", align: "right" as const },
+                        ],
+                        rows: newMembersList.map((m: any) => ({
+                            name: m.name,
+                            email: m.email ?? "-",
+                            phone: m.phone ?? "-",
+                            status: m.status,
+                            created_at: m.created_at,
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Analitik Member"
@@ -82,10 +147,12 @@ export default function MemberAnalyticsPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-member-analytics" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

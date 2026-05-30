@@ -4,10 +4,10 @@ import { Dumbbell } from "lucide-react";
 import { motion } from "framer-motion";
 
 const footerSections = [
-  { title: "Platform", links: ["Features", "Pricing", "Integrations", "Changelog", "Mobile App"] },
-  { title: "Company", links: ["About Fitnice", "Blog", "Careers", "Press", "Contact"] },
-  { title: "Resources", links: ["Documentation", "Help Center", "API Reference", "Community", "System Status"] },
-  { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Security", "GDPR"] },
+  { title: "Platform", links: ["Fitur", "Harga", "Integrasi", "Changelog", "Aplikasi Mobile"] },
+  { title: "Perusahaan", links: ["Tentang GYMFIT", "Blog", "Karir", "Pers", "Hubungi Kami"] },
+  { title: "Sumber Daya", links: ["Dokumentasi", "Pusat Bantuan", "Referensi API", "Komunitas", "Status Sistem"] },
+  { title: "Hukum", links: ["Kebijakan Privasi", "Syarat & Ketentuan", "Keamanan", "GDPR"] },
 ];
 
 const Footer = () => {
@@ -32,17 +32,17 @@ const Footer = () => {
                   <Dumbbell className="w-5 h-5 text-teal-400" />
                 </div>
                 <span className="text-2xl font-black text-white tracking-tighter uppercase">
-                  Fitnice<span className="text-teal-500">.</span>
+                  GYMFIT<span className="text-teal-500">.</span>
                 </span>
               </a>
               <p className="text-xs font-bold leading-relaxed text-slate-500 uppercase tracking-wide max-w-xs mb-8">
-                The modern operating system for fitness businesses. Manage, grow, and scale with absolute confidence.
+                Sistem operasi modern untuk bisnis kebugaran. Kelola, kembangkan, dan tingkatkan skala dengan percaya diri.
               </p>
             </div>
             
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-slate-800 rounded-lg w-max">
               <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">All Systems Operational</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Semua Sistem Berjalan Normal</span>
             </div>
           </div>
 
@@ -71,17 +71,17 @@ const Footer = () => {
         {/* --- BIG LOGO WATERMARK --- */}
         <div className="w-full flex justify-center items-center border-t border-slate-900 py-12 md:py-16">
            <h1 className="text-[15vw] md:text-[10rem] font-black uppercase tracking-tighter text-slate-900 leading-none select-none">
-             FITNICE.
+             GYMFIT.
            </h1>
         </div>
 
         {/* --- BOTTOM LEGAL --- */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-            &copy; 2026 Fitnice OS. All rights reserved.
+            &copy; 2026 GYMFIT OS. Hak Cipta Dilindungi.
           </p>
           <div className="flex items-center gap-6 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
-            <span>Powered by Innovation</span>
+            <span>Didorong oleh Inovasi</span>
             <span className="w-1 h-1 rounded-full bg-slate-700" />
             <span>Bali, ID</span>
           </div>

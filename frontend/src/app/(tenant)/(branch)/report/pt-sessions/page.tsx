@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#10B981", "#EF4444", "#F59E0B", "#3B82F6"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -16,6 +17,7 @@ export default function PtSessionsReportPage() {
     const [startDate, setStartDate] = useState(dayjs().subtract(30, "day").format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
     const { data, isLoading, isError } = useBranchReport("pt-sessions", startDate, endDate);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const report = data?.data;
 
     const handleFilterChange = useCallback((range: { start: string; end: string }) => {
@@ -61,6 +63,58 @@ export default function PtSessionsReportPage() {
         ], `Laporan_PT_Sessions_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Sesi PT",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("PT_Sessions", startDate, endDate),
+                summary: [
+                    { label: "Total Sesi", value: String(totalSessions) },
+                    { label: "Selesai", value: String(completedSessions) },
+                    { label: "Dibatalkan", value: String(cancelledSessions) },
+                    { label: "Penyelesaian", value: `${completionRate}%` },
+                ],
+                tables: [
+                    {
+                        title: "Status Sesi PT",
+                        columns: [
+                            { header: "Status", key: "name" },
+                            { header: "Jumlah", key: "value", align: "right" as const },
+                        ],
+                        rows: statusDistribution.map((s: any) => ({
+                            name: s.name,
+                            value: String(s.value),
+                        })),
+                    },
+                    {
+                        title: "Beban Kerja Pelatih (Trainer Utilization)",
+                        columns: [
+                            { header: "Nama Pelatih", key: "name" },
+                            { header: "Total Sesi", key: "total_sessions", align: "right" as const },
+                            { header: "Sesi Selesai", key: "completed", align: "right" as const },
+                            { header: "Persentase Selesai", key: "completion_rate", align: "right" as const },
+                        ],
+                        rows: trainerUtilization.map((t: any) => ({
+                            name: t.name,
+                            total_sessions: String(t.total_sessions),
+                            completed: String(t.completed),
+                            completion_rate: t.total_sessions > 0
+                                ? `${((t.completed / t.total_sessions) * 100).toFixed(1)}%`
+                                : "0%",
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan Sesi PT"
@@ -69,10 +123,12 @@ export default function PtSessionsReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-pt-sessions" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

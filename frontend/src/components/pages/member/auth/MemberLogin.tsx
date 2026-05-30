@@ -40,22 +40,22 @@ function LoginForm() {
                 <TextInput name="email" label="Email" placeholder="member@email.com" type="email" />
 
                 <div className="relative">
-                    <TextInput name="password" label="Password" placeholder="Enter your password" type={showPassword ? "text" : "password"} />
+                    <TextInput name="password" label="Kata Sandi" placeholder="Masukkan kata sandi Anda" type={showPassword ? "text" : "password"} />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-[34px] text-zinc-400 hover:text-zinc-600 text-xs">
-                        {showPassword ? "Hide" : "Show"}
+                        {showPassword ? "Sembunyikan" : "Tampilkan"}
                     </button>
                     <div className="text-right mt-1">
-                        <a href="/member/forgot-password" className="text-xs text-blue-600 hover:text-blue-700 font-medium">Forgot password?</a>
+                        <a href="/member/forgot-password" className="text-xs text-blue-600 hover:text-blue-700 font-medium">Lupa kata sandi?</a>
                     </div>
                 </div>
 
                 <CustomButton type="submit" disabled={isLoading} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 disabled:opacity-50 transition-colors">
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Memproses..." : "Masuk"}
                 </CustomButton>
 
                 <div className="flex items-center gap-3">
                     <hr className="flex-1 border-zinc-200" />
-                    <span className="text-xs text-zinc-400">or</span>
+                    <span className="text-xs text-zinc-400">atau</span>
                     <hr className="flex-1 border-zinc-200" />
                 </div>
 
@@ -66,7 +66,7 @@ function LoginForm() {
                         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
-                    Continue with Google
+                    Lanjutkan dengan Google
                 </button>
             </form>
         </FormProvider>
@@ -104,15 +104,15 @@ export default function MemberLogin() {
                     <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mx-auto mb-4">
                         <span className="text-white font-bold text-xl">M</span>
                     </div>
-                    <h1 className="text-2xl font-semibold text-zinc-800">Member Portal</h1>
-                    <p className="text-zinc-500 text-sm mt-1">Sign in to access your membership</p>
+                    <h1 className="text-2xl font-semibold text-zinc-800">Portal Member</h1>
+                    <p className="text-zinc-500 text-sm mt-1">Masuk untuk mengakses keanggotaan Anda</p>
                 </div>
 
                 <div className="bg-white rounded-2xl border border-gray-200 px-8 py-8 shadow-sm">
                     <LoginForm />
                 </div>
 
-                <p className="text-center text-xs text-zinc-400 mt-6">Welcome to your fitness journey</p>
+                <p className="text-center text-xs text-zinc-400 mt-6">Selamat memulai perjalanan kebugaran Anda</p>
             </div>
         </div>
     );

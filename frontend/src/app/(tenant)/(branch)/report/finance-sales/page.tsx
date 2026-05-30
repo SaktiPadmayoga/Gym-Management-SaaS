@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#3B82F6", "#8B5CF6", "#F59E0B", "#10B981", "#EF4444"];
 const toNumber = (v: unknown) => { const p = parseFloat(String(v ?? 0)); return isNaN(p) ? 0 : p; };
@@ -44,6 +45,7 @@ interface RecentTransaction {
 export default function FinanceSalesReportPage() {
     const [startDate, setStartDate] = useState(dayjs().subtract(7, "day").format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const { data, isLoading, isError } = useBranchReport("finance-sales", startDate, endDate);
     const report = data?.data;
 
@@ -112,6 +114,78 @@ export default function FinanceSalesReportPage() {
         ], `Laporan_Keuangan_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Keuangan & Penjualan",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("Keuangan", startDate, endDate),
+                summary: [
+                    { label: "Total Pendapatan", value: formatRp(toNumber(totalRevenue)) },
+                    { label: "Transaksi Berhasil", value: totalTransactions },
+                    { label: "Menunggu Bayar (Qty)", value: pendingCount },
+                    { label: "Menunggu Bayar (Rp)", value: formatRp(toNumber(pendingRevenue)) },
+                ],
+                tables: [
+                    {
+                        title: "Tren Pendapatan Harian",
+                        columns: [
+                            { header: "Tanggal", key: "date" },
+                            { header: "Pendapatan", key: "revenue", align: "right" },
+                        ],
+                        rows: revenueTrend.map(t => ({ date: t.date, revenue: formatRp(toNumber(t.revenue)) })),
+                    },
+                    {
+                        title: "Metode Pembayaran",
+                        columns: [
+                            { header: "Metode", key: "name" },
+                            { header: "Pendapatan", key: "value", align: "right" },
+                        ],
+                        rows: revenueByMethod.map(m => ({ name: m.name, value: formatRp(toNumber(m.value)) })),
+                    },
+                    {
+                        title: "Item Paling Laris (Top Sales)",
+                        columns: [
+                            { header: "Item", key: "item" },
+                            { header: "Tipe", key: "tipe" },
+                            { header: "Terjual", key: "qty", align: "right" },
+                            { header: "Pendapatan", key: "revenue", align: "right" },
+                        ],
+                        rows: topItems.map(i => ({
+                            item: i.item_name,
+                            tipe: i.item_type_label || i.item_type,
+                            qty: `${i.qty}x`,
+                            revenue: formatRp(toNumber(i.revenue)),
+                        })),
+                    },
+                    {
+                        title: "Transaksi Terbaru",
+                        columns: [
+                            { header: "Invoice", key: "invoice" },
+                            { header: "Member", key: "member" },
+                            { header: "Metode", key: "metode" },
+                            { header: "Waktu", key: "waktu", align: "right" },
+                            { header: "Total", key: "total", align: "right" },
+                        ],
+                        rows: recentTransactions.map(tx => ({
+                            invoice: tx.invoice_number,
+                            member: tx.member_name,
+                            metode: tx.payment_method || "-",
+                            waktu: dayjs(tx.paid_at).format("DD/MM/YY HH:mm"),
+                            total: formatRp(toNumber(tx.total_amount)),
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan Keuangan & Penjualan"
@@ -120,10 +194,12 @@ export default function FinanceSalesReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-finance-sales" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

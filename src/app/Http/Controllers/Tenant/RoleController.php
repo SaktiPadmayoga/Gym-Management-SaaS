@@ -295,9 +295,12 @@ class RoleController extends Controller
             $groupLabels = Permission::groupLabels();
 
             $grouped = $permissions->groupBy('group')->map(function ($perms, $group) use ($groupLabels) {
+                $viewPerm = $perms->firstWhere('action', 'view');
+                $dynamicLabel = $viewPerm ? str_replace('Lihat ', '', $viewPerm->display_name) : ucfirst($group);
+
                 return [
                     'group'       => $group,
-                    'label'       => $groupLabels[$group] ?? ucfirst($group),
+                    'label'       => $groupLabels[$group] ?? $dynamicLabel,
                     'permissions' => $perms->map(fn($p) => [
                         'id'           => $p->id,
                         'name'         => $p->name,
@@ -310,6 +313,77 @@ class RoleController extends Controller
             return ApiResponse::success($grouped, 'Permissions berhasil dimuat');
         } catch (\Exception $e) {
             return ApiResponse::error('Gagal memuat permissions: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * POST /permissions
+     * Create a new custom permission group (module) dynamically.
+     */
+    public function storePermission(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'group'       => ['required', 'string', 'regex:/^[a-z0-9_]+$/'],
+            'label'       => ['required', 'string'],
+            'description' => ['nullable', 'string'],
+        ], [
+            'group.regex' => 'Kode modul harus berupa huruf kecil, angka, atau underscore saja (slug).'
+        ]);
+
+        if ($validator->fails()) {
+            return ApiResponse::error('Validasi gagal', $validator->errors(), 422);
+        }
+
+        $group = $request->group;
+        $label = $request->label;
+        $description = $request->description;
+
+        // Check if group already exists
+        $exists = Permission::where('group', $group)->exists();
+        if ($exists) {
+            return ApiResponse::error("Kode modul '{$group}' sudah digunakan", null, 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Calculate next sort order
+            $maxSort = Permission::max('sort_order') ?? 0;
+            $nextSort = $maxSort + 1;
+
+            // 1. Create view permission
+            $viewId = (string) Str::uuid();
+            Permission::create([
+                'id'           => $viewId,
+                'group'        => $group,
+                'name'         => "{$group}.view",
+                'display_name' => "Lihat {$label}",
+                'action'       => 'view',
+                'description'  => $description ? "Izin melihat {$description}" : "Izin melihat modul {$label}",
+                'sort_order'   => $nextSort,
+            ]);
+
+            // 2. Create manage permission
+            $manageId = (string) Str::uuid();
+            Permission::create([
+                'id'           => $manageId,
+                'group'        => $group,
+                'name'         => "{$group}.manage",
+                'display_name' => "Kelola {$label}",
+                'action'       => 'manage',
+                'description'  => $description ? "Izin mengelola {$description}" : "Izin mengelola modul {$label}",
+                'sort_order'   => $nextSort + 1,
+            ]);
+
+            DB::commit();
+
+            return ApiResponse::success([
+                'group' => $group,
+                'label' => $label,
+            ], 'Modul izin akses baru berhasil dibuat', 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ApiResponse::error('Gagal membuat modul izin akses: ' . $e->getMessage(), null, 500);
         }
     }
 }

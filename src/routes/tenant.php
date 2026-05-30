@@ -131,6 +131,7 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
 
     // Master permission list (any authenticated staff can read)
     Route::get('/permissions', [RoleController::class, 'availablePermissions']);
+    Route::post('/permissions', [RoleController::class, 'storePermission'])->middleware('permission:settings');
 
     Route::middleware('permission:settings')->prefix('roles')->group(function () {
         Route::get('/', [RoleController::class, 'index']);
@@ -262,6 +263,8 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
     Route::post('/pt-sessions',         [PtSessionController::class, 'store']);
     Route::get('/pt-sessions/{id}',     [PtSessionController::class, 'show']);
     Route::put('/pt-sessions/{id}',     [PtSessionController::class, 'update']);
+    Route::patch('/pt-sessions/{id}/mark-complete', [PtSessionController::class, 'markComplete']);
+    Route::patch('/pt-sessions/{id}/notes',         [PtSessionController::class, 'updateNotes']);
     Route::patch('/pt-sessions/{id}/cancel', [PtSessionController::class, 'cancel']);
     Route::get('/pt-packages',          [PtPackageController::class, 'index']);
     Route::get('/pt-packages/{id}',     [PtPackageController::class, 'show']);

@@ -71,4 +71,16 @@ export const ptSessionsAPI = {
         });
         return response.data.data;
     },
+
+    // Tandai sesi selesai + simpan catatan progress
+    markComplete: async (id: string, notes?: string): Promise<PtSessionData> => {
+        const response = await tenantApiClient.patch(`/pt-sessions/${id}/mark-complete`, { notes });
+        return response.data.data;
+    },
+
+    // Update catatan/progress saja (tanpa ubah status)
+    updateNotes: async (id: string, notes: string): Promise<PtSessionData> => {
+        const response = await tenantApiClient.patch(`/pt-sessions/${id}/notes`, { notes });
+        return response.data.data;
+    },
 };

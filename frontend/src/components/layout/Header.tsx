@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({ pathname }) => {
                 
                 {/* --- KIRI: Konteks & Breadcrumbs --- */}
                 <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-extrabold font-outfit text-zinc-900 tracking-tigh uppercase">FITNICE.</h1>
+                    <h1 className="text-2xl font-extrabold font-outfit text-zinc-900 tracking-tigh uppercase">GYMFIT.</h1>
                 </div>
 
                 {/* --- KANAN: Actions & User Profile --- */}

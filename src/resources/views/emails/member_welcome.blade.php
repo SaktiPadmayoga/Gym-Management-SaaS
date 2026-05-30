@@ -44,7 +44,7 @@
         </div>
         
         <div class="footer">
-            <p>&copy; {{ date('Y') }} Fitnice. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} GYMFIT. Hak Cipta Dilindungi.</p>
         </div>
     </div>
 </body>

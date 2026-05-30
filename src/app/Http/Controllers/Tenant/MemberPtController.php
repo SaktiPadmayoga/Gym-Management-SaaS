@@ -155,8 +155,8 @@ class MemberPtController extends Controller
         $query = \App\Models\Tenant\Staff::where('is_active', true)
             ->where(function($q) use ($branchId) {
                 $q->where('role', 'trainer')
-                  ->orWhereHas('branches', function($qb) use ($branchId) {
-                      $qb->where('role', 'trainer');
+                  ->orWhereHas('staffBranches', function($qb) use ($branchId) {
+                      $qb->whereHas('role', fn($r) => $r->where('name', 'trainer'));
                       if ($branchId) {
                           $qb->where('branch_id', $branchId);
                       }

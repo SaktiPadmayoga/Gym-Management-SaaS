@@ -58,7 +58,7 @@ export default function CentralDashboardPage() {
       {/* HEADER */}
       <div>
         <h1 className="text-2xl font-bold text-zinc-900">Platform Overview</h1>
-        <p className="text-sm text-zinc-500">Pantau performa dan metrik utama SaaS Fitnice.</p>
+        <p className="text-sm text-zinc-500">Pantau performa dan metrik utama SaaS GYMFIT.</p>
       </div>
 
       {/* SUMMARY CARDS */}
@@ -162,7 +162,7 @@ export default function CentralDashboardPage() {
                   <tr key={tenant.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="py-3 px-2">
                       <p className="text-sm font-semibold text-zinc-800">{tenant.name}</p>
-                      <p className="text-xs text-zinc-500">{tenant.slug}.fitnice.id</p>
+                      <p className="text-xs text-zinc-500">{tenant.slug}.gymfit.id</p>
                     </td>
                     <td className="py-3 px-2 text-sm text-zinc-700">{tenant.owner_name}</td>
                     <td className="py-3 px-2">

@@ -162,7 +162,7 @@ export default function Reports() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">Analitik Platform</h1>
-          <p className="text-sm text-zinc-500">Laporan mendalam mengenai performa SaaS Fitnice.</p>
+          <p className="text-sm text-zinc-500">Laporan mendalam mengenai performa SaaS GYMFIT.</p>
         </div>
         <button
           onClick={handleExport}

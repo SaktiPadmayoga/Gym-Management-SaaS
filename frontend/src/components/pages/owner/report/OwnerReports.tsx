@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { DollarSign, Users, CreditCard, Download, Loader2, Building2, ChevronDown } from "lucide-react";
+import { DollarSign, Users, CreditCard, Sheet, FileText, Loader2, Building2, ChevronDown } from "lucide-react";
 import { useOwnerReports } from "@/hooks/tenant/useOwnerReports";
 import { useOwnerBranches } from "@/hooks/tenant/useOwnerBranches";
 
@@ -13,6 +13,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import dayjs from "dayjs";
 import tenantApiClient from "@/lib/tenant-api-client";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const DEFAULT_START = dayjs().subtract(7, "day").format("YYYY-MM-DD");
 const DEFAULT_END = dayjs().format("YYYY-MM-DD");
@@ -22,6 +23,7 @@ export default function OwnerReports() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const [startDate, setStartDate] = useState<string>(DEFAULT_START);
   const [endDate, setEndDate] = useState<string>(DEFAULT_END);
@@ -70,23 +72,32 @@ export default function OwnerReports() {
     try {
       setIsExporting(true);
       const branchSuffix = selectedBranch !== "all" ? `_${selectedBranchName}` : "";
+      const toNum = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
+      const fmtRp = (v: any) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(toNum(v));
 
       if (currentTab === "finance") {
+        const totalRev = toNum(summary?.total_revenue);
+        const totalTx = toNum(summary?.total_transactions);
+        const aov = totalTx > 0 ? totalRev / totalTx : 0;
+        const revTrend = charts?.revenue_trend || [];
+        const bestDay = revTrend.length > 0
+          ? revTrend.reduce((a: any, b: any) => toNum(a.revenue) > toNum(b.revenue) ? a : b)
+          : null;
+
         const summaryData = [{
-          "Total Pendapatan": summary?.total_revenue || 0,
-          "Total Transaksi": summary?.total_transactions || 0,
+          "Total Pendapatan": totalRev,
+          "Total Transaksi": totalTx,
+          "Rata-rata per Transaksi (AOV)": aov,
+          "Hari Terbaik": bestDay ? `${bestDay.date} (${fmtRp(bestDay.revenue)})` : "-",
         }];
-        const trendData = (charts?.revenue_trend || []).map((t: any) => ({
-          "Tanggal": t.date,
-          "Pendapatan": t.revenue
+        const trendData = revTrend.map((t: any) => ({
+          "Tanggal": t.date, "Pendapatan": t.revenue
         }));
         const methodData = (charts?.revenue_by_method || []).map((m: any) => ({
-          "Metode": m.name,
-          "Pendapatan": m.value
+          "Metode": m.name, "Pendapatan": m.value
         }));
         const branchData = (charts?.top_branches || []).map((t: any) => ({
-          "Cabang": t.name,
-          "Pendapatan": t.revenue
+          "Cabang": t.name, "Pendapatan": t.revenue
         }));
         const txData = (tables?.recent_transactions || []).map((tx: any) => ({
           "Invoice": tx.invoice_number,
@@ -102,37 +113,33 @@ export default function OwnerReports() {
           { sheetName: "Tren Pendapatan", data: trendData },
           { sheetName: "Metode Pembayaran", data: methodData },
         ];
-        if (branchData.length > 0) {
-          sheets.push({ sheetName: "Top Cabang", data: branchData });
-        }
+        if (branchData.length > 0) sheets.push({ sheetName: "Top Cabang", data: branchData });
         sheets.push({ sheetName: "Transaksi", data: txData });
-
         exportToExcel(sheets, `Owner_Finance_Report${branchSuffix}_${startDate}_${endDate}`);
+
       } else if (currentTab === "member") {
+        const newM = toNum(summary?.new_members);
+        const churn = toNum(summary?.churned_members);
+        const churnRate = newM > 0 ? ((churn / newM) * 100).toFixed(1) : "0";
+
         const summaryData = [{
-          "Member Baru": summary?.new_members || 0,
-          "Churn": summary?.churned_members || 0,
-          "Net Growth": summary?.net_growth || 0
+          "Member Baru": newM,
+          "Churn": churn,
+          "Net Growth": summary?.net_growth || 0,
+          "Churn Rate (%)": churnRate + "%",
         }];
         const trendData = (charts?.registration_trend || []).map((t: any) => ({
-          "Tanggal": t.date,
-          "Total": t.total
+          "Tanggal": t.date, "Total": t.total
         }));
         const planData = (charts?.plan_distribution || []).map((p: any) => ({
-          "Paket": p.name,
-          "Jumlah": p.value
+          "Paket": p.name, "Jumlah": p.value
         }));
         const branchDistData = (charts?.branch_distribution || []).map((b: any) => ({
-          "Cabang": b.name,
-          "Jumlah Member": b.value
+          "Cabang": b.name, "Jumlah Member": b.value
         }));
         const newMembersData = (tables?.new_members || []).map((m: any) => ({
-          "Nama": m.name,
-          "Email": m.email || "-",
-          "Telepon": m.phone || "-",
-          "Cabang": m.branch_name,
-          "Status": m.status || "-",
-          "Bergabung": m.created_at || "-"
+          "Nama": m.name, "Email": m.email || "-", "Telepon": m.phone || "-",
+          "Cabang": m.branch_name, "Status": m.status || "-", "Bergabung": m.created_at || "-"
         }));
 
         const sheets: any[] = [
@@ -140,12 +147,10 @@ export default function OwnerReports() {
           { sheetName: "Tren Pendaftaran", data: trendData },
           { sheetName: "Distribusi Paket", data: planData },
         ];
-        if (branchDistData.length > 0) {
-          sheets.push({ sheetName: "Distribusi Cabang", data: branchDistData });
-        }
+        if (branchDistData.length > 0) sheets.push({ sheetName: "Distribusi Cabang", data: branchDistData });
         sheets.push({ sheetName: "Member Baru", data: newMembersData });
-
         exportToExcel(sheets, `Owner_Member_Report${branchSuffix}_${startDate}_${endDate}`);
+
       } else if (currentTab === "membership") {
         const summaryData = [{
           "Membership Aktif": summary?.active_count || 0,
@@ -153,21 +158,15 @@ export default function OwnerReports() {
           "Frozen": summary?.frozen_count || 0
         }];
         const planData = (charts?.plan_distribution || []).map((p: any) => ({
-          "Paket": p.name,
-          "Jumlah": p.value
+          "Paket": p.name, "Jumlah": p.value
         }));
         const expiringData = (tables?.expiring_soon || []).map((s: any) => ({
-          "Member": s.member_name,
-          "Paket": s.plan_name,
-          "Cabang": s.branch_name,
-          "Berakhir": s.ends_at,
-          "Sisa Hari": s.days_left
+          "Member": s.member_name, "Paket": s.plan_name, "Cabang": s.branch_name,
+          "Berakhir": s.ends_at, "Sisa Hari": s.days_left
         }));
         const frozenData = (tables?.frozen_list || []).map((s: any) => ({
-          "Member": s.member_name,
-          "Paket": s.plan_name,
-          "Frozen Sejak": s.frozen_at,
-          "Frozen Sampai": s.frozen_until
+          "Member": s.member_name, "Paket": s.plan_name,
+          "Frozen Sejak": s.frozen_at, "Frozen Sampai": s.frozen_until
         }));
         exportToExcel([
           { sheetName: "Ringkasan", data: summaryData },
@@ -181,6 +180,179 @@ export default function OwnerReports() {
       alert("Terjadi kesalahan saat mengekspor laporan.");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Mapping nama tab → judul PDF
+  const tabTitleMap: Record<string, string> = {
+    finance: "Laporan Keuangan",
+    member: "Laporan Pertumbuhan Member",
+    membership: "Laporan Aktivitas Membership",
+  };
+
+  const handleExportPdf = async () => {
+    if (!data?.data) return;
+    setIsExportingPdf(true);
+    try {
+      const { summary, charts, tables } = data.data;
+      const toNum = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
+      const fmtRp = (v: any) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(toNum(v));
+      const subtitleText = `Periode: ${startDate} s.d ${endDate}${selectedBranch !== "all" ? ` \u2022 ${selectedBranchName}` : " \u2022 Semua Cabang"}`;
+      const pdfFilename = buildPdfFilename(
+        tabTitleMap[currentTab] || "Owner",
+        startDate, endDate,
+        selectedBranch !== "all" ? selectedBranchName : undefined
+      );
+
+      if (currentTab === "finance") {
+        const totalRev = toNum(summary?.total_revenue);
+        const totalTx = toNum(summary?.total_transactions);
+        const aov = totalTx > 0 ? totalRev / totalTx : 0;
+        const revTrend = charts?.revenue_trend || [];
+        const bestDay = revTrend.length > 0
+          ? revTrend.reduce((a: any, b: any) => toNum(a.revenue) > toNum(b.revenue) ? a : b)
+          : null;
+
+        await exportToPdf({
+          title: "Laporan Keuangan",
+          subtitle: subtitleText,
+          filename: pdfFilename,
+          summary: [
+            { label: "Total Pendapatan", value: fmtRp(totalRev) },
+            { label: "Total Transaksi", value: totalTx },
+            { label: "AOV", value: fmtRp(aov) },
+            { label: "Hari Terbaik", value: bestDay ? bestDay.date : "-" },
+          ],
+          tables: [
+            {
+              title: "Tren Pendapatan",
+              columns: [{ header: "Tanggal", key: "date" }, { header: "Pendapatan", key: "revenue", align: "right" }],
+              rows: revTrend.map((t: any) => ({ date: t.date, revenue: fmtRp(t.revenue) })),
+            },
+            {
+              title: "Metode Pembayaran",
+              columns: [{ header: "Metode", key: "name" }, { header: "Pendapatan", key: "value", align: "right" }],
+              rows: (charts?.revenue_by_method || []).map((m: any) => ({ name: m.name, value: fmtRp(m.value) })),
+            },
+            ...(selectedBranch === "all" && (charts?.top_branches || []).length > 0 ? [{
+              title: "Top Cabang",
+              columns: [{ header: "Cabang", key: "name" }, { header: "Pendapatan", key: "revenue", align: "right" as const }],
+              rows: (charts?.top_branches || []).map((b: any) => ({ name: b.name, revenue: fmtRp(b.revenue) })),
+            }] : []),
+            {
+              title: "Transaksi Terbaru",
+              columns: [
+                { header: "Invoice", key: "invoice" },
+                { header: "Member", key: "member" },
+                { header: "Cabang", key: "branch" },
+                { header: "Metode", key: "metode" },
+                { header: "Total", key: "total", align: "right" },
+              ],
+              rows: (tables?.recent_transactions || []).map((tx: any) => ({
+                invoice: tx.invoice_number, member: tx.member_name,
+                branch: tx.branch_name || "-", metode: tx.payment_method || "OTHER",
+                total: fmtRp(tx.total_amount),
+              })),
+            },
+          ],
+        });
+      } else if (currentTab === "member") {
+        const newM = toNum(summary?.new_members);
+        const churn = toNum(summary?.churned_members);
+        const churnRate = newM > 0 ? ((churn / newM) * 100).toFixed(1) : "0";
+
+        await exportToPdf({
+          title: "Laporan Pertumbuhan Member",
+          subtitle: subtitleText,
+          filename: pdfFilename,
+          summary: [
+            { label: "Member Baru", value: newM },
+            { label: "Churn", value: churn },
+            { label: "Net Growth", value: summary?.net_growth || 0 },
+            { label: "Churn Rate", value: churnRate + "%" },
+          ],
+          tables: [
+            {
+              title: "Tren Pendaftaran",
+              columns: [{ header: "Tanggal", key: "date" }, { header: "Total", key: "total", align: "right" }],
+              rows: (charts?.registration_trend || []).map((t: any) => ({ date: t.date, total: t.total })),
+            },
+            {
+              title: "Distribusi Paket",
+              columns: [{ header: "Paket", key: "name" }, { header: "Jumlah", key: "value", align: "right" }],
+              rows: (charts?.plan_distribution || []).map((p: any) => ({ name: p.name, value: p.value })),
+            },
+            ...(selectedBranch === "all" && (charts?.branch_distribution || []).length > 0 ? [{
+              title: "Distribusi Cabang",
+              columns: [{ header: "Cabang", key: "name" }, { header: "Jumlah", key: "value", align: "right" as const }],
+              rows: (charts?.branch_distribution || []).map((b: any) => ({ name: b.name, value: b.value })),
+            }] : []),
+            {
+              title: "Daftar Member Baru",
+              columns: [
+                { header: "Nama", key: "name" },
+                { header: "Email", key: "email" },
+                { header: "Telepon", key: "phone" },
+                { header: "Cabang", key: "branch" },
+                { header: "Status", key: "status" },
+              ],
+              rows: (tables?.new_members || []).map((m: any) => ({
+                name: m.name, email: m.email || "-", phone: m.phone || "-",
+                branch: m.branch_name, status: m.status || "-",
+              })),
+            },
+          ],
+        });
+      } else if (currentTab === "membership") {
+        await exportToPdf({
+          title: "Laporan Aktivitas Membership",
+          subtitle: subtitleText,
+          filename: pdfFilename,
+          summary: [
+            { label: "Aktif", value: summary?.active_count || 0 },
+            { label: "Expired", value: summary?.expired_count || 0 },
+            { label: "Frozen", value: summary?.frozen_count || 0 },
+          ],
+          tables: [
+            {
+              title: "Distribusi Paket",
+              columns: [{ header: "Paket", key: "name" }, { header: "Jumlah", key: "value", align: "right" }],
+              rows: (charts?.plan_distribution || []).map((p: any) => ({ name: p.name, value: p.value })),
+            },
+            {
+              title: "Akan Expired (7 Hari)",
+              columns: [
+                { header: "Member", key: "member" },
+                { header: "Paket", key: "plan" },
+                { header: "Cabang", key: "branch" },
+                { header: "Berakhir", key: "ends" },
+                { header: "Sisa Hari", key: "days", align: "right" },
+              ],
+              rows: (tables?.expiring_soon || []).map((s: any) => ({
+                member: s.member_name, plan: s.plan_name, branch: s.branch_name,
+                ends: s.ends_at, days: s.days_left,
+              })),
+            },
+            {
+              title: "Membership Frozen",
+              columns: [
+                { header: "Member", key: "member" },
+                { header: "Paket", key: "plan" },
+                { header: "Frozen Sejak", key: "from" },
+                { header: "Sampai", key: "until" },
+              ],
+              rows: (tables?.frozen_list || []).map((s: any) => ({
+                member: s.member_name, plan: s.plan_name,
+                from: s.frozen_at, until: s.frozen_until,
+              })),
+            },
+          ],
+        });
+      }
+    } catch (e) {
+      console.error("PDF export gagal:", e);
+    } finally {
+      setIsExportingPdf(false);
     }
   };
 
@@ -211,26 +383,27 @@ export default function OwnerReports() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Branch Selector */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setIsBranchDropdownOpen(!isBranchDropdownOpen)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all cursor-pointer ${
-                isFiltered
-                  ? "bg-aksen-secondary/10 border-aksen-secondary text-aksen-secondary"
-                  : "bg-white border-gray-200 text-zinc-600 hover:border-aksen-secondary/50"
-              }`}
-            >
-              <Building2 size={16} />
-              <span className="max-w-[160px] truncate">{selectedBranchName}</span>
-              <ChevronDown size={14} className={`transition-transform ${isBranchDropdownOpen ? "rotate-180" : ""}`} />
-            </button>
+          {/* Export Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Branch Selector */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsBranchDropdownOpen(!isBranchDropdownOpen)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border transition-all cursor-pointer ${
+                  isFiltered
+                    ? "bg-aksen-secondary/10 border-aksen-secondary text-aksen-secondary"
+                    : "bg-white border-gray-200 text-zinc-600 hover:border-aksen-secondary/50"
+                }`}
+              >
+                <Building2 size={16} />
+                <span className="max-w-[160px] truncate">{selectedBranchName}</span>
+                <ChevronDown size={14} className={`transition-transform ${isBranchDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
 
-            {isBranchDropdownOpen && (
+              {isBranchDropdownOpen && (
               <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-2">
-                  <p className="text-xs text-zinc-400 font-medium px-3 py-2 uppercase tracking-wider">Pilih Cabang</p>
+                    <p className="text-xs text-zinc-400 font-medium px-3 py-2 uppercase tracking-wider">Pilih Cabang</p>
 
                   {/* All Branches */}
                   <button
@@ -277,20 +450,26 @@ export default function OwnerReports() {
             )}
           </div>
 
-          {/* Export Button */}
-          <button
-            onClick={handleExport}
-            disabled={isExporting}
-            className="flex items-center gap-2 bg-aksen-secondary text-white px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {isExporting ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Download size={16} />
-            )}
-            {isExporting ? "Mengekspor..." : "Export Laporan"}
-          </button>
-        </div>
+            {/* Excel Export Button */}
+            <button
+              onClick={handleExport}
+              disabled={isExporting}
+              className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors rounded-lg text-sm font-medium border border-emerald-200 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isExporting ? <Loader2 size={15} className="animate-spin" /> : <Sheet size={15} />}
+              {isExporting ? "Mengekspor..." : "Excel"}
+            </button>
+
+            {/* PDF Export Button */}
+            <button
+              onClick={handleExportPdf}
+              disabled={isExportingPdf}
+              className="flex items-center gap-2 px-3 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors rounded-lg text-sm font-medium border border-rose-200 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {isExportingPdf ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />}
+              {isExportingPdf ? "Membuat PDF..." : "PDF"}
+            </button>
+          </div>
       </div>
 
       {/* Branch Filter Badge */}
@@ -347,7 +526,7 @@ export default function OwnerReports() {
             Gagal memuat laporan. Coba refresh halaman.
           </div>
         ) : (
-          <>
+          <div id="report-content-owner">
             {currentTab === "finance" && (
               <OwnerFinanceTab
                 data={data?.data}
@@ -359,7 +538,7 @@ export default function OwnerReports() {
             )}
             {currentTab === "member" && <OwnerMemberTab data={data?.data} isFiltered={isFiltered} />}
             {currentTab === "membership" && <OwnerMembershipTab data={data?.data} isFiltered={isFiltered} />}
-          </>
+          </div>
         )}
       </div>
     </div>

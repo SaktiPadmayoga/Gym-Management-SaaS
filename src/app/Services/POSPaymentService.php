@@ -134,7 +134,7 @@ class POSPaymentService
         if (!$member) return;
 
         $startDate = now();
-        $endDate = $plan->duration_days ? $startDate->copy()->addDays($plan->duration_days) : null;
+        $endDate = $plan->getEndDate($startDate);
 
         Membership::where('member_id', $invoice->member_id)
             ->whereIn('status', ['active', 'pending', 'trial'])
@@ -152,7 +152,7 @@ class POSPaymentService
             'end_date'                => $endDate ? $endDate->toDateString() : null,
             'status'                  => 'active',
             'unlimited_checkin'       => $plan->unlimited_checkin ?? true,
-            'remaining_checkin_quota' => $plan->checkin_quota ?? null,
+            'remaining_checkin_quota' => $plan->checkin_quota_per_month ?? null,
         ]);
 
         // 5. PERBAIKAN PAYLOAD NOTIFIKASI

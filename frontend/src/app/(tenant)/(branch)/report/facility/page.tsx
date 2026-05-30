@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#10B981", "#EF4444", "#F59E0B", "#3B82F6", "#8B5CF6"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -16,6 +17,7 @@ export default function FacilityReportPage() {
     const [startDate, setStartDate] = useState(dayjs().subtract(30, "day").format("YYYY-MM-DD"));
     const [endDate, setEndDate] = useState(dayjs().format("YYYY-MM-DD"));
     const { data, isLoading, isError } = useBranchReport("facility", startDate, endDate);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const report = data?.data;
 
     const handleFilterChange = useCallback((range: { start: string; end: string }) => {
@@ -59,6 +61,52 @@ export default function FacilityReportPage() {
         ], `Laporan_Fasilitas_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Fasilitas",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("Fasilitas", startDate, endDate),
+                summary: [
+                    { label: "Total Booking", value: totalBookings.toLocaleString("id-ID") },
+                    { label: "Selesai / Hadir", value: completedBookings.toLocaleString("id-ID") },
+                    { label: "Dibatalkan", value: cancelledBookings.toLocaleString("id-ID") },
+                    { label: "No-Show", value: noShowBookings.toLocaleString("id-ID") },
+                ],
+                tables: [
+                    {
+                        title: "Fasilitas Paling Sering Dibooking",
+                        columns: [
+                            { header: "Fasilitas", key: "name" },
+                            { header: "Total Booking", key: "total_bookings", align: "right" as const },
+                        ],
+                        rows: popularFacilities.map((f: any) => ({
+                            name: f.name,
+                            total_bookings: Number(f.total_bookings).toLocaleString("id-ID"),
+                        })),
+                    },
+                    {
+                        title: "Status Pemesanan",
+                        columns: [
+                            { header: "Status", key: "name" },
+                            { header: "Jumlah", key: "value", align: "right" as const },
+                        ],
+                        rows: statusDistribution.map((s: any) => ({
+                            name: s.name,
+                            value: Number(s.value).toLocaleString("id-ID"),
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan Fasilitas"
@@ -67,10 +115,12 @@ export default function FacilityReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-facility" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

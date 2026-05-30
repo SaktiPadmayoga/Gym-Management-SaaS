@@ -13,7 +13,8 @@ class StaffBranchResource extends JsonResource
         return [
             'id'        => $this->id,
             'branch_id' => $this->branch_id,
-            'role'      => $this->role,
+            'role_id'   => $this->role_id,
+            'role'      => is_string($this->role) ? $this->role : ($this->role?->name ?? null),
             'is_active' => $this->is_active,
             'joined_at' => $this->joined_at?->toIso8601String(),
 

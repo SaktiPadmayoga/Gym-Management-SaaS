@@ -6,24 +6,24 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const faqs = [
   {
-    q: "How long does it take to set up Fitnice?",
-    a: "Sebagian besar gym sudah bisa beroperasi dalam 30 menit. Wizard setup kami akan memandu Anda melakukan import data member, konfigurasi kelas, dan setup pembayaran. Kami juga menyediakan bantuan onboarding gratis.",
+    q: "Berapa lama waktu yang dibutuhkan untuk setup GYMFIT?",
+    a: "Sebagian besar gym sudah bisa mulai beroperasi dalam waktu 30 menit saja. Panduan setup kami akan memandu Anda untuk melakukan impor data anggota, konfigurasi kelas, dan setup pembayaran. Kami juga menyediakan bantuan pendampingan (onboarding) secara gratis.",
   },
   {
-    q: "Can I import data from my current system?",
-    a: "Tentu! Fitnice mendukung import via CSV dan integrasi langsung dengan beberapa tool manajemen gym populer. Tim data engineer kami siap membantu migrasi tanpa biaya tambahan.",
+    q: "Apakah saya bisa mengimpor data dari sistem lama saya?",
+    a: "Tentu saja! GYMFIT mendukung impor data via file CSV dan integrasi langsung dengan beberapa alat manajemen gym populer lainnya. Tim data engineer kami siap membantu proses migrasi data Anda tanpa biaya tambahan.",
   },
   {
-    q: "Is there a contract or commitment?",
-    a: "Tidak ada kontrak jangka panjang. Semua paket berjalan secara *month-to-month* dan bisa dibatalkan kapan saja. Kami juga menawarkan diskon 20% untuk penagihan tahunan.",
+    q: "Apakah ada ikatan kontrak atau komitmen jangka panjang?",
+    a: "Tidak ada kontrak jangka panjang sama sekali. Semua paket berjalan secara bulanan (month-to-month) dan bebas dibatalkan kapan saja. Kami juga menawarkan diskon sebesar 20% untuk penagihan tahunan.",
   },
   {
-    q: "Does Fitnice work for multiple gym locations?",
-    a: "Sangat bisa. Paket Professional kami mendukung multi-cabang, dan paket Enterprise menawarkan cabang tak terbatas (unlimited nodes) dengan manajemen terpusat dan analitik lintas-cabang.",
+    q: "Apakah GYMFIT mendukung pengelolaan banyak cabang?",
+    a: "Sangat bisa. Paket Professional kami mendukung pengelolaan multi-cabang, dan paket Enterprise menawarkan jumlah cabang tak terbatas dengan panel manajemen terpusat serta analitik performa lintas-cabang.",
   },
   {
-    q: "What payment methods are supported?",
-    a: "Fitnice terintegrasi dengan payment gateway utama (Stripe, Xendit) untuk memproses transfer bank, kartu kredit, e-wallet (GoPay, OVO, DANA), hingga auto-debit (direct debit).",
+    q: "Metode pembayaran apa saja yang didukung?",
+    a: "GYMFIT terintegrasi dengan payment gateway utama (seperti Xendit dan Midtrans) untuk memproses transfer bank secara otomatis, kartu kredit, e-wallet (seperti GoPay, OVO, DANA, ShopeePay), QRIS, hingga sistem auto-debit.",
   },
 ];
 
@@ -49,20 +49,20 @@ const FaqSection = () => {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
               <HelpCircle className="w-3 h-3 text-teal-400" />
-              Knowledge Base
+              Pusat Bantuan
             </div>
             <h2 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900 mb-6">
-              System <br />
+              Pertanyaan <br />
               <span className="text-slate-300">F.A.Q.</span>
             </h2>
             <p className="text-sm font-bold text-slate-500 uppercase tracking-tight leading-relaxed max-w-sm mb-8">
               Tidak menemukan jawaban yang Anda cari? Tim support kami standby 24/7 untuk membantu Anda.
             </p>
             <a 
-              href="mailto:support@fitnice.io" 
+              href="mailto:support@gymfit.id" 
               className="inline-flex items-center justify-center h-12 px-6 rounded-xl bg-white border border-slate-200 text-xs font-black uppercase tracking-widest text-slate-900 hover:bg-slate-100 transition-colors shadow-sm"
             >
-              Contact Support
+              Hubungi CS Support
             </a>
           </motion.div>
         </div>

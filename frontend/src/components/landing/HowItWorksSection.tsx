@@ -7,19 +7,19 @@ const steps = [
   {
     number: "01",
     icon: <Database className="w-6 h-6" />,
-    title: "Data Migration",
-    description: "Import data member, staf, dan paket dari sistem lama Anda. Setup database Fitnice selesai secara otomatis tanpa hambatan.",
+    title: "Migrasi Data",
+    description: "Import data member, staf, dan paket dari sistem lama Anda. Setup database GYMFIT selesai secara otomatis tanpa hambatan.",
   },
   {
     number: "02",
     icon: <Settings2 className="w-6 h-6" />,
-    title: "System Config",
+    title: "Konfigurasi Sistem",
     description: "Konfigurasi role, metode pembayaran, dan integrasi hardware (seperti turnstile/RFID). Sesuaikan alur dengan SOP operasional gym Anda.",
   },
   {
     number: "03",
     icon: <Rocket className="w-6 h-6" />,
-    title: "Go Live & Scale",
+    title: "Mulai Beroperasi",
     description: "Sistem aktif beroperasi penuh. Pantau transaksi POS harian dan analitik retensi member dari satu dashboard real-time.",
   },
 ];
@@ -45,11 +45,11 @@ const HowItWorksSection = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
               <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse" />
-              Deployment Protocol
+              Protokol Aktivasi
             </div>
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900">
-              Setup in <br />
-              <span className="text-teal-500">Minutes.</span>
+              Setup dalam <br />
+              <span className="text-teal-500">Hitungan Menit.</span>
             </h2>
           </div>
           <div className="max-w-xs">
@@ -101,7 +101,7 @@ const HowItWorksSection = () => {
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4">
                   <span className="px-2 py-1 bg-slate-200 text-slate-600 rounded-md text-[10px] font-black uppercase tracking-widest group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
-                    Step {step.number}
+                    Langkah {step.number}
                   </span>
                 </div>
                 <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tighter mb-3 leading-none">

@@ -96,6 +96,19 @@ export function usePermissions() {
     });
 }
 
+/** Create dynamic permission group. */
+export function useCreatePermission() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: { group: string; label: string; description?: string }) =>
+            rolesApi.createPermission(payload),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["permissions"] });
+        },
+    });
+}
+
 /**
  * Update access level for a specific resource group.
  * Optimistic update: immediately update the role in cache, rollback on error.

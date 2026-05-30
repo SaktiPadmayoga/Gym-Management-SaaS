@@ -8,6 +8,7 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const COLORS = ["#018790", "#3B82F6", "#8B5CF6", "#EC4899", "#10B981", "#F59E0B", "#EF4444"];
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
@@ -31,6 +32,7 @@ export default function MembershipReportPage() {
     const planDistribution = (report?.charts?.plan_distribution || []).map((i: any) => ({ ...i, value: toNumber(i.value) }));
     const expiringSoonList = report?.tables?.expiring_soon || [];
 
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const [page, setPage] = useState(1);
     const perPage = 10;
     const totalPages = Math.ceil(expiringSoonList.length / perPage);
@@ -64,6 +66,55 @@ export default function MembershipReportPage() {
         ], `Laporan_Membership_${startDate}_${endDate}`);
     };
 
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            await exportToPdf({
+                title: "Laporan Membership",
+                subtitle: `Periode: ${startDate} s.d ${endDate}`,
+                filename: buildPdfFilename("Membership", startDate, endDate),
+                summary: [
+                    { label: "Membership Aktif", value: activeCount.toLocaleString("id-ID") },
+                    { label: "Membership Dibekukan", value: frozenCount.toLocaleString("id-ID") },
+                    { label: "Kedaluwarsa di Periode Ini", value: expiredCount.toLocaleString("id-ID") },
+                ],
+                tables: [
+                    {
+                        title: "Distribusi Paket Membership (Aktif)",
+                        columns: [
+                            { header: "Paket", key: "name" },
+                            { header: "Jumlah Member", key: "value", align: "right" as const },
+                        ],
+                        rows: planDistribution.map((p: any) => ({
+                            name: p.name,
+                            value: p.value.toLocaleString("id-ID"),
+                        })),
+                    },
+                    {
+                        title: "Akan Kedaluwarsa (7 Hari ke Depan)",
+                        columns: [
+                            { header: "Member", key: "member_name" },
+                            { header: "Paket", key: "plan_name" },
+                            { header: "Tanggal Berakhir", key: "ends_at" },
+                            { header: "Sisa Hari", key: "days_left", align: "right" as const },
+                        ],
+                        rows: expiringSoonList.map((m: any) => ({
+                            member_name: m.member_name,
+                            plan_name: m.plan_name,
+                            ends_at: m.ends_at,
+                            days_left: `${m.days_left} hari`,
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
+    };
+
     return (
         <ReportPageLayout
             title="Laporan Membership"
@@ -72,10 +123,12 @@ export default function MembershipReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={<ReportDateFilter startDate={startDate} endDate={endDate} onFilterChange={handleFilterChange} />}
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-membership" className="space-y-6">
                     {/* Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="bg-white p-5 rounded-xl border border-gray-500/20 flex items-center gap-4">

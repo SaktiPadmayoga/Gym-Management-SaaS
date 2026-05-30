@@ -102,7 +102,7 @@ export default function CreateTrialTenant() {
                         <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center text-slate-950">
                             <Zap size={24} className="font-bold" />
                         </div>
-                        <span className="text-2xl font-black tracking-tight uppercase">Fitnice Trial</span>
+                        <span className="text-2xl font-black tracking-tight uppercase">GYMFIT Trial</span>
                     </Link>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -128,7 +128,7 @@ export default function CreateTrialTenant() {
                 <div className="w-full max-w-lg">
                     <div className="bg-white rounded-[2rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
                         <div className="mb-8">
-                            <h2 className="text-2xl font-black tracking-tighter uppercase text-slate-900 mb-2">Claim Your Free Trial</h2>
+                            <h2 className="text-2xl font-black tracking-tighter uppercase text-slate-900 mb-2">Klaim Uji Coba Gratis Anda</h2>
                             <p className="text-sm font-bold text-slate-500 uppercase">Isi data dasar untuk membuat akses Owner.</p>
                         </div>
 
@@ -151,12 +151,12 @@ export default function CreateTrialTenant() {
                                 {/* DATA GYM */}
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <TextInput name="tenant_name" label="Nama Gym" placeholder="Fitnice Studio"  />
+                                        <TextInput name="tenant_name" label="Nama Gym" placeholder="GYMFIT Studio"  />
                                         
                                         <div>
-                                            <TextInput name="slug" label="Subdomain Sistem" placeholder="fitnice" />
+                                            <TextInput name="slug" label="Subdomain Sistem" placeholder="gymfit" />
                                             <p className="text-[10px] font-bold text-slate-400 mt-1.5 ml-1">
-                                                <span className="text-teal-500 lowercase">{form.watch("slug") || "nama-gym"}</span>.fitnice.id
+                                                <span className="text-teal-500 lowercase">{form.watch("slug") || "nama-gym"}</span>.gymfit.id
                                             </p>
                                         </div>
                                     </div>

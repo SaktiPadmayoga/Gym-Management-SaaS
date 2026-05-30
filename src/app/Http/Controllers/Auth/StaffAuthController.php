@@ -42,7 +42,7 @@ class StaffAuthController extends Controller
         }
 
         return $staff->staffBranches()
-            ->with('branch')
+            ->with(['branch', 'role'])
             ->where('is_active', true)
             ->get()
             ->map(fn($sb) => [
@@ -51,7 +51,7 @@ class StaffAuthController extends Controller
                 'branch_code' => $sb->branch->branch_code,
                 'address'     => $sb->branch->address,
                 'city'        => $sb->branch->city,
-                'role'        => $sb->role,
+                'role'        => $sb->role?->name,
                 'permissions' => $staff->getPermissionsInBranch($sb->branch->id),
             ])
             ->toArray();
@@ -126,23 +126,18 @@ public function login(Request $request)
     $token    = $staff->createToken('staff-token')->plainTextToken;
     $branches = $this->getBranchesForStaff($staff);
 
+    // Set cookie berbeda berdasarkan role agar owner & staff bisa login
+    // secara bersamaan di tab browser yang berbeda.
+    $cookie = $staff->isOwner()
+        ? CookieService::makeOwnerCookie($token)
+        : CookieService::makeStaffCookie($token);
+
     return ApiResponse::success([
         'staff'          => new StaffResource($staff),
         'branches'       => $branches,
         'global_role'    => $staff->role,
         'dashboard_path' => $this->getDashboardPath($staff),
-    ], 'Login successful')->withCookie(
-        cookie(
-            name:     'staff_token',
-            value:    $token,
-            minutes:  480,
-            path:     '/',
-            domain:   null,
-            secure:   true,
-            httpOnly: true,
-            sameSite: 'None',
-        )
-    );
+    ], 'Login successful')->withCookie($cookie);
 }
 
 // Logout
@@ -150,7 +145,9 @@ public function login(Request $request)
     {
         $request->user('staff')->currentAccessToken()->delete();
 
+        // Clear keduanya agar bersih regardless cookie mana yang aktif
         return ApiResponse::success(null, 'Logged out successfully')
+            ->withCookie(CookieService::clearOwnerCookie())
             ->withCookie(CookieService::clearStaffCookie());
     }
     
@@ -287,6 +284,11 @@ public function login(Request $request)
         $globalRole      = urlencode($staff->role);
         $dashboardPath   = urlencode($this->getDashboardPath($staff));
 
+        // Set cookie berbeda berdasarkan role (Google OAuth)
+        $oauthCookie = $staff->isOwner()
+            ? CookieService::makeOwnerCookie($token)
+            : CookieService::makeStaffCookie($token);
+
         return redirect(
             "{$frontendUrl}/tenant-auth/callback" .
             "?staff={$staffEncoded}" .
@@ -294,7 +296,7 @@ public function login(Request $request)
             "&global_role={$globalRole}" .
             "&dashboard_path={$dashboardPath}"
             // token TIDAK ada di URL
-        )->withCookie(CookieService::makeStaffCookie($token));
+        )->withCookie($oauthCookie);
     }
 
     // =============================================

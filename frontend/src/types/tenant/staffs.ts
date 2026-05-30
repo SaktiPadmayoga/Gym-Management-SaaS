@@ -6,12 +6,7 @@ import * as z from "zod";
 
 export const StaffRoleEnum = z.enum(["owner", "staff"]);
 
-export const BranchRoleEnum = z.enum([
-    "branch_manager",
-    "trainer",
-    "receptionist",
-    "cashier",
-]);
+export const BranchRoleEnum = z.string();
 
 /* =========================
  * STAFF BRANCH SCHEMA

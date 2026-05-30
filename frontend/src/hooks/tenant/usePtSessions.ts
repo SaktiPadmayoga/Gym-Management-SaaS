@@ -103,3 +103,27 @@ export function useRejectPtRequest() {
         },
     });
 }
+
+export function useMarkPtSessionComplete() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, notes }: { id: string; notes?: string }) =>
+            ptSessionsAPI.markComplete(id, notes),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ptSessionKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: ptSessionKeys.lists() });
+        },
+    });
+}
+
+export function useUpdatePtSessionNotes() {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, notes }: { id: string; notes: string }) =>
+            ptSessionsAPI.updateNotes(id, notes),
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: ptSessionKeys.detail(id) });
+            queryClient.invalidateQueries({ queryKey: ptSessionKeys.lists() });
+        },
+    });
+}

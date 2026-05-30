@@ -32,7 +32,7 @@ class AdminResetPasswordMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reset Password Fitnice Workspace',
+            subject: 'Reset Password GYMFIT Workspace',
         );
     }
 

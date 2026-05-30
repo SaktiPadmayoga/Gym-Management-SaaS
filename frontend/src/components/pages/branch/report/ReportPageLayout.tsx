@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Loader2, Download } from "lucide-react";
+import { Loader2, Sheet, FileText } from "lucide-react";
 
 interface ReportPageLayoutProps {
   title: string;
@@ -11,6 +11,8 @@ interface ReportPageLayoutProps {
   isError: boolean;
   filterSlot: React.ReactNode;
   onExportExcel?: () => void;
+  onExportPdf?: () => void;
+  isExportingPdf?: boolean;
   children: React.ReactNode;
 }
 
@@ -22,6 +24,8 @@ export default function ReportPageLayout({
   isError,
   filterSlot,
   onExportExcel,
+  onExportPdf,
+  isExportingPdf = false,
   children,
 }: ReportPageLayoutProps) {
   return (
@@ -37,21 +41,38 @@ export default function ReportPageLayout({
             <p className="text-sm text-zinc-500">{description}</p>
           </div>
         </div>
-        {onExportExcel && (
-          <button
-            onClick={onExportExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors rounded-lg font-medium text-sm border border-green-200 shadow-sm"
-          >
-            <Download size={16} />
-            Export Excel
-          </button>
-        )}
+
+        {/* Export Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {onExportExcel && (
+            <button
+              onClick={onExportExcel}
+              className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors rounded-lg font-medium text-sm border border-emerald-200 shadow-sm"
+            >
+              <Sheet size={15} />
+              Excel
+            </button>
+          )}
+
+          {onExportPdf && (
+            <button
+              onClick={onExportPdf}
+              disabled={isExportingPdf}
+              className="flex items-center gap-2 px-3 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors rounded-lg font-medium text-sm border border-rose-200 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isExportingPdf ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <FileText size={15} />
+              )}
+              {isExportingPdf ? "Membuat PDF..." : "PDF"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter */}
-      <div className="border-b border-zinc-100 pb-4">
-        {filterSlot}
-      </div>
+      <div className="border-b border-zinc-100 pb-4">{filterSlot}</div>
 
       {/* Content */}
       <div className="min-h-[400px]">

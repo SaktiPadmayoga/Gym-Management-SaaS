@@ -23,7 +23,7 @@ export default function TenantLandingPage() {
         toast.error("Failed to load membership plans");
     }
 
-    const gymName = tenantSlug ? `${tenantSlug.replace('-', ' ')} Gym` : 'Fitnice Gym';
+    const gymName = tenantSlug ? `${tenantSlug.replace('-', ' ')} Gym` : 'GYMFIT Gym';
 
     // Scroll helper
     const scrollTo = (id: string) => {
@@ -48,9 +48,9 @@ export default function TenantLandingPage() {
                     
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-zinc-300">
-                        <button onClick={() => scrollTo('about')} className="hover:text-white transition-colors">About Us</button>
-                        <button onClick={() => scrollTo('classes')} className="hover:text-white transition-colors">Programs</button>
-                        <button onClick={() => scrollTo('pricing')} className="hover:text-white transition-colors">Memberships</button>
+                        <button onClick={() => scrollTo('about')} className="hover:text-white transition-colors">Tentang Kami</button>
+                        <button onClick={() => scrollTo('classes')} className="hover:text-white transition-colors">Program</button>
+                        <button onClick={() => scrollTo('pricing')} className="hover:text-white transition-colors">Keanggotaan</button>
                     </nav>
 
                     <div className="flex items-center gap-4">
@@ -58,13 +58,13 @@ export default function TenantLandingPage() {
                             className="text-sm font-bold text-white hover:text-blue-400 transition-colors hidden sm:block"
                             onClick={() => router.push("/member/login")}
                         >
-                            Sign In
+                            Masuk
                         </button>
                         <CustomButton 
                             className="bg-white text-zinc-950 hover:bg-zinc-200 font-bold rounded-full px-6"
                             onClick={() => scrollTo('pricing')}
                         >
-                            Join Now
+                            Gabung Sekarang
                         </CustomButton>
                     </div>
                 </div>
@@ -85,29 +85,29 @@ export default function TenantLandingPage() {
                     <div className="max-w-3xl">
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400 text-sm font-bold uppercase tracking-widest mb-6 backdrop-blur-sm">
                             <Zap size={16} className="fill-blue-400" />
-                            Elite Fitness Experience
+                            Pengalaman Fitness Kelas Dunia
                         </div>
                         <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[1] mb-6">
-                            PUSH YOUR <br />
+                            TEMBUS BATAS <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-blue-700">
-                                LIMITS.
+                                DIRIMU.
                             </span>
                         </h1>
                         <p className="text-lg md:text-xl text-zinc-300 mb-10 max-w-xl leading-relaxed font-medium">
-                            Dont wait for tomorrow. Build your best version today with state-of-the-art equipment, elite trainers, and an unstoppable community.
+                            Jangan tunggu besok. Bangun versi terbaik dirimu hari ini dengan peralatan mutakhir, pelatih elit, dan komunitas yang suportif.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4">
                             <CustomButton 
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-lg font-bold shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all hover:scale-105 flex items-center justify-center gap-2"
                                 onClick={() => scrollTo('pricing')}
                             >
-                                Get Started <ArrowRight size={20} />
+                                Mulai Sekarang <ArrowRight size={20} />
                             </CustomButton>
                             <CustomButton 
                                 className="bg-white/10 hover:bg-white/20 text-white border border-white/10 px-8 py-4 rounded-full text-lg font-bold transition-all flex items-center justify-center gap-2 backdrop-blur-md"
                                 onClick={() => scrollTo('classes')}
                             >
-                                <Play size={20} className="fill-white" /> Explore Programs
+                                <Play size={20} className="fill-white" /> Jelajahi Program
                             </CustomButton>
                         </div>
                     </div>
@@ -119,19 +119,19 @@ export default function TenantLandingPage() {
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-white/10 pt-8">
                             <div>
                                 <h4 className="text-4xl font-black text-white mb-1">50+</h4>
-                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Premium Machines</p>
+                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Alat Premium</p>
                             </div>
                             <div>
                                 <h4 className="text-4xl font-black text-white mb-1">15+</h4>
-                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Expert Trainers</p>
+                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Pelatih Ahli</p>
                             </div>
                             <div>
                                 <h4 className="text-4xl font-black text-white mb-1">30+</h4>
-                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Classes Weekly</p>
+                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Kelas Mingguan</p>
                             </div>
                             <div>
                                 <h4 className="text-4xl font-black text-white mb-1">24/7</h4>
-                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Gym Access</p>
+                                <p className="text-zinc-500 text-sm font-semibold uppercase tracking-wider">Akses Gym</p>
                             </div>
                         </div>
                     </div>
@@ -151,22 +151,22 @@ export default function TenantLandingPage() {
                             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl -z-10" />
                         </div>
                         <div className="w-full lg:w-1/2">
-                            <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">About {gymName}</h2>
+                            <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">Tentang {gymName}</h2>
                             <h3 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tight mb-6 leading-tight">
-                                MORE THAN JUST A GYM. ITS A LIFESTYLE.
+                                LEBIH DARI SEKADAR GYM. INI GAYA HIDUP.
                             </h3>
                             <p className="text-lg text-zinc-600 mb-8 leading-relaxed">
-                                We believe that fitness is the foundation of a great life. Our facility is designed to inspire, motivate, and help you achieve results you never thought possible. Whether youre a beginner or a pro athlete, you belong here.
+                                Kami percaya bahwa kebugaran adalah fondasi kehidupan yang hebat. Fasilitas kami dirancang untuk menginspirasi, memotivasi, dan membantu Anda mencapai hasil yang luar biasa. Baik pemula maupun atlet profesional, Anda diterima di sini.
                             </p>
                             <ul className="space-y-4 mb-8">
                                 <li className="flex items-center gap-3 text-zinc-800 font-semibold">
-                                    <ShieldCheck className="text-blue-600" size={24} /> Internationally Certified Trainers
+                                    <ShieldCheck className="text-blue-600" size={24} /> Pelatih Bersertifikat Internasional
                                 </li>
                                 <li className="flex items-center gap-3 text-zinc-800 font-semibold">
-                                    <ShieldCheck className="text-blue-600" size={24} /> Cutting-edge Recovery Facilities
+                                    <ShieldCheck className="text-blue-600" size={24} /> Fasilitas Pemulihan Terkini
                                 </li>
                                 <li className="flex items-center gap-3 text-zinc-800 font-semibold">
-                                    <ShieldCheck className="text-blue-600" size={24} /> Nutrition & Meal Planning Support
+                                    <ShieldCheck className="text-blue-600" size={24} /> Dukungan Nutrisi & Rencana Makanan
                                 </li>
                             </ul>
                         </div>
@@ -179,10 +179,10 @@ export default function TenantLandingPage() {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                         <div className="max-w-2xl">
-                            <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">Our Programs</h2>
-                            <h3 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tight">FIND YOUR PASSION</h3>
+                            <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">Program Kami</h2>
+                            <h3 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tight">TEMUKAN PASSION-MU</h3>
                         </div>
-                        <p className="text-zinc-500 max-w-sm text-right hidden md:block">From high-intensity interval training to mindful yoga, we have a class for every goal.</p>
+                        <p className="text-zinc-500 max-w-sm text-right hidden md:block">Mulai dari latihan interval intensitas tinggi hingga yoga yang menenangkan, kami memiliki kelas untuk setiap tujuan.</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -192,7 +192,7 @@ export default function TenantLandingPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-8 w-full">
                                 <h4 className="text-2xl font-black text-white uppercase mb-2 transform transition-transform group-hover:-translate-y-2">Strength & Conditioning</h4>
-                                <p className="text-zinc-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">Build muscle and increase raw power with heavy lifting focused sessions.</p>
+                                <p className="text-zinc-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">Bangun otot dan tingkatkan kekuatan murni dengan sesi latihan beban terfokus.</p>
                             </div>
                         </div>
                         {/* Class Card 2 */}
@@ -201,7 +201,7 @@ export default function TenantLandingPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-8 w-full">
                                 <h4 className="text-2xl font-black text-white uppercase mb-2 transform transition-transform group-hover:-translate-y-2">HIIT Burn</h4>
-                                <p className="text-zinc-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">High-intensity cardio sessions designed to maximize calorie burn in 45 minutes.</p>
+                                <p className="text-zinc-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">Sesi kardio intensitas tinggi yang dirancang untuk memaksimalkan pembakaran kalori dalam 45 menit.</p>
                             </div>
                         </div>
                         {/* Class Card 3 */}
@@ -210,7 +210,7 @@ export default function TenantLandingPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
                             <div className="absolute bottom-0 left-0 p-8 w-full">
                                 <h4 className="text-2xl font-black text-white uppercase mb-2 transform transition-transform group-hover:-translate-y-2">Flex & Flow Yoga</h4>
-                                <p className="text-zinc-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">Improve mobility, flexibility, and mental clarity with our expert Yogis.</p>
+                                <p className="text-zinc-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0">Tingkatkan mobilitas, fleksibilitas, dan kejernihan mental bersama Yogi ahli kami.</p>
                             </div>
                         </div>
                     </div>
@@ -223,9 +223,9 @@ export default function TenantLandingPage() {
                 
                 <div className="max-w-7xl mx-auto z-10 relative">
                     <div className="text-center mb-16">
-                        <h2 className="text-blue-500 font-bold tracking-widest uppercase mb-3 text-sm">Memberships</h2>
-                        <h3 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight uppercase">Choose Your Arsenal</h3>
-                        <p className="text-zinc-400 text-lg">No hidden fees. Just pure gains.</p>
+                        <h2 className="text-blue-500 font-bold tracking-widest uppercase mb-3 text-sm">Keanggotaan</h2>
+                        <h3 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight uppercase">Pilih Paket Terbaik Anda</h3>
+                        <p className="text-zinc-400 text-lg">Tanpa biaya tersembunyi. Fokus pada hasil maksimal.</p>
                     </div>
 
                     {isLoading ? (
@@ -237,8 +237,8 @@ export default function TenantLandingPage() {
                     ) : plans.length === 0 ? (
                         <div className="text-center py-20 bg-zinc-900/50 border border-dashed border-zinc-800 rounded-[2rem]">
                             <Dumbbell size={48} className="mx-auto mb-4 text-zinc-700" />
-                            <h3 className="text-xl font-bold text-white mb-2">Coming Soon</h3>
-                            <p className="text-zinc-500">We are currently updating our premium membership plans.</p>
+                            <h3 className="text-xl font-bold text-white mb-2">Segera Hadir</h3>
+                            <p className="text-zinc-500">Kami sedang memperbarui paket keanggotaan premium kami.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
@@ -257,7 +257,7 @@ export default function TenantLandingPage() {
                                     >
                                         {isPopular && (
                                             <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white text-zinc-950 text-xs font-black uppercase tracking-widest py-1.5 px-4 rounded-full shadow-lg">
-                                                Most Popular
+                                                Paling Populer
                                             </div>
                                         )}
 
@@ -266,7 +266,7 @@ export default function TenantLandingPage() {
                                                 {plan.name}
                                             </h3>
                                             <p className={`text-sm leading-relaxed min-h-[40px] ${isPopular ? 'text-blue-100' : 'text-zinc-400'}`}>
-                                                {plan.description || "Perfect plan to start your fitness journey."}
+                                                {plan.description || "Paket sempurna untuk memulai perjalanan kebugaran Anda."}
                                             </p>
                                         </div>
                                         
@@ -278,23 +278,23 @@ export default function TenantLandingPage() {
                                                 </span>
                                             </div>
                                             <div className={`text-sm mt-1 font-medium uppercase tracking-wide ${isPopular ? 'text-blue-200' : 'text-zinc-500'}`}>
-                                                For {plan.duration} {plan.duration_unit}(s)
+                                                Untuk {plan.duration} {plan.duration_unit === 'month' ? 'Bulan' : plan.duration_unit === 'day' ? 'Hari' : plan.duration_unit === 'year' ? 'Tahun' : plan.duration_unit}
                                             </div>
                                         </div>
 
                                         <ul className={`space-y-4 mb-10 flex-1 ${isPopular ? 'text-white' : 'text-zinc-300'}`}>
                                             <li className="flex items-center gap-3">
                                                 <CheckCircle2 size={20} className={isPopular ? 'text-blue-300' : 'text-blue-500'} />
-                                                <span className="text-sm font-medium">Full Gym Floor Access</span>
+                                                <span className="text-sm font-medium">Akses Penuh Area Gym</span>
                                             </li>
                                             <li className="flex items-center gap-3">
                                                 <CheckCircle2 size={20} className={isPopular ? 'text-blue-300' : 'text-blue-500'} />
-                                                <span className="text-sm font-medium">Locker & Showers</span>
+                                                <span className="text-sm font-medium">Loker & Ruang Mandi</span>
                                             </li>
                                             <li className="flex items-center gap-3">
                                                 <CheckCircle2 size={20} className={isPopular ? 'text-blue-300' : 'text-blue-500'} />
                                                 <span className="text-sm font-medium">
-                                                    {plan.unlimited_checkin ? 'Unlimited check-ins' : `${plan.checkin_quota_per_month} check-ins / month`}
+                                                    {plan.unlimited_checkin ? 'Check-in Tanpa Batas' : `${plan.checkin_quota_per_month} check-in / bulan`}
                                                 </span>
                                             </li>
                                         </ul>
@@ -307,7 +307,7 @@ export default function TenantLandingPage() {
                                             }`}
                                             onClick={() => router.push(`/member/register?plan_id=${plan.id}`)}
                                         >
-                                            Select Plan
+                                            Pilih Paket
                                         </CustomButton>
                                     </div>
                                 );
@@ -321,15 +321,15 @@ export default function TenantLandingPage() {
             <section className="py-24 bg-white">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-16">
-                        <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">Testimonials</h2>
-                        <h3 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tight">SUCCESS STORIES</h3>
+                        <h2 className="text-blue-600 font-bold tracking-widest uppercase mb-3 text-sm">Testimoni</h2>
+                        <h3 className="text-4xl md:text-5xl font-black text-zinc-950 tracking-tight">KISAH SUKSES</h3>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
-                            { name: "Sarah Jenkins", role: "Member since 2024", text: "The trainers here changed my life. I've never felt stronger or more confident. The facilities are always spotless.", img: "https://i.pravatar.cc/150?img=44" },
-                            { name: "Michael Chen", role: "Athlete", text: "As a competitive lifter, I need serious equipment. This gym has everything I need and a community that pushes me.", img: "https://i.pravatar.cc/150?img=11" },
-                            { name: "Amanda Rossi", role: "Yoga Enthusiast", text: "The yoga classes are phenomenal. It's my daily sanctuary away from the stress of work. Highly recommended!", img: "https://i.pravatar.cc/150?img=5" }
+                            { name: "Sarah Jenkins", role: "Anggota sejak 2024", text: "Para pelatih di sini mengubah hidup saya. Saya tidak pernah merasa sekuat atau sepercaya diri ini. Fasilitasnya selalu bersih.", img: "https://i.pravatar.cc/150?img=44" },
+                            { name: "Michael Chen", role: "Atlet", text: "Sebagai atlet angkat besi kompetitif, saya butuh peralatan serius. Gym ini memiliki semua yang saya butuhkan dan komunitas yang saling mendukung.", img: "https://i.pravatar.cc/150?img=11" },
+                            { name: "Amanda Rossi", role: "Pencinta Yoga", text: "Kelas yoganya sangat luar biasa. Ini menjadi tempat perlindungan harian saya dari stres kerja. Sangat direkomendasikan!", img: "https://i.pravatar.cc/150?img=5" }
                         ].map((review, i) => (
                             <div key={i} className="bg-zinc-50 rounded-[2rem] p-8 border border-zinc-100">
                                 <div className="flex text-amber-400 mb-6">
@@ -353,13 +353,13 @@ export default function TenantLandingPage() {
             <section className="py-20 bg-blue-600 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                 <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
-                    <h2 className="text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight">Ready to transform?</h2>
-                    <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">Join today and get access to all our premium facilities. Your future self will thank you.</p>
+                    <h2 className="text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight">Siap untuk bertransformasi?</h2>
+                    <p className="text-blue-100 text-lg mb-10 max-w-2xl mx-auto">Bergabunglah hari ini dan dapatkan akses ke semua fasilitas premium kami. Diri Anda di masa depan akan berterima kasih.</p>
                     <CustomButton 
                         className="bg-zinc-950 hover:bg-zinc-900 text-white px-10 py-5 rounded-full text-xl font-bold shadow-xl transition-transform hover:scale-105"
                         onClick={() => scrollTo('pricing')}
                     >
-                        Claim Your Membership
+                        Dapatkan Keanggotaan Anda
                     </CustomButton>
                 </div>
             </section>
@@ -379,7 +379,7 @@ export default function TenantLandingPage() {
                                 </span>
                             </div>
                             <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
-                                Empowering individuals to reach their peak physical and mental potential through world-class fitness experiences.
+                                Memberdayakan individu untuk mencapai potensi fisik dan mental puncak mereka melalui pengalaman kebugaran kelas dunia.
                             </p>
                             <div className="flex gap-4">
                                 <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors"><Instagram size={18} /></a>
@@ -390,18 +390,18 @@ export default function TenantLandingPage() {
 
                         {/* Quick Links */}
                         <div>
-                            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Quick Links</h4>
+                            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Tautan Cepat</h4>
                             <ul className="space-y-3 text-sm text-zinc-500">
-                                <li><button onClick={() => scrollTo('about')} className="hover:text-blue-400 transition-colors">About Us</button></li>
-                                <li><button onClick={() => scrollTo('classes')} className="hover:text-blue-400 transition-colors">Classes & Programs</button></li>
-                                <li><button onClick={() => scrollTo('pricing')} className="hover:text-blue-400 transition-colors">Membership Plans</button></li>
-                                <li><button className="hover:text-blue-400 transition-colors">Careers</button></li>
+                                <li><button onClick={() => scrollTo('about')} className="hover:text-blue-400 transition-colors">Tentang Kami</button></li>
+                                <li><button onClick={() => scrollTo('classes')} className="hover:text-blue-400 transition-colors">Kelas & Program</button></li>
+                                <li><button onClick={() => scrollTo('pricing')} className="hover:text-blue-400 transition-colors">Paket Keanggotaan</button></li>
+                                <li><button className="hover:text-blue-400 transition-colors">Karir</button></li>
                             </ul>
                         </div>
 
                         {/* Contact */}
                         <div>
-                            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Contact Us</h4>
+                            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Hubungi Kami</h4>
                             <ul className="space-y-4 text-sm text-zinc-500">
                                 <li className="flex items-start gap-3">
                                     <MapPin size={18} className="text-blue-600 shrink-0 mt-0.5" />
@@ -413,17 +413,17 @@ export default function TenantLandingPage() {
                                 </li>
                                 <li className="flex items-center gap-3">
                                     <Mail size={18} className="text-blue-600 shrink-0" />
-                                    <span>hello@{tenantSlug || 'fitnice'}.com</span>
+                                    <span>hello@{tenantSlug || 'gymfit'}.id</span>
                                 </li>
                             </ul>
                         </div>
 
                         {/* Newsletter */}
                         <div>
-                            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Newsletter</h4>
-                            <p className="text-zinc-500 text-sm mb-4">Subscribe to get the latest fitness tips and exclusive offers.</p>
+                            <h4 className="text-white font-bold mb-6 uppercase tracking-wider text-sm">Buletin</h4>
+                            <p className="text-zinc-500 text-sm mb-4">Berlangganan untuk mendapatkan tips kebugaran terbaru dan penawaran eksklusif.</p>
                             <div className="flex">
-                                <input type="email" placeholder="Your email address" className="bg-zinc-900 border border-zinc-800 text-white text-sm rounded-l-lg px-4 py-3 w-full focus:outline-none focus:border-blue-500" />
+                                <input type="email" placeholder="Alamat email Anda" className="bg-zinc-900 border border-zinc-800 text-white text-sm rounded-l-lg px-4 py-3 w-full focus:outline-none focus:border-blue-500" />
                                 <button className="bg-blue-600 text-white px-4 py-3 rounded-r-lg font-bold hover:bg-blue-700 transition-colors">
                                     <ArrowRight size={18} />
                                 </button>
@@ -433,12 +433,12 @@ export default function TenantLandingPage() {
 
                     <div className="border-t border-zinc-900 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                         <p className="text-zinc-600 text-xs">
-                            © {new Date().getFullYear()} {gymName}. All rights reserved.
+                            © {new Date().getFullYear()} {gymName}. Hak Cipta Dilindungi.
                         </p>
                         <div className="flex gap-4 text-xs text-zinc-600">
-                            <a href="#" className="hover:text-zinc-300">Privacy Policy</a>
-                            <a href="#" className="hover:text-zinc-300">Terms of Service</a>
-                            <a href="#" className="hover:text-zinc-300 flex items-center gap-1">Powered by <span className="font-bold text-blue-500">Fitnice</span></a>
+                            <a href="#" className="hover:text-zinc-300">Kebijakan Privasi</a>
+                            <a href="#" className="hover:text-zinc-300">Ketentuan Layanan</a>
+                            <a href="#" className="hover:text-zinc-300 flex items-center gap-1">Powered by <span className="font-bold text-blue-500">GYMFIT</span></a>
                         </div>
                     </div>
                 </div>

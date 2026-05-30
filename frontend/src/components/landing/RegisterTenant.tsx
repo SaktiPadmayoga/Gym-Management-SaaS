@@ -171,12 +171,12 @@ function RegisterTenantContent() {
                         <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center text-slate-950">
                             <Dumbbell size={24} strokeWidth={2.5} />
                         </div>
-                        <span className="text-2xl font-black tracking-tight uppercase">Fitnice</span>
+                        <span className="text-2xl font-black tracking-tight uppercase">GYMFIT</span>
                     </Link>
 
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-teal-400 text-xs font-bold uppercase tracking-widest mb-6 border border-white/10">
-                            <Lock className="w-3 h-3" /> Secure Checkout
+                            <Lock className="w-3 h-3" /> Pembayaran Aman
                         </div>
                         <h1 className="text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
                             Upgrade Bisnis <br/><span className="text-teal-400">Fitness Anda.</span>
@@ -327,12 +327,12 @@ function RegisterTenantContent() {
                                             <div className="space-y-4">
                                                 <h3 className="text-xs font-black uppercase tracking-widest text-teal-500 border-b border-slate-100 pb-2">Detail Cabang Utama</h3>
                                                 <div className="grid grid-cols-1 gap-4">
-                                                    <TextInput name="name" label="Nama Gym / Studio" placeholder="Cth: Fitnice Gym & Studio" />
+                                                    <TextInput name="name" label="Nama Gym / Studio" placeholder="Cth: GYMFIT Gym & Studio" />
                                                     
                                                     <div>
-                                                        <TextInput name="slug" label="URL Sistem Bisnis Anda" placeholder="fitnice-gym" />
+                                                        <TextInput name="slug" label="URL Sistem Bisnis Anda" placeholder="gymfit-gym" />
                                                         <p className="text-[10px] font-bold text-slate-400 mt-1.5 ml-1">
-                                                            Akses sistem: <span className="text-teal-500 lowercase">{form.watch("slug") || "nama-gym"}</span>.fitnice.id
+                                                            Akses sistem: <span className="text-teal-500 lowercase">{form.watch("slug") || "nama-gym"}</span>.gymfit.id
                                                         </p>
                                                     </div>
 

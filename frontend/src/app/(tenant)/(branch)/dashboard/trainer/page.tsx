@@ -240,18 +240,58 @@ export default function TrainerDashboardPage() {
                         )}
                     </div>
 
-                    {/* Placeholder Widget: Aktivitas / Notes */}
+                    {/* Widget: Aktivitas Terakhir */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-bold text-zinc-900">Aktivitas Terakhir</h2>
+                            <Link href="/trainer/members" className="text-xs font-bold text-aksen-secondary hover:underline">
+                                Semua Member →
+                            </Link>
                         </div>
-                        <div className="py-12 text-center border-2 border-dashed border-zinc-200 rounded-3xl bg-zinc-50 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-white/50 backdrop-blur-[1px] flex items-center justify-center z-10">
-                                <span className="px-3 py-1 bg-zinc-800 text-white text-xs font-bold rounded-full">Coming Soon</span>
+
+                        {isLoadingSessions ? (
+                            <div className="space-y-3">
+                                {[1, 2].map(i => <div key={i} className="h-16 bg-zinc-100 rounded-2xl animate-pulse" />)}
                             </div>
-                            <User className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
-                            <p className="text-zinc-400 text-sm font-medium px-4">Fitur pencatatan progress member akan segera hadir.</p>
-                        </div>
+                        ) : (() => {
+                            const recentCompleted = todaySessions
+                                .filter((s: any) => s.status === 'completed')
+                                .slice(0, 3);
+
+                            if (recentCompleted.length === 0) return (
+                                <div className="py-8 text-center border-2 border-dashed border-zinc-200 rounded-3xl bg-zinc-50">
+                                    <User className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
+                                    <p className="text-zinc-400 text-sm font-medium">Belum ada sesi selesai hari ini.</p>
+                                </div>
+                            );
+
+                            return (
+                                <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden divide-y divide-zinc-100">
+                                    {recentCompleted.map((s: any) => (
+                                        <Link
+                                            key={s.id}
+                                            href={`/trainer/members/${s.member_id}`}
+                                            className="flex items-start gap-3 p-4 hover:bg-zinc-50 transition-colors"
+                                        >
+                                            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-black text-sm shrink-0 mt-0.5">
+                                                {(s.member?.name ?? "?").charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-bold text-sm text-zinc-900 truncate">{s.member?.name}</p>
+                                                {s.notes ? (
+                                                    <p className="text-xs text-zinc-500 truncate mt-0.5">{s.notes}</p>
+                                                ) : (
+                                                    <p className="text-xs text-zinc-400 italic mt-0.5">Tanpa catatan</p>
+                                                )}
+                                            </div>
+                                            <span className="text-xs text-teal-600 font-bold shrink-0 mt-0.5">
+                                                {s.start_at?.slice(0, 5)}
+                                            </span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            );
+                        })()}
                     </div>
 
                 </div>

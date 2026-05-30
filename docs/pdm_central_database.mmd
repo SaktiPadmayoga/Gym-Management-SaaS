@@ -1,0 +1,259 @@
+erDiagram
+    %% ==========================================
+    %% CENTRAL DATABASE — GYMFIT SaaS Platform
+    %% 17 Tabel
+    %% ==========================================
+
+    %% ========== SAAS CORE ==========
+
+    tenants {
+        uuid id PK
+        varchar name
+        varchar slug UK
+        varchar owner_name
+        varchar owner_email
+        enum status "provisioning|failed|trial|active|suspended|expired"
+        int max_branches "default 1"
+        int current_branch_count "default 1"
+        varchar logo_url "nullable"
+        varchar timezone "default Asia-Jakarta"
+        varchar locale "default id"
+        json data "nullable"
+        timestamp trial_ends_at "nullable"
+        timestamp subscription_ends_at "nullable"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+        timestamp deleted_at "softDeletes"
+    }
+
+    domains {
+        uuid id PK
+        varchar domain UK
+        uuid tenant_id FK "references tenants.id CASCADE"
+        uuid branch_id "nullable"
+        enum type "tenant|branch"
+        boolean is_primary "default false"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+    }
+
+    plans {
+        uuid id PK
+        varchar name
+        varchar code UK
+        text description "nullable"
+        bigint price_monthly "default 0"
+        bigint price_yearly "default 0"
+        bigint setup_fee "default 0"
+        varchar currency "default IDR, 3 chars"
+        int max_membership "default 0"
+        int max_staff "default 0"
+        int max_branches "default 1"
+        boolean allow_multi_branch "default false"
+        boolean allow_cross_branch_attendance "default false"
+        json features "nullable"
+        boolean is_active "default true"
+        boolean is_public "default true"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+        timestamp deleted_at "softDeletes"
+    }
+
+    subscriptions {
+        uuid id PK
+        uuid tenant_id FK "references tenants.id CASCADE"
+        uuid plan_id FK "references plans.id RESTRICT"
+        enum status "active|pending|cancelled|expired|trial"
+        enum billing_cycle "monthly|yearly"
+        decimal amount "15-2 default 0"
+        boolean auto_renew "default true"
+        int max_branches "default 1"
+        int max_users "default 0"
+        timestamp started_at "nullable"
+        timestamp trial_ends_at "nullable"
+        timestamp current_period_ends_at "nullable, indexed"
+        timestamp canceled_at "nullable"
+        varchar last_invoice_id "nullable"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+        timestamp deleted_at "softDeletes"
+    }
+
+    invoices {
+        uuid id PK
+        uuid tenant_id FK "references tenants.id CASCADE"
+        uuid subscription_id FK "nullable, references subscriptions.id CASCADE"
+        varchar invoice_number UK "format INV-YYYY-NNNN"
+        varchar external_reference "nullable, midtrans order_id"
+        decimal amount "15-2"
+        varchar currency "default IDR, 10 chars"
+        varchar payment_gateway "default midtrans"
+        varchar payment_method "nullable, qris|va|gopay|cc"
+        varchar transaction_id "nullable"
+        enum status "pending|paid|failed|expired|canceled"
+        timestamp issued_at "nullable"
+        timestamp due_date "nullable"
+        timestamp paid_at "nullable"
+        json gateway_response "nullable"
+        text notes "nullable"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+    }
+
+    payments {
+        uuid id PK
+        uuid tenant_id FK "references tenants.id CASCADE"
+        uuid invoice_id FK "references invoices.id CASCADE"
+        varchar provider "default midtrans"
+        varchar payment_type "nullable, qris|bank_transfer|gopay|cc"
+        varchar transaction_id "nullable, indexed"
+        varchar order_id "indexed, invoice_number"
+        decimal gross_amount "15-2"
+        enum status "pending|success|failed|expired|refund"
+        json raw_response "nullable"
+        timestamp paid_at "nullable"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+    }
+
+    %% ========== ADMINISTRASI ==========
+
+    admins {
+        uuid id PK
+        varchar name
+        varchar email UK
+        varchar password
+        enum role "super_admin|finance|support"
+        boolean is_active "default true"
+        timestamp last_login_at "nullable"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+        timestamp deleted_at "softDeletes"
+    }
+
+    domain_requests {
+        uuid id PK
+        uuid tenant_id FK "references tenants.id CASCADE"
+        uuid branch_id FK "nullable, references domains.id SET NULL"
+        varchar current_domain
+        varchar requested_domain
+        enum status "pending|approved|rejected"
+        text rejection_reason "nullable"
+        uuid reviewed_by FK "nullable, references admins.id SET NULL"
+        timestamp reviewed_at "nullable"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+        timestamp deleted_at "softDeletes"
+    }
+
+    audit_logs {
+        bigint id PK "auto-increment"
+        varchar tenant_id "nullable, indexed, no FK"
+        varchar action "indexed"
+        varchar model "nullable"
+        varchar model_id "nullable"
+        varchar user_id "nullable"
+        varchar user_name "nullable"
+        varchar user_email "nullable"
+        json old_values "nullable"
+        json new_values "nullable"
+        varchar ip_address "nullable"
+        text user_agent "nullable"
+        timestamp created_at "nullable, indexed"
+        timestamp updated_at "nullable"
+    }
+
+    notifications {
+        uuid id PK
+        varchar type
+        varchar title
+        text message
+        boolean is_read "default false"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+    }
+
+    admin_password_reset_tokens {
+        varchar email PK
+        varchar token
+        timestamp created_at "nullable"
+    }
+
+    %% ========== AUTH (SANCTUM) ==========
+
+    personal_access_tokens {
+        bigint id PK "auto-increment"
+        varchar tokenable_type "morphs"
+        varchar tokenable_id "morphs, string 36 chars"
+        text name
+        varchar token UK "64 chars"
+        text abilities "nullable"
+        timestamp last_used_at "nullable"
+        timestamp expires_at "nullable, indexed"
+        timestamp created_at "nullable"
+        timestamp updated_at "nullable"
+    }
+
+    %% ========== LARAVEL FRAMEWORK ==========
+
+    cache {
+        varchar key PK "255 chars"
+        mediumtext value
+        int expiration
+    }
+
+    cache_locks {
+        varchar key PK "255 chars"
+        varchar owner
+        int expiration
+    }
+
+    jobs {
+        bigint id PK "auto-increment"
+        varchar queue "indexed"
+        longtext payload
+        tinyint attempts
+        uint reserved_at "nullable"
+        uint available_at
+        uint created_at
+    }
+
+    job_batches {
+        varchar id PK "255 chars"
+        varchar name
+        int total_jobs
+        int pending_jobs
+        int failed_jobs
+        longtext failed_job_ids
+        mediumtext options "nullable"
+        int cancelled_at "nullable"
+        int created_at
+        int finished_at "nullable"
+    }
+
+    failed_jobs {
+        bigint id PK "auto-increment"
+        varchar uuid UK
+        text connection
+        text queue
+        longtext payload
+        longtext exception
+        timestamp failed_at "default CURRENT_TIMESTAMP"
+    }
+
+    %% ========== RELASI ==========
+
+    tenants ||--o{ domains : "memiliki"
+    tenants ||--o{ subscriptions : "berlangganan"
+    tenants ||--o{ invoices : "menerima tagihan"
+    tenants ||--o{ payments : "membayar"
+    tenants ||--o{ domain_requests : "mengajukan"
+
+    plans ||--o{ subscriptions : "digunakan oleh"
+
+    subscriptions |o--o{ invoices : "menghasilkan"
+
+    invoices ||--o{ payments : "dibayar melalui"
+
+    domains |o--o{ domain_requests : "terkait"
+    admins |o--o{ domain_requests : "mereview"

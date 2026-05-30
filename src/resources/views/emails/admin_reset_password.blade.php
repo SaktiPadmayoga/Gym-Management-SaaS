@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password Fitnice Central Dashboard</title>
+    <title>Reset Password GYMFIT Central Dashboard</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
@@ -20,12 +20,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <p class="logo">Fitnice<span>.</span></p>
+            <p class="logo">GYMFIT<span>.</span></p>
         </div>
         <div class="content">
             <h1 class="h1">Reset Kata Sandi Admin</h1>
             <p>Halo,</p>
-            <p>Anda menerima email ini karena kami menerima permintaan penyetelan ulang kata sandi untuk akun Admin Fitnice Central Dashboard Anda.</p>
+            <p>Anda menerima email ini karena kami menerima permintaan penyetelan ulang kata sandi untuk akun Admin GYMFIT Central Dashboard Anda.</p>
             
             <div style="text-align: center;">
                 <a href="{{ $resetUrl }}" class="btn">Reset Kata Sandi</a>
@@ -41,7 +41,7 @@
             </div>
         </div>
         <div class="footer">
-            &copy; {{ date('Y') }} Fitnice OS. Hak Cipta Dilindungi.
+            &copy; {{ date('Y') }} GYMFIT OS. Hak Cipta Dilindungi.
         </div>
     </div>
 </body>

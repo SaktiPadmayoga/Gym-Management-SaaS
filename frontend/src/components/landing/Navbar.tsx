@@ -7,10 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NavLink } from "./NavLink"; // Sesuaikan dengan path file NavLink Anda
 
 const navLinks = [
-  { label: "Features", to: "/features" }, // Sesuaikan route dengan aplikasi Anda
+  { label: "Fitur", to: "/features" },
   { label: "Deployment", to: "/deployment" },
-  { label: "Pricing", to: "/pricing" },
-  { label: "Clients", to: "/clients" },
+  { label: "Harga", to: "/pricing" },
+  { label: "Klien", to: "/clients" },
 ];
 
 const Navbar = () => {
@@ -40,7 +40,7 @@ const Navbar = () => {
               <Dumbbell className="w-5 h-5 text-teal-400" />
             </div>
             <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
-              Fitnice<span className="text-teal-500">.</span>
+              GYMFIT<span className="text-teal-500">.</span>
             </span>
           </NavLink>
 
@@ -65,7 +65,7 @@ const Navbar = () => {
             {/* System Status Indicator */}
             <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Sys. Operational</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">Sistem Berjalan</span>
             </div>
             
             <Button 
@@ -74,7 +74,7 @@ const Navbar = () => {
             >
               {/* Button asChild + NavLink bekerja sempurna berkat forwardRef */}
               <NavLink to="/create-trial">
-                Start Trial
+                Mulai Uji Coba
                 <ArrowRight className="w-3.5 h-3.5 ml-2" />
               </NavLink>
             </Button>
@@ -120,7 +120,7 @@ const Navbar = () => {
                   activeClassName="text-teal-600 bg-slate-50"
                   onClick={() => setOpen(false)}
                 >
-                  Log in
+                  Masuk
                 </NavLink>
                 
                 <Button 
@@ -128,7 +128,7 @@ const Navbar = () => {
                   className="w-full mt-2 bg-teal-500 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl h-12 shadow-lg shadow-teal-500/20" 
                 >
                   <NavLink to="/register" onClick={() => setOpen(false)}>
-                    Get Access <ArrowRight className="w-4 h-4 ml-2" />
+                    Daftar Sekarang <ArrowRight className="w-4 h-4 ml-2" />
                   </NavLink>
                 </Button>
               </div>

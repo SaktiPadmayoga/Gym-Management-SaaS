@@ -152,8 +152,8 @@ class BranchReportService
         $registrationTrend = DB::table('members')
             ->where('home_branch_id', $branchId)
             ->whereBetween('created_at', [$start, $end])
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as total')
-            ->groupBy(DB::raw('DATE(created_at)'))
+            ->selectRaw('CAST(created_at AS date) as date, COUNT(*) as total')
+            ->groupBy(DB::raw('CAST(created_at AS date)'))
             ->orderBy('date')
             ->get()
             ->map(fn($item) => [
@@ -273,8 +273,8 @@ class BranchReportService
         $dailyTrend = DB::table('check_ins')
             ->where('branch_id', $branchId)->where('status', 'success')
             ->whereBetween('checked_in_at', [$start, $end])
-            ->selectRaw('DATE(checked_in_at) as date, COUNT(*) as total')
-            ->groupBy(DB::raw('DATE(checked_in_at)'))
+            ->selectRaw('CAST(checked_in_at AS date) as date, COUNT(*) as total')
+            ->groupBy(DB::raw('CAST(checked_in_at AS date)'))
             ->orderBy('date')
             ->get()
             ->map(fn($item) => [
@@ -610,8 +610,8 @@ class BranchReportService
 
         // Daily revenue trend
         $dailyTrend = (clone $invoicesQuery)
-            ->selectRaw('DATE(paid_at) as date, SUM(total_amount) as revenue')
-            ->groupBy(DB::raw('DATE(paid_at)'))
+            ->selectRaw('CAST(paid_at AS date) as date, SUM(total_amount) as revenue')
+            ->groupBy(DB::raw('CAST(paid_at AS date)'))
             ->orderBy('date')
             ->get()
             ->map(fn($item) => [
@@ -719,8 +719,8 @@ class BranchReportService
             ->count();
 
         $dailyProductSales = (clone $productSalesQuery)
-            ->selectRaw('DATE(tenant_invoices.paid_at) as date, SUM(tenant_invoice_items.total_price) as revenue, SUM(tenant_invoice_items.quantity) as qty')
-            ->groupBy(DB::raw('DATE(tenant_invoices.paid_at)'))
+            ->selectRaw('CAST(tenant_invoices.paid_at AS date) as date, SUM(tenant_invoice_items.total_price) as revenue, SUM(tenant_invoice_items.quantity) as qty')
+            ->groupBy(DB::raw('CAST(tenant_invoices.paid_at AS date)'))
             ->orderBy('date')
             ->get()
             ->map(fn($item) => [

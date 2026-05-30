@@ -58,7 +58,7 @@ export default function BranchCreateStaff() {
         },
     });
 
-    const selectedRole = form.watch("role");
+
 
     const onSubmit = async (formData: CreateStaffFormData) => {
         try {
@@ -156,39 +156,19 @@ export default function BranchCreateStaff() {
                             </div>
                         </div>
 
-                        {/* ROLE */}
+                        {/* BRANCH ASSIGNMENT */}
+                        <hr />
+                        <div>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-1">Branch Assignment</h2>
+                            <p className="text-sm text-zinc-500 mb-4">
+                                Staff will be assigned to <span className="font-medium text-zinc-700">{currentBranch?.name}</span> automatically.
+                            </p>
+                        </div>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} rules={{ required: "Global role is required" }} />
+                                <SearchableDropdown name="branch_role" label="Role in Branch" options={branchRoleOptions} rules={{ required: "Branch role is required" }} />
                             </div>
                         </div>
-
-                        {/* BRANCH ROLE — hanya tampil jika branch context tersedia dan role adalah staff */}
-                        {selectedRole === "staff" && (
-                            <>
-                                <hr />
-                                <div>
-                                    <h2 className="text-lg font-semibold text-gray-800 mb-1">Branch Assignment</h2>
-                                    <p className="text-sm text-zinc-500 mb-4">
-                                        Staff will be assigned to <span className="font-medium text-zinc-700">{currentBranch?.name}</span> automatically.
-                                    </p>
-                                </div>
-                                <div className="grid grid-cols-12 gap-4">
-                                    <div className="col-span-6">
-                                        <SearchableDropdown name="branch_role" label="Role in Branch" options={branchRoleOptions} rules={{ required: "Branch role is required" }} />
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* Informasi untuk Owner */}
-                        {selectedRole === "owner" && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700 mt-2">
-                                <p>
-                                    <strong>Catatan:</strong> Akun dengan role <strong>Owner</strong> akan memiliki akses penuh ke semua cabang dan fitur Owner Dashboard. Tidak diperlukan penugasan cabang spesifik.
-                                </p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </form>

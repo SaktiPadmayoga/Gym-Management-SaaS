@@ -30,7 +30,7 @@ class StaffController extends Controller
         //     });
         // }
 
-        $query = Staff::query()->with(['staffBranches.branch']);
+        $query = Staff::query()->with(['staffBranches.branch', 'staffBranches.role']);
 
         if ($request->filled('branch_id')) {
             $query->whereHas('staffBranches', function ($q) use ($request) {
@@ -44,9 +44,9 @@ class StaffController extends Controller
             $query->where(function ($q) use ($role) {
                 // 1. Cek apakah cocok dengan role global di tabel staffs
                 $q->where('role', $role)
-                  // 2. ATAU cek apakah cocok dengan role di tabel staff_branches
-                  ->orWhereHas('staffBranches', function ($sq) use ($role) {
-                      $sq->where('role', $role)->where('is_active', true);
+                  // 2. ATAU cek apakah cocok dengan role di tabel staff_branches (melalui relasi role.name)
+                  ->orWhereHas('staffBranches.role', function ($sq) use ($role) {
+                      $sq->where('name', $role)->where('staff_branches.is_active', true);
                   });
             });
         }
@@ -97,22 +97,24 @@ class StaffController extends Controller
         ]);
 
         if (!empty($data['branch_id'])) {
+            $role = \App\Models\Tenant\Role::where('name', $data['branch_role'])->firstOrFail();
+
             StaffBranch::create([
                 'staff_id'  => $staff->id,
                 'branch_id' => $data['branch_id'], 
-                'role'      => $data['branch_role'],
+                'role_id'   => $role->id,
                 'joined_at' => now(),
             ]);
         }
 
-        $staff->load('staffBranches.branch');
+        $staff->load(['staffBranches.branch', 'staffBranches.role']);
 
         return ApiResponse::success(new StaffResource($staff), 'Staff created successfully', 201);
     }
 
     public function show(Request $request, string $id)
     {
-        $staff = Staff::with('staffBranches.branch')->findOrFail($id);
+        $staff = Staff::with(['staffBranches.branch', 'staffBranches.role'])->findOrFail($id);
 
         // TODO: uncomment setelah auth diterapkan
         // $authStaff = $request->user();
@@ -143,7 +145,7 @@ class StaffController extends Controller
         }
 
         $staff->update($data);
-        $staff->load('staffBranches.branch');
+        $staff->load(['staffBranches.branch', 'staffBranches.role']);
 
         return ApiResponse::success(new StaffResource($staff), 'Staff updated successfully');
     }
@@ -163,6 +165,10 @@ class StaffController extends Controller
         $staff = Staff::findOrFail($id);
         $data  = $request->validated();
 
+        $role = \App\Models\Tenant\Role::where('name', $data['role'])
+            ->orWhere('id', $data['role'])
+            ->firstOrFail();
+
         $existing = StaffBranch::withTrashed()
             ->where('staff_id', $staff->id)
             ->where('branch_id', $data['branch_id'])
@@ -171,7 +177,7 @@ class StaffController extends Controller
         if ($existing) {
             $existing->restore();
             $existing->update([
-                'role'      => $data['role'],
+                'role_id'   => $role->id,
                 'is_active' => true,
                 'joined_at' => $data['joined_at'] ?? now(),
             ]);
@@ -180,12 +186,12 @@ class StaffController extends Controller
             $staffBranch = StaffBranch::create([
                 'staff_id'  => $staff->id,
                 'branch_id' => $data['branch_id'],
-                'role'      => $data['role'],
+                'role_id'   => $role->id,
                 'joined_at' => $data['joined_at'] ?? now(),
             ]);
         }
 
-        $staffBranch->load('branch');
+        $staffBranch->load(['branch', 'role']);
 
         return ApiResponse::success($staffBranch, 'Staff assigned to branch successfully');
     }
@@ -204,13 +210,14 @@ class StaffController extends Controller
 
     public function branches(string $id)
     {
-        $staff = Staff::with('staffBranches.branch')->findOrFail($id);
+        $staff = Staff::with(['staffBranches.branch', 'staffBranches.role'])->findOrFail($id);
 
         return ApiResponse::success(
             $staff->staffBranches->map(fn($sb) => [
                 'id'        => $sb->id,
                 'branch'    => $sb->branch,
-                'role'      => $sb->role,
+                'role'      => $sb->role?->name,
+                'role_id'   => $sb->role_id,
                 'is_active' => $sb->is_active,
                 'joined_at' => $sb->joined_at?->toIso8601String(),
             ])

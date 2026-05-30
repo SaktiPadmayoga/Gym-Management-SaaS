@@ -23,6 +23,24 @@ class CookieService
         );
     }
 
+    /**
+     * Owner cookie — terpisah dari staff_token agar sesi owner & staff bisa
+     * berjalan bersamaan di tab browser yang berbeda.
+     */
+    public static function makeOwnerCookie(string $token): Cookie
+    {
+        return cookie(
+            name:     'owner_token',
+            value:    $token,
+            minutes:  480,
+            path:     '/',
+            domain:   null,
+            secure:   true,
+            httpOnly: true,
+            sameSite: 'None',
+        );
+    }
+
     public static function makeMemberCookie(string $token): Cookie
     {
         return cookie(
@@ -53,7 +71,12 @@ class CookieService
 
     public static function clearStaffCookie(): Cookie
     {
-        return cookie('staff_token',  '', -1, '/');
+        return cookie('staff_token', '', -1, '/');
+    }
+
+    public static function clearOwnerCookie(): Cookie
+    {
+        return cookie('owner_token', '', -1, '/');
     }
 
     public static function clearMemberCookie(): Cookie
@@ -63,6 +86,6 @@ class CookieService
 
     public static function clearAdminCookie(): Cookie
     {
-        return cookie('admin_token',  '', -1, '/');
+        return cookie('admin_token', '', -1, '/');
     }
 }

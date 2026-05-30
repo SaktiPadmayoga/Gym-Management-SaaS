@@ -13,6 +13,8 @@ import {
     IconBarbell,
     IconBarbellFilled,
     IconLink,
+    IconShield,
+    IconShieldFilled,
 } from "@tabler/icons-react";
 
 /**
@@ -78,6 +80,7 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     
 
 
+
     // =========================
     // USER MANAGEMENT
     // =========================
@@ -95,6 +98,13 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
         path: "/owner/staffs",
         Icon: IconUser,
         IconSolid: IconUserFilled,
+    },
+    {
+        id: "nav-roles",
+        title: "Role & Izin",
+        path: "/owner/roles",
+        Icon: IconShield,
+        IconSolid: IconShieldFilled,
     },
 
     // =========================

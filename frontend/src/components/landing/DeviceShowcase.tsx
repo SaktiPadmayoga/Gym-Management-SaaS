@@ -112,7 +112,7 @@ const DeviceShowcase = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-slate-500 leading-relaxed font-medium mb-8"
             >
-              Pantau performa bisnis gym Anda dari mana saja. Fitnice memberikan aplikasi khusus untuk staf di lapangan dan dashboard analitik lengkap untuk manajemen di level strategis.
+              Pantau performa bisnis gym Anda dari mana saja. GYMFIT memberikan aplikasi khusus untuk staf di lapangan dan dashboard analitik lengkap untuk manajemen di level strategis.
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -147,7 +147,7 @@ const DeviceShowcase = () => {
               transition={{ duration: 0.6 }}
               className="text-white/90 text-lg md:text-xl leading-relaxed font-medium mb-6"
             >
-              Tinggalkan rumitnya pencatatan manual. Fitnice menyajikan laporan keuangan real-time mulai dari transaksi harian hingga performa membership, semua terpusat dalam satu platform mudah.
+              Tinggalkan rumitnya pencatatan manual. GYMFIT menyajikan laporan keuangan real-time mulai dari transaksi harian hingga performa membership, semua terpusat dalam satu platform mudah.
             </motion.p>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}

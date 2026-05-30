@@ -24,33 +24,33 @@ const CtaSection = () => {
           </div>
 
           <h2 className="relative z-10 text-5xl md:text-7xl lg:text-[6rem] font-black tracking-tighter uppercase text-white leading-[0.85] mb-8">
-            System <br />
-            <span className="text-teal-500">Ready.</span>
+            Sistem <br />
+            <span className="text-teal-500">Siap.</span>
           </h2>
 
           <p className="relative z-10 text-sm md:text-base font-bold text-slate-400 uppercase tracking-widest max-w-lg mx-auto mb-12 leading-relaxed">
-            Bergabung dengan 500+ bisnis kebugaran yang telah berkembang bersama Fitnice. Skalakan operasi Anda hari ini.
+            Bergabung dengan 500+ bisnis kebugaran yang telah berkembang bersama GYMFIT. Tingkatkan skala bisnis Anda sekarang juga.
           </p>
 
           <div className="relative z-10 flex flex-col sm:flex-row gap-4 justify-center w-full max-w-md">
             <Button className="w-full h-16 bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm uppercase tracking-widest rounded-2xl shadow-[0_0_40px_rgba(20,184,166,0.3)] transition-all active:scale-95">
-              Start Free Trial
+              Mulai Uji Coba Gratis
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button 
               variant="outline" 
               className="w-full h-16 bg-transparent border-slate-700 text-white hover:bg-white/5 hover:text-white font-black text-sm uppercase tracking-widest rounded-2xl transition-all"
             >
-              Contact Sales
+              Hubungi Tim Sales
             </Button>
           </div>
 
           <div className="relative z-10 flex items-center justify-center gap-6 mt-10 opacity-60">
-             <span className="text-[10px] font-black uppercase tracking-widest text-white">No Credit Card</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-white">Tanpa Kartu Kredit</span>
              <span className="w-1.5 h-1.5 rounded-full bg-slate-600" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-white">Cancel Anytime</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-white">Batalkan Kapan Saja</span>
              <span className="w-1.5 h-1.5 rounded-full bg-slate-600 hidden md:block" />
-             <span className="text-[10px] font-black uppercase tracking-widest text-white hidden md:block">24/7 Support</span>
+             <span className="text-[10px] font-black uppercase tracking-widest text-white hidden md:block">Dukungan 24/7</span>
           </div>
         </motion.div>
       </div>

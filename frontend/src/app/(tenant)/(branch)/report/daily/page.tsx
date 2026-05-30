@@ -8,12 +8,14 @@ import { useBranchReport } from "@/hooks/tenant/useBranchReport";
 import ReportPageLayout from "@/components/pages/branch/report/ReportPageLayout";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
 import { exportToExcel } from "@/lib/exportExcel";
+import { exportToPdf, buildPdfFilename } from "@/lib/exportPdf";
 
 const formatRupiah = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(n);
 const toNumber = (v: any) => { const p = parseFloat(v); return isNaN(p) ? 0 : p; };
 
 export default function DailyReportPage() {
     const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
     const { data, isLoading, isError } = useBranchReport("daily", undefined, undefined, date);
     const report = data?.data;
 
@@ -39,7 +41,8 @@ export default function DailyReportPage() {
             "Invoice": tx.invoice_number,
             "Member": tx.member_name,
             "Metode": tx.payment_method || "OTHER",
-            "Total": tx.total_amount
+            "Total": tx.total_amount,
+            "Waktu": tx.paid_at ? dayjs(tx.paid_at).format("HH:mm:ss") : "-"
         }));
 
         exportToExcel([
@@ -47,6 +50,57 @@ export default function DailyReportPage() {
             { sheetName: "Check-in Per Jam", data: hourlyData },
             { sheetName: "Transaksi", data: txData }
         ], `Laporan_Harian_${date}`);
+    };
+
+    const handleExportPdf = async () => {
+        if (!report) return;
+        setIsExportingPdf(true);
+        try {
+            const s = report.summary || {};
+            await exportToPdf({
+                title: "Laporan Harian",
+                subtitle: `Tanggal: ${dayjs(date).format("DD MMMM YYYY")}`,
+                filename: buildPdfFilename("Harian", date, date),
+                summary: [
+                    { label: "Pendapatan", value: formatRupiah(toNumber(s.revenue)) },
+                    { label: "Transaksi", value: s.transactions ?? 0 },
+                    { label: "Check-in", value: s.check_ins ?? 0 },
+                    { label: "Member Baru", value: s.new_members ?? 0 },
+                    { label: "Kelas", value: s.classes ?? 0 },
+                    { label: "Peserta Kelas", value: s.class_attendees ?? 0 },
+                    { label: "PT Sessions", value: s.pt_sessions ?? 0 },
+                ],
+                tables: [
+                    {
+                        title: "Distribusi Check-in per Jam",
+                        columns: [
+                            { header: "Jam", key: "hour" },
+                            { header: "Total", key: "total", align: "right" },
+                        ],
+                        rows: (report.charts?.hourly_checkins || []).map((h: any) => ({ hour: h.hour, total: h.total })),
+                    },
+                    {
+                        title: "Transaksi Hari Ini",
+                        columns: [
+                            { header: "Invoice", key: "invoice" },
+                            { header: "Member", key: "member" },
+                            { header: "Metode", key: "metode" },
+                            { header: "Total", key: "total", align: "right" },
+                        ],
+                        rows: (report.tables?.recent_transactions || []).map((tx: any) => ({
+                            invoice: tx.invoice_number,
+                            member: tx.member_name,
+                            metode: tx.payment_method || "OTHER",
+                            total: formatRupiah(toNumber(tx.total_amount)),
+                        })),
+                    },
+                ],
+            });
+        } catch (e) {
+            console.error("PDF export gagal:", e);
+        } finally {
+            setIsExportingPdf(false);
+        }
     };
 
     return (
@@ -57,12 +111,14 @@ export default function DailyReportPage() {
             isLoading={isLoading}
             isError={isError}
             onExportExcel={handleExportExcel}
+            onExportPdf={handleExportPdf}
+            isExportingPdf={isExportingPdf}
             filterSlot={
                 <ReportDateFilter startDate="" endDate="" onFilterChange={() => {}} showDatePicker date={date} onDateChange={setDate} />
             }
         >
             {report && (
-                <div className="space-y-6">
+                <div id="report-content-daily" className="space-y-6">
                     {/* Summary Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         <SummaryCard icon={<DollarSign size={20} />} label="Pendapatan" value={formatRupiah(toNumber(report.summary?.revenue))} color="green" />

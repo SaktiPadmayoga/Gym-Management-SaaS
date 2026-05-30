@@ -22,8 +22,8 @@ class PtSessionController extends Controller
         $query = PtSession::with(['member', 'trainer', 'package.plan']);
 
         // Filter: Trainer hanya melihat sesinya sendiri, kecuali dia manager/owner
-        $isBranchTrainer = $staff->branches()->where('staff_branches.role', 'trainer')->exists();
-        $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->branches()->whereIn('staff_branches.role', ['branch_manager'])->exists();
+        $isBranchTrainer = $staff->staffBranches()->whereHas('role', fn($q) => $q->where('name', 'trainer'))->exists();
+        $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->staffBranches()->whereHas('role', fn($q) => $q->whereIn('name', ['branch_manager']))->exists();
 
         if ($isBranchTrainer && !$isManager) {
             $query->where('trainer_id', $staff->id);
@@ -155,6 +155,70 @@ class PtSessionController extends Controller
         return ApiResponse::success(null, 'Jadwal berhasil dibatalkan');
     }
 
+    /**
+     * Tandai Sesi Sebagai Selesai
+     * Sekaligus update used_sessions di paket member.
+     */
+    public function markComplete(Request $request, $id)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:2000',
+        ]);
+
+        $session = PtSession::with('package')->findOrFail($id);
+
+        if (!in_array($session->status, ['scheduled', 'ongoing'])) {
+            return ApiResponse::error(
+                "Hanya sesi berstatus 'scheduled' atau 'ongoing' yang bisa diselesaikan.",
+                null, 422
+            );
+        }
+
+        DB::transaction(function () use ($session, $request) {
+            // 1. Update status sesi + simpan catatan trainer
+            $session->update([
+                'status' => 'completed',
+                'notes'  => $request->notes,
+            ]);
+
+            // 2. Increment used_sessions di paket (fix bug TODO sebelumnya)
+            if ($session->package) {
+                $session->package->increment('used_sessions');
+            }
+        });
+
+        return ApiResponse::success(
+            $session->fresh(['member', 'trainer', 'package.plan']),
+            'Sesi berhasil ditandai selesai'
+        );
+    }
+
+    /**
+     * Update Catatan/Progress Sesi (oleh Trainer)
+     * Hanya bisa mengedit kolom notes saja.
+     */
+    public function updateNotes(Request $request, $id)
+    {
+        $request->validate([
+            'notes' => 'required|string|max:2000',
+        ]);
+
+        $staff   = $request->user();
+        $session = PtSession::findOrFail($id);
+
+        // Trainer hanya boleh edit notes sesi yang dia ampu,
+        // kecuali owner/admin yang bisa edit semuanya.
+        if (!$staff->isOwner() && $staff->role !== 'admin') {
+            if ($session->trainer_id !== $staff->id) {
+                return ApiResponse::error('Anda tidak berhak mengedit catatan sesi ini.', null, 403);
+            }
+        }
+
+        $session->update(['notes' => $request->notes]);
+
+        return ApiResponse::success($session->fresh(), 'Catatan sesi berhasil diperbarui');
+    }
+
     public function getRequests(Request $request)
     {
         $staff = $request->user();
@@ -164,8 +228,8 @@ class PtSessionController extends Controller
         // Filter: Trainer hanya melihat request untuk dirinya sendiri,
         // Branch manager bisa melihat semua request di cabang mereka (di-handle oleh global scope jika ada, atau tambahkan manual).
         $isGlobalTrainer = $staff->role === 'trainer';
-        $isBranchTrainer = $staff->branches()->where('staff_branches.role', 'trainer')->exists();
-        $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->branches()->whereIn('staff_branches.role', ['branch_manager'])->exists();
+        $isBranchTrainer = $staff->staffBranches()->whereHas('role', fn($q) => $q->where('name', 'trainer'))->exists();
+        $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->staffBranches()->whereHas('role', fn($q) => $q->whereIn('name', ['branch_manager']))->exists();
 
         if (($isGlobalTrainer || $isBranchTrainer) && !$isManager) {
             $query->where('trainer_id', $staff->id);
