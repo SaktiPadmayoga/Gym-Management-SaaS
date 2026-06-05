@@ -32,6 +32,7 @@ interface PlanFormData {
     pricing: {
         monthly: number;
         yearly: number;
+        setup_fee: number;
         currency: string;
     };
 
@@ -42,6 +43,8 @@ interface PlanFormData {
     };
 
     features: string; // comma separated di UI
+    allow_multi_branch: boolean;
+    allow_cross_branch_attendance: boolean;
     is_active: boolean;
     is_public: boolean;
 }
@@ -73,6 +76,7 @@ export default function PlanDetailPage() {
             pricing: {
                 monthly: plan.pricing.monthly,
                 yearly: plan.pricing.yearly,
+                setup_fee: plan.pricing.setup_fee || 0,
                 currency: plan.pricing.currency,
             },
 
@@ -83,6 +87,8 @@ export default function PlanDetailPage() {
             },
 
             features: plan.features.join(", "),
+            allow_multi_branch: plan.allow_multi_branch || false,
+            allow_cross_branch_attendance: plan.allow_cross_branch_attendance || false,
             is_active: plan.is_active,
             is_public: plan.is_public,
         });
@@ -90,7 +96,7 @@ export default function PlanDetailPage() {
 
     if (isLoading) return <div className="p-6">Loading...</div>;
     if (isError) return notFound();
-    if (!plan) return null; 
+    if (!plan) return null;
 
     /* =====================================
      * SAVE UPDATE
@@ -114,6 +120,9 @@ export default function PlanDetailPage() {
                           .filter(Boolean)
                     : [],
 
+                allow_multi_branch: formData.allow_multi_branch,
+                allow_cross_branch_attendance: formData.allow_cross_branch_attendance,
+
                 is_active: formData.is_active,
                 is_public: formData.is_public,
             };
@@ -127,14 +136,9 @@ export default function PlanDetailPage() {
 
             toast.success("Plan updated successfully");
             setIsEditMode(false);
-            router.push("/plans");
+            router.push("/admin/plans");
         } catch (error: any) {
-
-            const message =
-                error?.response?.data?.error ||   
-                error?.response?.data?.message || 
-                error?.message ||                 
-                "Failed to update plan";
+            const message = error?.response?.data?.error || error?.response?.data?.message || error?.message || "Failed to update plan";
 
             toast.error(message);
         }
@@ -148,6 +152,8 @@ export default function PlanDetailPage() {
             pricing: plan.pricing,
             limits: plan.limits,
             features: plan.features.join(", "),
+            allow_multi_branch: plan.allow_multi_branch || false,
+            allow_cross_branch_attendance: plan.allow_cross_branch_attendance || false,
             is_active: plan.is_active,
             is_public: plan.is_public,
         });
@@ -157,7 +163,6 @@ export default function PlanDetailPage() {
     return (
         <FormProvider {...form}>
             <form>
-
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
                     <Toaster position="top-center" />
                     {/* Breadcrumb */}
@@ -165,7 +170,7 @@ export default function PlanDetailPage() {
                         <ul>
                             <li>Tenant & Subscription</li>
                             <li>
-                                <Link href="/plans">Plans</Link>
+                                <Link href="/admin/plans">Plans</Link>
                             </li>
                             <li className="text-aksen-secondary">{id}</li>
                         </ul>
@@ -211,13 +216,16 @@ export default function PlanDetailPage() {
 
                         {/* PRICE */}
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
+                            <div className="col-span-3">
                                 <NumberInput name="pricing.monthly" label="Monthly Price" disabled={!isEditMode} rules={{ required: "Monthly price is required" }} />
                             </div>
-                            <div className="col-span-4">
+                            <div className="col-span-3">
                                 <NumberInput name="pricing.yearly" label="Yearly Price" disabled={!isEditMode} rules={{ required: "Yearly price is required" }} />
                             </div>
-                            <div className="col-span-4">
+                            <div className="col-span-3">
+                                <NumberInput name="pricing.setup_fee" label="Setup Fee" disabled={!isEditMode} rules={{ required: "Setup fee is required" }} />
+                            </div>
+                            <div className="col-span-3">
                                 <SearchableDropdown name="pricing.currency" label="Currency" options={currencyOptions} disabled={!isEditMode} />
                             </div>
                         </div>
@@ -236,6 +244,21 @@ export default function PlanDetailPage() {
                             <div className="col-span-4">
                                 <NumberInput name="limits.max_branches" label="Max Branches" disabled={!isEditMode} rules={{ required: "Max branches is required" }} />
                             </div>
+                        </div>
+
+                        <hr />
+
+                        {/* BRANCH SETTINGS */}
+                        <h2 className="text-lg font-semibold text-gray-800">Branch Settings</h2>
+                        <div className="flex gap-10 text-gray-800">
+                            <label className="flex items-center gap-2">
+                                <input type="checkbox" {...form.register("allow_multi_branch")} disabled={!isEditMode} />
+                                <span>Allow Multi Branch</span>
+                            </label>
+                            <label className="flex items-center gap-2">
+                                <input type="checkbox" {...form.register("allow_cross_branch_attendance")} disabled={!isEditMode} />
+                                <span>Allow Cross Branch Attendance</span>
+                            </label>
                         </div>
 
                         <hr />

@@ -13,8 +13,30 @@ const PricingSection = () => {
 
   const publicPlans = plansData?.filter((plan) => plan.is_public) || [];
 
-  const formatPrice = (price: number) => {
+  // Sort plans from lowest monthly price to highest monthly price, with Custom (price 0) at the end
+  const sortedPlans = [...publicPlans].sort((a, b) => {
+    const priceA = a.pricing?.monthly ?? 0;
+    const priceB = b.pricing?.monthly ?? 0;
+    
+    if (priceA === 0 && priceB !== 0) return 1;
+    if (priceB === 0 && priceA !== 0) return -1;
+    return priceA - priceB;
+  });
+
+  const formatPrice = (price: number, currency: string = "IDR") => {
     if (price === 0) return { amount: "Custom", suffix: "" };
+    
+    if (currency === "IDR") {
+      if (price >= 1000000) {
+        const value = price / 1000000;
+        return { amount: Number(value.toFixed(2)).toString(), suffix: " jt" };
+      }
+      if (price >= 1000) {
+        const value = price / 1000;
+        return { amount: Number(value.toFixed(2)).toString(), suffix: " rb" };
+      }
+    }
+    
     if (price >= 1000000) return { amount: (price / 1000000).toString(), suffix: "M" };
     if (price >= 1000) return { amount: (price / 1000).toString(), suffix: "K" };
     return { amount: price.toString(), suffix: "" };
@@ -116,14 +138,14 @@ const PricingSection = () => {
         {/* --- PRICING CARDS --- */}
         {!isLoading && !isError && (
           <div className="grid lg:grid-cols-3 gap-6 md:gap-6 items-center">
-            {publicPlans.map((plan, i) => {
+            {sortedPlans.map((plan, i) => {
               const isPopular = plan.code.toLowerCase().includes("pro") || i === 1;
               const priceValue = billingCycle === "monthly" ? plan.pricing.monthly : plan.pricing.yearly;
-              const { amount, suffix } = formatPrice(priceValue);
+              const { amount, suffix } = formatPrice(priceValue, plan.pricing.currency);
               const isCustom = amount === "Custom";
               
               const description = getFallbackDescription(i);
-              const periodLabel = billingCycle === "monthly" ? "/mo" : "/yr";
+              const periodLabel = billingCycle === "monthly" ? "/bln" : "/thn";
               
               // Ambil konfigurasi CTA
               const { label, href } = getCtaAttributes(plan.code);
@@ -185,6 +207,22 @@ const PricingSection = () => {
                     )}
                   </div>
 
+                  {/* Setup Fee Display */}
+                  <div className={`text-xs font-bold -mt-6 mb-8 uppercase tracking-wider ${isPopular ? "text-slate-400" : "text-slate-500"}`}>
+                    {plan.pricing.setup_fee && plan.pricing.setup_fee > 0 ? (
+                      <span>
+                        Setup Fee:{" "}
+                        <span className={`font-black ${isPopular ? "text-teal-400" : "text-slate-900"}`}>
+                          {plan.pricing.currency === "IDR" ? "Rp " : plan.pricing.currency}
+                          {formatPrice(plan.pricing.setup_fee, plan.pricing.currency).amount}
+                          {formatPrice(plan.pricing.setup_fee, plan.pricing.currency).suffix}
+                        </span>
+                      </span>
+                    ) : (
+                      <span>Setup Fee: <span className="text-teal-500 font-extrabold">Gratis</span></span>
+                    )}
+                  </div>
+
                   {/* --- CTA BUTTON DENGAN NAVIGASI --- */}
                   <div className="mb-10 relative z-10">
                     <Link href={href} className="w-full block">
@@ -205,6 +243,25 @@ const PricingSection = () => {
                       Features Included
                     </p>
                     <ul className="space-y-4">
+                      {/* Member Limit */}
+                      <li className="flex items-start gap-3">
+                        <CheckCircle2 className={`w-5 h-5 shrink-0 ${isPopular ? "text-teal-500" : "text-slate-300"}`} />
+                        <span className={`text-sm font-bold leading-tight ${isPopular ? "text-slate-200" : "text-slate-800"}`}>
+                          {plan.limits?.max_membership === 0 
+                            ? "Member Tanpa Batas" 
+                            : `Maks. ${plan.limits?.max_membership.toLocaleString("id-ID")} Member`}
+                        </span>
+                      </li>
+                      {/* Branch Limit */}
+                      <li className="flex items-start gap-3">
+                        <CheckCircle2 className={`w-5 h-5 shrink-0 ${isPopular ? "text-teal-500" : "text-slate-300"}`} />
+                        <span className={`text-sm font-bold leading-tight ${isPopular ? "text-slate-200" : "text-slate-800"}`}>
+                          {plan.limits?.max_branches === 0 
+                            ? "Cabang Tanpa Batas" 
+                            : `Maks. ${plan.limits?.max_branches.toLocaleString("id-ID")} Cabang`}
+                        </span>
+                      </li>
+                      {/* Dynamic Features */}
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-3">
                           <CheckCircle2 className={`w-5 h-5 shrink-0 ${isPopular ? "text-teal-500" : "text-slate-300"}`} />

@@ -3,6 +3,7 @@ import * as z from "zod";
 export const PricingSchema = z.object({
     monthly: z.number().int().nonnegative(),
     yearly: z.number().int().nonnegative(),
+    setup_fee: z.number().int().nonnegative().optional(),
     currency: z.string(),
 });
 
@@ -21,6 +22,9 @@ export const PlansSchema = z.object({
     limits: LimitsSchema,
 
     features: z.array(z.string()),
+
+    allow_multi_branch: z.boolean().optional(),
+    allow_cross_branch_attendance: z.boolean().optional(),
 
     is_active: z.boolean(),
     is_public: z.boolean(),
@@ -41,11 +45,15 @@ export const PlanCreateRequestSchema = z.object({
 
     price_monthly: z.number().int().nonnegative(),
     price_yearly: z.number().int().nonnegative(),
+    setup_fee: z.number().int().nonnegative().optional(),
     currency: z.string(),
 
     max_membership: z.number().optional(),
     max_staff: z.number().optional(),
     max_branches: z.number().optional(),
+
+    allow_multi_branch: z.boolean().optional(),
+    allow_cross_branch_attendance: z.boolean().optional(),
 
     features: z.array(z.string()).optional(),
 
@@ -62,11 +70,15 @@ export const mapPlanFormToCreateRequest = (data: PlansData): PlanCreateRequest =
 
         price_monthly: data.pricing.monthly,
         price_yearly: data.pricing.yearly,
+        setup_fee: data.pricing.setup_fee,
         currency: data.pricing.currency,
 
         max_membership: data.limits.max_membership,
         max_staff: data.limits.max_staff,
         max_branches: data.limits.max_branches,
+
+        allow_multi_branch: data.allow_multi_branch,
+        allow_cross_branch_attendance: data.allow_cross_branch_attendance,
 
         features: data.features,
 

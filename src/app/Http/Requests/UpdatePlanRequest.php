@@ -25,6 +25,7 @@ class UpdatePlanRequest extends FormRequest
             'description' => 'nullable|string|max:1000',
             'price_monthly' => 'sometimes|required|numeric|min:0',
             'price_yearly' => 'sometimes|required|numeric|min:0',
+            'setup_fee' => 'nullable|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'max_membership' => 'nullable|integer|min:0',
             'max_staff' => 'nullable|integer|min:0',

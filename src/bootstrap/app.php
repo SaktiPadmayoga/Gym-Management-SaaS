@@ -12,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
         $middleware->prepend(\App\Http\Middleware\InjectTokenFromCookie::class);
         $middleware->prepend(\Illuminate\Cookie\Middleware\EncryptCookies::class);
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);

@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
     // -----------------------------------------------
     // 1. EXTRACT HOSTNAME
     // -----------------------------------------------
-    let hostname = request.headers.get("host") || "";
+    let hostname = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
     hostname = hostname.split(":")[0];
 
     const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "gymfit.id";

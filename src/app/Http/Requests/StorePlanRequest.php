@@ -19,6 +19,7 @@ class StorePlanRequest extends FormRequest
             'description' => 'nullable|string|max:1000',
             'price_monthly' => ['required', 'integer', 'min:0'],
             'price_yearly'  => ['required', 'integer', 'min:0'],
+            'setup_fee'     => ['nullable', 'integer', 'min:0'],
             'currency' => 'nullable|string|size:3',
             'max_membership' => 'nullable|integer|min:0',
             'max_staff' => 'nullable|integer|min:0',

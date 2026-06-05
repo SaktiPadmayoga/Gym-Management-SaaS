@@ -17,7 +17,7 @@ class Plan extends Model
 
     protected $fillable = [
         'id', 'name', 'code', 'description',
-        'price_monthly', 'price_yearly', 'currency',
+        'price_monthly', 'price_yearly', 'setup_fee', 'currency',
         'max_membership', 'max_staff', 'max_branches',
         'allow_multi_branch',
         'allow_cross_branch_attendance',

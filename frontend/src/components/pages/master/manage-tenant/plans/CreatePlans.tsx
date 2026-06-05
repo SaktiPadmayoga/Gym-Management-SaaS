@@ -22,6 +22,7 @@ interface CreatePlanFormData {
     pricing: {
         monthly: number;
         yearly: number;
+        setup_fee: number;
         currency: string;
     };
     limits: {
@@ -30,6 +31,8 @@ interface CreatePlanFormData {
         max_branches: number;
     };
     features: string;
+    allow_multi_branch: boolean;
+    allow_cross_branch_attendance: boolean;
     is_active: boolean;
     is_public: boolean;
 }
@@ -46,6 +49,7 @@ export default function CreatePlans() {
             pricing: {
                 monthly: 0,
                 yearly: 0,
+                setup_fee: 0,
                 currency: "IDR",
             },
             limits: {
@@ -54,6 +58,8 @@ export default function CreatePlans() {
                 max_branches: 0,
             },
             features: "",
+            allow_multi_branch: false,
+            allow_cross_branch_attendance: false,
             is_active: true,
             is_public: true,
         },
@@ -69,6 +75,7 @@ export default function CreatePlans() {
                 pricing: {
                     monthly: formData.pricing.monthly,
                     yearly: formData.pricing.yearly,
+                    setup_fee: formData.pricing.setup_fee,
                     currency: formData.pricing.currency,
                 },
 
@@ -84,6 +91,9 @@ export default function CreatePlans() {
                           .map((f) => f.trim())
                           .filter(Boolean)
                     : [],
+
+                allow_multi_branch: formData.allow_multi_branch,
+                allow_cross_branch_attendance: formData.allow_cross_branch_attendance,
 
                 is_active: formData.is_active,
                 is_public: formData.is_public,
@@ -153,15 +163,19 @@ export default function CreatePlans() {
 
                         {/* PRICE */}
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-4">
+                            <div className="col-span-3">
                                 <NumberInput name="pricing.monthly" label="Monthly Price" rules={{ required: "Monthly price is required" }} />
                             </div>
 
-                            <div className="col-span-4">
+                            <div className="col-span-3">
                                 <NumberInput name="pricing.yearly" label="Yearly Price" rules={{ required: "Yearly price is required" }} />
                             </div>
 
-                            <div className="col-span-4">
+                            <div className="col-span-3">
+                                <NumberInput name="pricing.setup_fee" label="Setup Fee" rules={{ required: "Setup fee is required" }} />
+                            </div>
+
+                            <div className="col-span-3">
                                 <SearchableDropdown name="pricing.currency" label="Currency" options={currencyOptions}  />
                             </div>
                         </div>
@@ -183,6 +197,23 @@ export default function CreatePlans() {
                             <div className="col-span-4">
                                 <NumberInput name="limits.max_branches" label="Max Branches" rules={{ required: "Max branches is required" }} />
                             </div>
+                        </div>
+
+                        <hr />
+
+                        {/* BRANCH SETTINGS */}
+                        <h2 className="text-lg font-semibold text-gray-800">Branch Settings</h2>
+
+                        <div className="flex gap-10 text-gray-800">
+                            <label className="flex items-center gap-2">
+                                <input type="checkbox" {...form.register("allow_multi_branch")} />
+                                <span>Allow Multi Branch</span>
+                            </label>
+
+                            <label className="flex items-center gap-2">
+                                <input type="checkbox" {...form.register("allow_cross_branch_attendance")} />
+                                <span>Allow Cross Branch Attendance</span>
+                            </label>
                         </div>
 
                         <hr />

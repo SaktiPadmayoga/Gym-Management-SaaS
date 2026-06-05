@@ -37,7 +37,6 @@ export default function PlansPage() {
         per_page: perPage,
     });
 
-
     const deleteMutation = useDeletePlan();
 
     // Update URL when search changes
@@ -135,13 +134,14 @@ export default function PlansPage() {
         {
             label: "View Detail",
             icon: "eye",
+            className: "text-zinc-800 hover:bg-zinc-900",
             onClick: (row) => router.push(`/admin/plans/${row.id}`),
         },
         {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
-            onClick: (row) => router.push(`/admin/plans/${row.id}/edit`),
+            onClick: (row) => router.push(`/admin/plans/${row.id}`),
         },
         {
             label: "Delete",
@@ -203,7 +203,6 @@ export default function PlansPage() {
                         Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
                     </div>
                 </div>
-                
             </div>
         </FormProvider>
     );
