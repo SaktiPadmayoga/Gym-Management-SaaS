@@ -59,8 +59,8 @@ services:
     # ========================================
     php:
         build:
-            context: ./docker/php
-            dockerfile: Dockerfile
+            context: .
+            dockerfile: docker/php/Dockerfile
         container_name: gym-php
         working_dir: /var/www/html
         environment:
@@ -122,7 +122,6 @@ services:
             MIDTRANS_IS_3DS: "true"
             FRONTEND_URL: https://gymfit.id
         volumes:
-            - ./src:/var/www/html
             - laravel_storage:/var/www/html/storage
         depends_on:
             postgres:
@@ -158,11 +157,10 @@ services:
     # ========================================
     nginx:
         build:
-            context: ./docker/nginx
-            dockerfile: Dockerfile
+            context: .
+            dockerfile: docker/nginx/Dockerfile
         container_name: gym-nginx
         volumes:
-            - ./src:/var/www/html:ro
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
         depends_on:
             - php

@@ -24,6 +24,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+# Copy source code ke dalam image
+COPY src/ .
+
 # Fix permissions untuk www-data
 RUN chown -R www-data:www-data /var/www/html
 
