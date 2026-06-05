@@ -70,7 +70,7 @@ export default function TenantHeader() {
     // ------------------------------
 
     // Logo: branch settings → fallback ke logo tenant (inherit)
-    const logoUrl = publicSettings?.logo_url || data?.logo_url || null;
+    const logoUrl = publicSettings?.logo_url || data?.logo_url || "/images/logobaru.png";
 
     if (isLoading) {
         return (

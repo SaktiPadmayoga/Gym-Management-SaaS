@@ -36,7 +36,7 @@ export default function MemberForgotForm() {
     const { data: publicSettings } = usePublicBranchSettings(undefined);
 
     const primaryColor = publicSettings?.primary_color ?? "#2563eb"; // default to brand blue
-    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || null;
+    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || "/images/logobaru.png";
     const tenantName = tenant?.name ?? "Workspace...";
 
     const form = useForm<ForgotFormData>({

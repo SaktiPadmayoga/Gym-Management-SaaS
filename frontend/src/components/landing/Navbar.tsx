@@ -28,9 +28,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex items-center justify-between h-12">
                     <NavLink to="/" className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 bg-slate-950 rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6 shadow-md shadow-slate-900/20">
-                            <Dumbbell className="w-5 h-5 text-teal-400" />
-                        </div>
+                        <img src="/images/logobaru.png" alt="GymFit Logo" className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6 shadow-md" />
                         <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
                             GYMFIT<span className="text-teal-500">.</span>
                         </span>

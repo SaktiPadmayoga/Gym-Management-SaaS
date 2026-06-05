@@ -30,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
         // 1. OBSERVERS
         // ---------------------------------------------------
         Branch::observe(BranchObserver::class);
+        \App\Models\Tenant\TenantInvoice::observe(\App\Observers\Tenant\TenantInvoiceObserver::class);
 
 
         // ---------------------------------------------------

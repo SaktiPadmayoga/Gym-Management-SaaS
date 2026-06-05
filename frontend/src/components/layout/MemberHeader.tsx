@@ -68,7 +68,7 @@ export default function MemberHeader({ onMenuClick }: { onMenuClick?: () => void
     };
 
     const primaryColor = publicSettings?.primary_color ?? "#ffffff";
-    const logoUrl = publicSettings?.logo_url || data?.logo_url || null;
+    const logoUrl = publicSettings?.logo_url || data?.logo_url || "/images/logobaru.png";
 
     const isDark = false;
     const textColor = "#18181b";

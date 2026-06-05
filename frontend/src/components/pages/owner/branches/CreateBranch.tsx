@@ -24,8 +24,8 @@ const timezoneOptions: DropdownOption<string>[] = [
 ];
 
 const activeOptions: DropdownOption<string>[] = [
-    { key: "true", label: "Active", value: "true" },
-    { key: "false", label: "Inactive", value: "false" },
+    { key: "true", label: "Aktif", value: "true" },
+    { key: "false", label: "Tidak Aktif", value: "false" },
 ];
 
 export default function CreateBranch() {
@@ -63,7 +63,7 @@ export default function CreateBranch() {
                 error?.response?.data?.error || 
                 error?.response?.data?.message || 
                 error?.message ||                 
-                "Failed to create branch";
+                "Gagal menambahkan cabang";
 
             toast.error(message);
         }
@@ -77,11 +77,11 @@ export default function CreateBranch() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Tenant & Subscription</li>
+                            <li>Cabang & Langganan</li>
                             <li>
-                                <Link  href="/owner/branches">Branches</Link>
+                                <Link  href="/owner/branches">Cabang</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create New</li> 
+                            <li className="text-aksen-secondary">Tambah Baru</li> 
                         </ul>
                     </div>
 
@@ -91,11 +91,11 @@ export default function CreateBranch() {
                             <button type="button" onClick={() => router.push("/owner/branches")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
-                            <h1 className="text-2xl font-semibold ">Create Branch</h1>
+                            <h1 className="text-2xl font-semibold ">Tambah Cabang</h1>
                         </div>
 
                         <CustomButton  type="submit" className="px-4 py-2.5 text-white" disabled={createMutation.isPending}>
-                            {createMutation.isPending ? "Creating..." : "Create & Save"}
+                            {createMutation.isPending ? "Menyimpan..." : "Buat & Simpan"}
                         </CustomButton>
                     </div>
 
@@ -103,47 +103,47 @@ export default function CreateBranch() {
 
                     <div className="flex flex-col gap-5 mt-6">
                         {/* BRANCH INFO */}
-                        <h2 className="text-lg font-semibold text-zinc-800">Branch Information</h2>
+                        <h2 className="text-lg font-semibold text-zinc-800">Informasi Cabang</h2>
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="branch_code" label="Branch Code" placeholder="e.g. MAIN, BR001" rules={{ required: "Branch code is required" }} />
+                                <TextInput name="branch_code" label="Kode Cabang" placeholder="Misal: MAIN, BR001" rules={{ required: "Kode cabang wajib diisi" }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="name" label="Branch Name" placeholder="e.g. Main Branch Jakarta" rules={{ required: "Branch name is required" }} />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-6">
-                                <TextInput name="email" label="Email" placeholder="e.g. branch@gym.com" />
-                            </div>
-                            <div className="col-span-6">
-                                <TextInput name="phone" label="Phone" placeholder="e.g. +62 21 1234567" />
+                                <TextInput name="name" label="Nama Cabang" placeholder="Misal: Cabang Utama Jakarta" rules={{ required: "Nama cabang wajib diisi" }} />
                             </div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="address" label="Address" placeholder="Full address"  />
+                                <TextInput name="email" label="Email" placeholder="Misal: cabang@gym.com" />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="city" label="City" placeholder="e.g. Jakarta" />
+                                <TextInput name="phone" label="Nomor Telepon" placeholder="Misal: +62 21 1234567" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-12 gap-4">
+                            <div className="col-span-6">
+                                <TextInput name="address" label="Alamat" placeholder="Alamat lengkap"  />
+                            </div>
+                            <div className="col-span-6">
+                                <TextInput name="city" label="Kota" placeholder="Misal: Jakarta" />
                             </div>
                         </div>
                         <hr className="border-zinc-200" />
                         {/* SETTINGS */}
-                        <h2 className="text-lg font-semibold text-zinc-800">Settings</h2>
+                        <h2 className="text-lg font-semibold text-zinc-800">Pengaturan</h2>
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
-                                <SearchableDropdown name="timezone" label="Timezone" options={timezoneOptions} />
+                                <SearchableDropdown name="timezone" label="Zona Waktu" options={timezoneOptions} />
                             </div>
                             
                             <div className="col-span-4">
-                                <TextInput name="opened_at" label="Opened At" type="date" />
+                                <TextInput name="opened_at" label="Tanggal Dibuka" type="date" />
                             </div>
                             <label className="flex items-center gap-2 cols-span-4 text-zinc-900">
                                 <input type="checkbox" name="is_active" defaultChecked />
-                                <span>Active</span>
+                                <span>Aktif</span>
                             </label>
                         </div>
                     </div>

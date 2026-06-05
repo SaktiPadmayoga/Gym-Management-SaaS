@@ -25,9 +25,7 @@ const Footer = () => {
                     {/* Brand Info */}
                     <div className="md:col-span-2 flex flex-col justify-center">
                         <a href="#" className="flex items-center gap-3 mb-6 group w-fit">
-                            <div className="w-10 h-10 bg-slate-900 border border-slate-800 rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-105 group-hover:border-teal-500/50 shadow-lg">
-                                <Dumbbell className="w-5 h-5 text-teal-400" />
-                            </div>
+                            <img src="/images/logobaru.png" alt="GymFit Logo" className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 shadow-lg" />
 
                             <span className="text-2xl font-black text-white tracking-tighter uppercase">
                                 GYMFIT<span className="text-teal-500">.</span>

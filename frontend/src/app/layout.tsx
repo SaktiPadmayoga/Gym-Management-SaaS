@@ -6,7 +6,13 @@ import "./globals.css";
 import QueryProvider from "@/providers/QueryProvider";
 
 export const metadata: Metadata = {
-    title: "Gym Management System",
+    title: {
+        default: "GymFit - Gym Management Sistem",
+        template: "%s | GymFit",
+    },
+    icons: {
+        icon: "/images/logobaru.png",
+    },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -63,7 +63,7 @@ export default function BranchDetailPage() {
         });
     }, [branch, form]);
 
-    if (isLoading || !branch) return <div className="p-6">Loading...</div>;
+    if (isLoading || !branch) return <div className="p-6">Memuat...</div>;
     if (isError) return notFound();
 
     /* =====================================
@@ -176,7 +176,7 @@ export default function BranchDetailPage() {
 
                     <div className="flex flex-col gap-5 mt-6">
                         {/* BASIC INFO */}
-                        <h2 className="text-lg font-semibold text-gray-800">Basic Info</h2>
+                        <h2 className="text-lg font-semibold text-gray-800">Informasi Dasar</h2>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
                                 <TextInput name="name" label="Nama Cabang" disabled={!isEditMode} />
@@ -191,32 +191,32 @@ export default function BranchDetailPage() {
                                 <TextInput name="email" label="Email" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Phone" disabled={!isEditMode} />
+                                <TextInput name="phone" label="Nomor Telepon" disabled={!isEditMode} />
                             </div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="city" label="City" disabled={!isEditMode} />
+                                <TextInput name="city" label="Kota" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="address" label="Address" disabled={!isEditMode} />
+                                <TextInput name="address" label="Alamat" disabled={!isEditMode} />
                             </div>
                         </div>
                         <hr />
 
                         {/* OTHER */}
-                        <h2 className="text-lg font-semibold text-gray-800">Settings</h2>
+                        <h2 className="text-lg font-semibold text-gray-800">Pengaturan</h2>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-4">
                                 <TextInput
                                     name="opened_at"
-                                    label="Opened At"
+                                    label="Tanggal Dibuka"
                                     type="date"
                                     disabled={!isEditMode}
                                 />
                             </div>
                             <div className="col-span-4">
-                                <TextInput name="timezone" label="Timezone" disabled={!isEditMode} />
+                                <TextInput name="timezone" label="Zona Waktu" disabled={!isEditMode} />
                             </div>
                             <label className="flex items-center gap-2 col-span-4">
                                 <input
@@ -224,7 +224,7 @@ export default function BranchDetailPage() {
                                     {...form.register("is_active")}
                                     disabled={!isEditMode}
                                 />
-                                <span>Active</span>
+                                <span>Aktif</span>
                             </label>
                         </div>
                     </div>

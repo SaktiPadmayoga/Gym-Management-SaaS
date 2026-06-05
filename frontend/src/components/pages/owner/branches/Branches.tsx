@@ -159,7 +159,7 @@ export default function BranchesPage() {
                 <div className="text-sm">
                     <div className="text-zinc-700">
                         {item.opened_at
-                            ? new Date(item.opened_at).toLocaleDateString("en-US", {
+                            ? new Date(item.opened_at).toLocaleDateString("id-ID", {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
@@ -175,14 +175,14 @@ export default function BranchesPage() {
             render: (item) => (
                 <div className="text-sm">
                     <div className="text-zinc-700">
-                        {new Date(item.created_at).toLocaleDateString("en-US", {
+                        {new Date(item.created_at).toLocaleDateString("id-ID", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                         })}
                     </div>
                     <div className="text-xs text-zinc-500 mt-1">
-                        {new Date(item.created_at).toLocaleTimeString("en-US", {
+                        {new Date(item.created_at).toLocaleTimeString("id-ID", {
                             hour: "2-digit",
                             minute: "2-digit",
                         })}
@@ -201,7 +201,7 @@ export default function BranchesPage() {
             onClick: (row) => router.push(`/owner/branches/${row.id}`),
         },
         {
-            label: "Toggle Status",
+            label: "Ubah Status Aktif",
             icon: "plus",
             className: "text-orange-600 hover:bg-orange-50",
             onClick: (row) => {
