@@ -19,7 +19,7 @@ class AdminSeeder extends Seeder
         Admin::create([
             'name'     => 'Sakti Yoga',
             'email'    => 'sakti14yoga@gmail.com',
-            'password' => Hash::make('password'),   // Password default: password
+            'password' => Hash::make('@WPBangli2013'),
             'role'     => 'super_admin',
         ]);
 

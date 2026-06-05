@@ -78,6 +78,7 @@ services:
             PORT: "3000"
             NEXT_PUBLIC_HOSTNAME: "0.0.0.0" # kadang membantu di Next 15
             HOST: "0.0.0.0" # alternatif nama env
+            NEXT_PUBLIC_API_URL: http://localhost/api
             NEXT_PUBLIC_API_BASE_URL: http://localhost/api
             NEXT_PUBLIC_APP_NAME: Gym Management System
             NEXT_PUBLIC_TENANT_DOMAIN: localhost
