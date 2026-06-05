@@ -7,12 +7,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NavLink } from "./NavLink"; // Sesuaikan dengan path file NavLink Anda
 
 const navLinks = [
-    { label: "Overview", to: "/#overview" },
     { label: "Fitur", to: "/#features" },
     { label: "Cara Kerja", to: "/#how-it-works" },
-    { label: "Metrik", to: "/#metrics" },
     { label: "Harga", to: "/#pricing" },
-    { label: "Testimoni", to: "/#testimonials" },
     { label: "FAQ", to: "/#faq" },
 ];
 
