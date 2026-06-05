@@ -27,6 +27,12 @@ WORKDIR /var/www/html
 # Copy source code ke dalam image
 COPY src/ .
 
+# Buat struktur direktori yang dibutuhkan oleh Laravel (karena diabaikan oleh Git)
+RUN mkdir -p bootstrap/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache
+
 # Install PHP dependencies menggunakan Composer
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
