@@ -137,6 +137,12 @@ services:
         build:
             context: ./frontend
             dockerfile: ../docker/nextjs/Dockerfile
+            args:
+                - NEXT_PUBLIC_API_URL=https://gymfit.id/api
+                - NEXT_PUBLIC_API_BASE_URL=https://gymfit.id/api
+                - NEXT_PUBLIC_ROOT_DOMAIN=gymfit.id
+                - NEXT_PUBLIC_APP_NAME=Gymfit
+                - NEXT_PUBLIC_TENANT_DOMAIN=gymfit.id
         container_name: gym-nextjs
         environment:
             NODE_ENV: production

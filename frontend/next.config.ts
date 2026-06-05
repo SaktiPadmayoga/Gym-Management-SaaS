@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
             // Local development
             {
                 protocol: 'http',
-                hostname: 'localhost',
+                hostname: 'gymfit.id',
             },
             // App domain
             {
@@ -48,7 +48,7 @@ const nextConfig: NextConfig = {
     },
 
     env: {
-        NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost/api",
+        NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gymfit.id/api",
     },
 };
 

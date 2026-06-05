@@ -4,7 +4,7 @@ import { TenantCurrentData } from "@/types/tenant/tenant";
 const apiClient = axios.create({
     baseURL: typeof window !== "undefined"
         ? `${window.location.origin}/api`
-        : "http://localhost/api",
+        : "https://gymfit.id/api",
     withCredentials: true,
     headers: {
         "Content-Type": "application/json",

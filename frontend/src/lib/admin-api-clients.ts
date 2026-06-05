@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 
 const apiClient: AxiosInstance = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL || "http://localhost/api",
+    baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL || "https://gymfit.id/api",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

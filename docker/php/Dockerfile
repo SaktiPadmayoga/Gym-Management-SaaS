@@ -27,6 +27,9 @@ WORKDIR /var/www/html
 # Copy source code ke dalam image
 COPY src/ .
 
+# Install PHP dependencies menggunakan Composer
+RUN composer install --no-interaction --optimize-autoloader --no-dev
+
 # Fix permissions untuk www-data
 RUN chown -R www-data:www-data /var/www/html
 

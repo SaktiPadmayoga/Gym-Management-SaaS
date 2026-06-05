@@ -29,8 +29,5 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-    public function member()
-    {
-        return $this->hasOne(Member::class);
-    }
+
 }

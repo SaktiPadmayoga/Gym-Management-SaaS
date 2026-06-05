@@ -12,7 +12,7 @@ function getTenantSlug(): string | null {
 const memberApiClient: AxiosInstance = axios.create({
     baseURL: typeof window !== "undefined"
         ? `${window.location.origin}/api`
-        : process.env.NEXT_PUBLIC_API_URL || "http://localhost/api",
+        : process.env.NEXT_PUBLIC_API_URL || "https://gymfit.id/api",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",

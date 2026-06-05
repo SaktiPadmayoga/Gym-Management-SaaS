@@ -25,14 +25,4 @@ class User extends Authenticatable
         'password' => 'hashed',
         'is_active' => 'boolean',
     ];
-
-    public function memberProfile()
-    {
-        return $this->hasOne(MemberProfile::class);
-    }
-
-    public function staff()
-    {
-        return $this->hasOne(Staff::class);
-    }
 }

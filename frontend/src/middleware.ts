@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
     let hostname = request.headers.get("host") || "";
     hostname = hostname.split(":")[0];
 
-    const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "localhost";
+    const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "gymfit.id";
 
     const isSubdomain = hostname !== mainDomain && hostname.endsWith(mainDomain);
 
