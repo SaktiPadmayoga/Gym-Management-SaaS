@@ -19,26 +19,26 @@ import { MembershipPlanCreateRequest, DEFAULT_CHECKIN_SCHEDULE, CheckinSchedule 
  * ========================= */
 
 const durationUnitOptions: DropdownOption<string>[] = [
-    { key: "day", label: "Day", value: "day" },
-    { key: "week", label: "Week", value: "week" },
-    { key: "month", label: "Month", value: "month" },
-    { key: "year", label: "Year", value: "year" },
+    { key: "day", label: "Hari", value: "day" },
+    { key: "week", label: "Minggu", value: "week" },
+    { key: "month", label: "Bulan", value: "month" },
+    { key: "year", label: "Tahun", value: "year" },
 ];
 
 // PERBAIKAN: Mengganti 'all_branches' menjadi 'cross_branch'
 const accessTypeOptions: DropdownOption<string>[] = [
-    { key: "single_branch", label: "Single Branch", value: "single_branch" },
-    { key: "cross_branch", label: "Cross Branch (Multiple)", value: "cross_branch" },
+    { key: "single_branch", label: "Satu Cabang", value: "single_branch" },
+    { key: "cross_branch", label: "Multi Cabang", value: "cross_branch" },
 ];
 
 const DAYS = [
-    { key: "mon", label: "Monday" },
-    { key: "tue", label: "Tuesday" },
-    { key: "wed", label: "Wednesday" },
-    { key: "thu", label: "Thursday" },
-    { key: "fri", label: "Friday" },
-    { key: "sat", label: "Saturday" },
-    { key: "sun", label: "Sunday" },
+    { key: "mon", label: "Senin" },
+    { key: "tue", label: "Selasa" },
+    { key: "wed", label: "Rabu" },
+    { key: "thu", label: "Kamis" },
+    { key: "fri", label: "Jumat" },
+    { key: "sat", label: "Sabtu" },
+    { key: "sun", label: "Minggu" },
 ] as const;
 
 /* =========================
@@ -129,10 +129,10 @@ export default function CreateMembershipPlan() {
             };
 
             await createMutation.mutateAsync(payload);
-            toast.success("Membership plan created successfully");
-            router.push("/membership-plan?success=true");
+            toast.success("Paket keanggotaan berhasil dibuat");
+            router.push("/membership-plans?success=true");
         } catch (err) {
-            toast.error("Failed to create membership plan");
+            toast.error("Gagal membuat paket keanggotaan");
             console.error(err);
         }
     };
@@ -148,22 +148,22 @@ export default function CreateMembershipPlan() {
                         <ul>
                             <li>Master Data</li>
                             <li>
-                                <Link href="/membership-plan">Membership Plan</Link>
+                                <Link href="/membership-plans">Paket Keanggotaan</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li className="text-aksen-secondary">Buat baru</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/membership-plan")}>
+                            <button type="button" onClick={() => router.push("/membership-plans")}>
                                 <Icon name="back" className="h-7 w-7" />
                             </button>
-                            <h1 className="text-2xl font-semibold">Create Membership Plan</h1>
+                            <h1 className="text-2xl font-semibold">Buat Paket Keanggotaan</h1>
                         </div>
                         <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-4 py-2.5 disabled:opacity-50">
-                            {createMutation.isPending ? "Creating..." : "Create and save"}
+                            {createMutation.isPending ? "Membuat..." : "Buat dan simpan"}
                         </CustomButton>
                     </div>
 
@@ -173,35 +173,35 @@ export default function CreateMembershipPlan() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <TextInput name="name" label="Plan Name" placeholder="Enter plan name" />
+                                <TextInput name="name" label="Nama Paket" placeholder="Masukkan nama paket" />
                             </div>
                             <div className="col-span-4">
-                                <TextInput name="category" label="Category" placeholder="e.g Basic, Premium, VIP" />
+                                <TextInput name="category" label="Kategori" placeholder="misal: Basic, Premium, VIP" />
                             </div>
                             <div className="col-span-4">
-                                <TextInput name="description" label="Description" placeholder="Enter description" />
+                                <TextInput name="description" label="Deskripsi" placeholder="Masukkan deskripsi" />
                             </div>
                         </div>
 
                         {/* PRICE & DURATION */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Price (Rp)" />
+                                <NumberInput name="price" label="Harga (Rp)" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="duration" label="Duration" />
+                                <NumberInput name="duration" label="Durasi" />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="duration_unit" label="Duration Unit" options={durationUnitOptions} />
+                                <SearchableDropdown name="duration_unit" label="Satuan Durasi" options={durationUnitOptions} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="loyalty_points_reward" label="Loyalty Points Reward" />
+                                <NumberInput name="loyalty_points_reward" label="Hadiah Poin Loyalitas" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="max_sharing_members" label="Max Sharing Members" />
+                                <NumberInput name="max_sharing_members" label="Maksimal Anggota Berbagi" />
                             </div>
                             <div className="col-span-4">
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Color (optional)</label>
+                                <label className="block text-sm font-medium text-zinc-700 mb-1">Warna (opsional)</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" {...form.register("color")} className="w-10 h-10 rounded cursor-pointer border border-zinc-200" />
                                     <TextInput name="color" placeholder="#4F46E5" />
@@ -212,21 +212,21 @@ export default function CreateMembershipPlan() {
                         <hr />
 
                         {/* CHECKIN SETTING */}
-                        <h2 className="text-xl font-semibold text-gray-800">Check-in Setting</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Pengaturan Check-in</h2>
 
                         <div className="flex flex-col gap-5 text-zinc-800">
                             <div className="flex flex-row gap-5 w-full">
                                 <div className="w-full">
-                                    <SearchableDropdown name="access_type" label="Access Type" options={accessTypeOptions} />
+                                    <SearchableDropdown name="access_type" label="Tipe Akses" options={accessTypeOptions} />
                                 </div>
                                 <div className="grid grid-cols-12 gap-3 items-center w-full">
                                     <div className="col-span-6 flex items-center gap-3">
                                         <input type="checkbox" className="checkbox checkbox-sm" {...form.register("unlimited_checkin")} />
-                                        <span className="text-sm font-medium">Unlimited Check-in</span>
+                                        <span className="text-sm font-medium">Check-in Tanpa Batas</span>
                                     </div>
                                     {!unlimitedCheckin && (
                                         <div className="col-span-6">
-                                            <NumberInput name="checkin_quota_per_month" label="Check-in Quota / Month" />
+                                            <NumberInput name="checkin_quota_per_month" label="Kuota Check-in / Bulan" />
                                         </div>
                                     )}
                                 </div>
@@ -236,18 +236,18 @@ export default function CreateMembershipPlan() {
                         <hr />
 
                         {/* AVAILABILITY */}
-                        <h2 className="text-xl font-semibold text-gray-800">Availability Setting</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Pengaturan Ketersediaan</h2>
 
                         <div className="text-gray-800">
                             <div className="grid grid-cols-12 gap-6">
                                 <div className="col-span-12 grid grid-cols-12 gap-3 items-center">
                                     <div className="col-span-4 flex items-center gap-3">
                                         <input type="checkbox" className="checkbox checkbox-sm" {...form.register("unlimited_sold")} />
-                                        <span className="text-sm font-medium">Unlimited Sold / Quota</span>
+                                        <span className="text-sm font-medium">Kuota Penjualan Tanpa Batas</span>
                                     </div>
                                     {!unlimitedSold && (
                                         <div className="col-span-4">
-                                            <NumberInput name="total_quota" label="Max Sold / Quota" />
+                                            <NumberInput name="total_quota" label="Maksimal Penjualan / Kuota" />
                                         </div>
                                     )}
                                 </div>
@@ -255,15 +255,15 @@ export default function CreateMembershipPlan() {
                                 <div className="col-span-12 grid grid-cols-12 gap-3 items-center">
                                     <div className="col-span-4 flex items-center gap-3">
                                         <input type="checkbox" className="checkbox checkbox-sm" {...form.register("always_available")} />
-                                        <span className="text-sm font-medium">Always Available</span>
+                                        <span className="text-sm font-medium">Selalu Tersedia</span>
                                     </div>
                                     {!alwaysAvailable && (
                                         <>
                                             <div className="col-span-4">
-                                                <TextInput type="date" name="available_from" label="Available From" />
+                                                <TextInput type="date" name="available_from" label="Tersedia Mulai" />
                                             </div>
                                             <div className="col-span-4">
-                                                <TextInput type="date" name="available_until" label="Available Until" />
+                                                <TextInput type="date" name="available_until" label="Tersedia Hingga" />
                                             </div>
                                         </>
                                     )}
@@ -271,7 +271,7 @@ export default function CreateMembershipPlan() {
 
                                 <div className="col-span-12 flex items-center gap-3">
                                     <input type="checkbox" className="checkbox checkbox-sm" {...form.register("is_active")} />
-                                    <span className="text-sm font-medium">Active</span>
+                                    <span className="text-sm font-medium">Aktif</span>
                                 </div>
                             </div>
                         </div>
@@ -279,12 +279,12 @@ export default function CreateMembershipPlan() {
                         {/* CHECKIN SCHEDULE */}
                         <div className="flex items-center gap-3 text-zinc-800">
                             <input type="checkbox" checked={showSchedule} onChange={() => setShowSchedule(!showSchedule)} className="checkbox checkbox-sm" />
-                            <span className="text-sm font-medium">Custom Check-in Schedule</span>
+                            <span className="text-sm font-medium">Jadwal Check-in Kustom</span>
                         </div>
 
                         {showSchedule && (
                             <div className="p-4 bg-gray-100 rounded-lg text-zinc-800">
-                                <p className="text-sm font-medium mb-4">Check-in Schedule</p>
+                                <p className="text-sm font-medium mb-4">Jadwal Check-in</p>
                                 <div className="flex flex-col gap-3">
                                     {DAYS.map((day) => {
                                         const isOpen = form.watch(`checkin_schedule.${day.key}.is_open`);

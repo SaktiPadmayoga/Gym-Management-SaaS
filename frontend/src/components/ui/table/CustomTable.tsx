@@ -17,6 +17,8 @@ export interface ActionItem<T> {
     onClick: (row: T) => void;
     className?: string;
     divider?: boolean; // untuk menambahkan garis pembatas
+    disabled?: (row: T) => boolean;
+    hidden?: (row: T) => boolean;
 }
 
 interface CustomTableProps<T> {
@@ -127,26 +129,36 @@ export default function CustomTable<T>({ columns, data, withCheckbox = false, on
                                                 <Icon name="dotsVertical" className="h-5 w-5 text-zinc-600" />
                                             </button>
                                             <ul tabIndex={0} className="dropdown-content menu p-2 shadow-lg bg-white rounded-lg w-52 border border-zinc-200  z-50">
-                                                {allActions.map((action, idx) => (
-                                                    <React.Fragment key={idx}>
-                                                        {action.divider && idx > 0 && <hr className="border-zinc-200 my-1" />}
-                                                        <li>
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    action.onClick(row);
-                                                                    // Close dropdown
-                                                                    const elem = document.activeElement as HTMLElement;
-                                                                    elem?.blur();
-                                                                }}
-                                                                className={`flex items-center gap-2 px-3 py-2 text-sm ${action.className ?? ""}`}
-                                                            >
-                                                                {action.icon && <Icon name={action.icon} className="h-4 w-4" />}
-                                                                <span>{typeof action.label === "function" ? action.label(row) : action.label}</span>
-                                                            </button>
-                                                        </li>
-                                                    </React.Fragment>
-                                                ))}
+                                                {allActions.map((action, idx) => {
+                                                    if (action.hidden?.(row)) return null;
+                                                    const isDisabled = action.disabled?.(row);
+                                                    return (
+                                                        <React.Fragment key={idx}>
+                                                            {action.divider && idx > 0 && <hr className="border-zinc-200 my-1" />}
+                                                            <li>
+                                                                <button
+                                                                    disabled={isDisabled}
+                                                                    onClick={(e) => {
+                                                                        if (isDisabled) return;
+                                                                        e.stopPropagation();
+                                                                        action.onClick(row);
+                                                                        // Close dropdown
+                                                                        const elem = document.activeElement as HTMLElement;
+                                                                        elem?.blur();
+                                                                    }}
+                                                                    className={`flex items-center gap-2 px-3 py-2 text-sm ${
+                                                                        isDisabled
+                                                                            ? "opacity-50 cursor-not-allowed text-zinc-400 hover:bg-transparent"
+                                                                            : action.className ?? ""
+                                                                    }`}
+                                                                >
+                                                                    {action.icon && <Icon name={action.icon} className="h-4 w-4" />}
+                                                                    <span>{typeof action.label === "function" ? action.label(row) : action.label}</span>
+                                                                </button>
+                                                            </li>
+                                                        </React.Fragment>
+                                                    );
+                                                })}
                                             </ul>
                                         </div>
                                     </td>

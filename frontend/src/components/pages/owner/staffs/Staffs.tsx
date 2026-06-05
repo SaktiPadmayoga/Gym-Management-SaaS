@@ -16,6 +16,7 @@ import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
 import { useStaff, useDeleteStaff } from "@/hooks/tenant/useStaffs";
 import { useTenantBranches } from "@/hooks/useTenantBranches";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
 
 interface FilterForm {
     search: string;
@@ -26,6 +27,7 @@ export default function StaffList() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
+    const { staff: currentStaff } = useStaffAuth();
 
     const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
     const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
@@ -47,7 +49,7 @@ export default function StaffList() {
     const branches = branchesResponse?.data ?? [];
 
     const branchOptions: DropdownOption<string>[] = [
-        { key: "all", label: "All Branches", value: "" }, // empty string = all
+        { key: "all", label: "Semua Cabang", value: "" }, // empty string = all
         ...branches.map((b) => ({
             key: b.id,
             label: b.name,
@@ -84,15 +86,15 @@ export default function StaffList() {
         const deleted = searchParams.get("deleted");
 
         if (success === "true" && !hasShownToast.current) {
-            toast.success("Staff created successfully");
+            toast.success("Staf berhasil dibuat");
             hasShownToast.current = true;
         }
         if (updated === "true" && !hasShownToast.current) {
-            toast.success("Staff updated successfully");
+            toast.success("Staf berhasil diperbarui");
             hasShownToast.current = true;
         }
         if (deleted === "true" && !hasShownToast.current) {
-            toast.success("Staff deleted successfully");
+            toast.success("Staf berhasil dihapus");
             hasShownToast.current = true;
         }
 
@@ -105,7 +107,7 @@ export default function StaffList() {
     const totalItems = data?.meta?.total ?? entries.length;
 
     if (isError) {
-        return <div className="py-10 text-center text-red-500">Terjadi kesalahan saat memuat data staff</div>;
+        return <div className="py-10 text-center text-red-500">Terjadi kesalahan saat memuat data staf</div>;
     }
 
     /* =========================
@@ -128,7 +130,7 @@ export default function StaffList() {
      * ========================= */
     const columns: Column<StaffData>[] = [
         {
-            header: "Name",
+            header: "Nama",
             render: (item) => (
                 <Link href={`/owner/staffs/${item.id}`} className="font-medium hover:underline">
                     {item.name}
@@ -142,21 +144,25 @@ export default function StaffList() {
             width: "w-56",
         },
         {
-            header: "Phone",
+            header: "Telepon",
             render: (item) => <span className="text-zinc-500">{item.phone ?? "-"}</span>,
             width: "w-36",
         },
         {
-            header: "Global Role",
-            render: (item) => <span className={`rounded-lg px-2 py-1 text-sm font-medium ${globalRoleColor[item.role] ?? "bg-zinc-100 text-zinc-600"}`}>{item.role}</span>,
+            header: "Role Global",
+            render: (item) => (
+                <span className={`rounded-lg px-2 py-1 text-sm font-medium ${globalRoleColor[item.role] ?? "bg-zinc-100 text-zinc-600"}`}>
+                    {item.role === "staff" ? "Staf" : item.role === "owner" ? "Owner" : item.role}
+                </span>
+            ),
             width: "w-32",
         },
         {
-            header: "Branches",
+            header: "Cabang",
             render: (item) => {
                 const branches = item.branches ?? [];
 
-                if (branches.length === 0) return <span className="text-zinc-400 text-sm">No branch assigned</span>;
+                if (branches.length === 0) return <span className="text-zinc-400 text-sm">Belum ditugaskan</span>;
 
                 return (
                     <div className="flex flex-wrap gap-1">
@@ -165,7 +171,7 @@ export default function StaffList() {
                                 {sb.branch?.name ?? sb.branch_id}
                             </span>
                         ))}
-                        {branches.length > 2 && <span className="rounded-md px-2 py-0.5 text-xs bg-zinc-100 text-zinc-500">+{branches.length - 2} more</span>}
+                        {branches.length > 2 && <span className="rounded-md px-2 py-0.5 text-xs bg-zinc-100 text-zinc-500">+{branches.length - 2} lagi</span>}
                     </div>
                 );
             },
@@ -174,19 +180,19 @@ export default function StaffList() {
         {
             header: "Status",
             render: (item) =>
-                item.is_active ? <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium">Active</span> : <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium">Inactive</span>,
+                item.is_active ? <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium">Aktif</span> : <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium">Tidak Aktif</span>,
             width: "w-32",
         },
         {
-            header: "Last Login",
-            render: (item) => <span className="text-sm text-zinc-500">{item.last_login_at ? new Date(item.last_login_at).toLocaleDateString() : "-"}</span>,
+            header: "Login Terakhir",
+            render: (item) => <span className="text-sm text-zinc-500">{item.last_login_at ? new Date(item.last_login_at).toLocaleDateString("id-ID") : "-"}</span>,
             width: "w-36",
         },
     ];
 
     const actions: ActionItem<StaffData>[] = [
         {
-            label: "View Detail",
+            label: "Lihat Detail",
             icon: "eye",
             onClick: (row) => router.push(`/owner/staffs/${row.id}`),
         },
@@ -197,12 +203,13 @@ export default function StaffList() {
             onClick: (row) => router.push(`/owner/staffs/${row.id}/edit`),
         },
         {
-            label: "Delete",
+            label: "Hapus",
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
+            disabled: (row) => currentStaff?.id === row.id,
             onClick: (row) => {
-                if (confirm("Are you sure you want to delete this staff?")) {
+                if (confirm("Apakah Anda yakin ingin menghapus staf ini?")) {
                     deleteMutation.mutate(row.id);
                 }
             },
@@ -218,24 +225,24 @@ export default function StaffList() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>User Management</li>
-                            <li className="text-aksen-secondary">Staff</li>
+                            <li>Manajemen Pengguna</li>
+                            <li className="text-aksen-secondary">Staf</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-4 flex justify-between items-start">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Staff Management</h1>
-                            <p className="text-zinc-500">Manage all staff across all branches</p>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Manajemen Staf</h1>
+                            <p className="text-zinc-500">Kelola semua staf di seluruh cabang</p>
                         </div>
                         <div className="mb-6 flex items-center justify-between gap-3">
                             <div className="w-60 text-geonet-gray">
-                                <SearchInput name="search" placeholder="Search by name or email..." />
+                                <SearchInput name="search" placeholder="Cari nama atau email..." />
                             </div>
 
                             <CustomButton iconName="plus" className="text-white px-4 py-2" onClick={() => router.push("/owner/staffs/create")}>
-                                New Staff
+                                Tambah Staf
                             </CustomButton>
                         </div>
                     </div>
@@ -246,7 +253,7 @@ export default function StaffList() {
                             <Controller
                                 name="branch_id"
                                 control={form.control}
-                                render={({ field, fieldState: { error } }) => <SearchableDropdown className="max-h-10" name="branch_id" options={branchOptions} placeholder="Filter by Branch" />}
+                                render={({ field, fieldState: { error } }) => <SearchableDropdown className="max-h-10" name="branch_id" options={branchOptions} placeholder="Filter berdasarkan Cabang" />}
                             />
                         </div>
                     </div>
@@ -266,7 +273,7 @@ export default function StaffList() {
 
                     {/* Info */}
                     <div className="mt-4 text-sm text-zinc-500">
-                        Showing {entries.length} of {totalItems} staff
+                        Menampilkan {entries.length} dari {totalItems} staf
                     </div>
 
                     {/* Pagination */}

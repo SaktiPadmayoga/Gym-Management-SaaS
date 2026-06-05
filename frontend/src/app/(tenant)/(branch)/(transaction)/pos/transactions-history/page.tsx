@@ -318,7 +318,7 @@ export default function TransactionsHistory() {
                         hasNextPage={false} // Update dengan logika backend jika sudah ada
                         hasPrevPage={false}
                         totalItems={totalData}
-                        rowOptions={[5, 10, 20, 50]}
+                        rowOptions={[5, 10, 15, 20, 50]}
                         defaultRowsPerPage={perPage}
                     />
                 </div>

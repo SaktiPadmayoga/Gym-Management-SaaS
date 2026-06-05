@@ -9,9 +9,10 @@ import {
 } from '@/hooks/tenant/useTenantNotifications';
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import dayjs from 'dayjs';
+import 'dayjs/locale/id';
 import { useRouter } from "next/navigation";
 
-export default function TenantNotificationBell() {
+export default function TenantNotificationBell({ textColor }: { textColor?: string }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
@@ -58,18 +59,25 @@ export default function TenantNotificationBell() {
             case 'new_member': return <UserPlus size={16} className="text-blue-600" />;
             case 'stock_low': return <ShoppingBag size={16} className="text-amber-500" />;
             case 'member_expiring': return <AlertTriangle size={16} className="text-rose-500" />;
+            case 'tenant_deactivated': return <AlertTriangle size={16} className="text-rose-600" />;
+            case 'domain_request_approved': return <CheckCircle size={16} className="text-emerald-600" />;
+            case 'domain_request_rejected': return <AlertTriangle size={16} className="text-rose-600" />;
             default: return <Bell size={16} className="text-aksen-secondary" />;
         }
     };
+
+    // Tentukan hover class berdasarkan text color contrast
+    const hoverBgClass = textColor === "#ffffff" ? "hover:bg-white/10" : "hover:bg-black/5";
 
     return (
         <div className="relative" ref={dropdownRef}>
             {/* BELL ICON */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="p-2 text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 rounded-xl transition-colors relative group"
+                className={`p-2 rounded-xl transition-colors relative group ${!textColor ? 'text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100' : `${hoverBgClass}`}`}
+                style={textColor ? { color: textColor } : undefined}
             >
-                <Bell className="w-5 h-5 group-hover:animate-swing" />
+                <Bell className="w-5 h-5 group-hover:animate-swing" color={textColor} />
                 {unreadCount > 0 && (
                     <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-red-500 text-[9px] font-bold text-white">
                         {unreadCount > 9 ? "9+" : unreadCount}

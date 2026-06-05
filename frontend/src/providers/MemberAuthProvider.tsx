@@ -6,6 +6,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { memberAuthAPI } from "@/lib/api/tenant/memberAuth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface Member {
     id: string;
@@ -64,6 +65,7 @@ const MemberAuthContext = createContext<MemberAuthContextValue | null>(null);
 
 export function MemberAuthProvider({ children }: { children: ReactNode }) {
     const router  = useRouter();
+    const queryClient = useQueryClient();
     const [state, dispatch] = useReducer(authReducer, initialState);
     const didInit = useRef(false);
 
@@ -117,9 +119,10 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
         try {
             await memberAuthAPI.logout();
         } catch { /* tetap logout */ }
+        queryClient.clear();
         dispatch({ type: "LOGOUT" });
         router.push("/member/login");
-    }, [router]);
+    }, [router, queryClient]);
 
     return (
         <MemberAuthContext.Provider value={{ ...state, login, loginWithGoogle, logout }}>

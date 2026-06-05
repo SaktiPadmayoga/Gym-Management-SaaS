@@ -7,6 +7,7 @@ import {
 import { useRouter } from "next/navigation";
 import { staffAuthAPI } from "@/lib/api/tenant/staffAuth";
 import { LoginBranchData, SelectedBranch } from "@/types/tenant/staff-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Staff {
     id: string;
@@ -73,6 +74,7 @@ interface StaffAuthContextValue extends AuthState {
     logout:             () => Promise<void>;
     hasPermission:      (permission: string) => boolean;
     currentPermissions: string[];
+    updateStaffState:   (staff: Staff) => void;
 }
 
 const StaffAuthContext = createContext<StaffAuthContextValue | null>(null);
@@ -108,6 +110,7 @@ function buildSelectedBranch(branch: LoginBranchData): SelectedBranch {
 
 export function StaffAuthProvider({ children }: { children: ReactNode }) {
     const router   = useRouter();
+    const queryClient = useQueryClient();
     const [state, dispatch] = useReducer(authReducer, initialState);
     const didInit  = useRef(false);
 
@@ -228,10 +231,11 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
         try {
             await staffAuthAPI.logout();
         } catch { /* tetap logout */ }
+        queryClient.clear();
         clearSelectedBranch();
         dispatch({ type: "LOGOUT" });
         router.push("/tenant-auth/login");
-    }, [router]);
+    }, [router, queryClient]);
 
     const currentPermissions: string[] = state.selectedBranch?.permissions ?? [];
 
@@ -253,6 +257,17 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
         [state.globalRole, currentPermissions],
     );
 
+    const updateStaffState = useCallback((updatedStaff: Staff) => {
+        dispatch({
+            type: "SET_AUTH",
+            payload: {
+                staff:      updatedStaff,
+                branches:   state.branches,
+                globalRole: state.globalRole as "owner" | "staff",
+            },
+        });
+    }, [state.branches, state.globalRole]);
+
     return (
         <StaffAuthContext.Provider value={{
             ...state,
@@ -263,6 +278,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
             logout,
             hasPermission,
             currentPermissions,
+            updateStaffState,
         }}>
             {children}
         </StaffAuthContext.Provider>

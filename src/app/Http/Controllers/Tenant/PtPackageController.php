@@ -10,12 +10,37 @@ use Illuminate\Http\Request;
 class PtPackageController extends Controller
 {
     /**
+     * Helper to get base query with branch scoping for non-owners/admins
+     */
+    private function getPtPackageQuery(Request $request)
+    {
+        $query = PtPackage::query();
+        $staff = $request->user();
+
+        if ($staff && !$staff->isOwner() && $staff->role !== 'admin') {
+            $activeBranchId = $request->header('X-Branch-Id');
+            $query->where('branch_id', $activeBranchId);
+        }
+
+        return $query;
+    }
+
+    /**
      * Menampilkan daftar PT Package (dengan filter)
      */
     public function index(Request $request)
     {
-        // Relasi wajib dibawa agar FE bisa render nama member & nama paket
-        $query = PtPackage::with(['member', 'plan']);
+        $staff = $request->user();
+        $query = $this->getPtPackageQuery($request)->with(['member', 'plan']);
+
+        // Filter branch for global managers (owner/admin)
+        if ($staff && ($staff->isOwner() || $staff->role === 'admin')) {
+            if ($request->filled('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            } elseif ($branchId = $request->header('X-Branch-Id')) {
+                $query->where('branch_id', $branchId);
+            }
+        }
 
         // Filter berdasarkan status (misal: hanya yang 'active')
         if ($request->filled('status')) {
@@ -28,11 +53,6 @@ class PtPackageController extends Controller
             $query->whereHas('member', function ($q) use ($search) {
                 $q->where('name', 'ilike', "%{$search}%");
             });
-        }
-
-        // Filter by branch jika diperlukan oleh sistemmu
-        if ($branchId = $request->header('X-Branch-Id')) {
-            $query->where('branch_id', $branchId);
         }
 
         $packages = $query->orderBy('created_at', 'desc')
@@ -52,9 +72,11 @@ class PtPackageController extends Controller
     /**
      * Menampilkan detail satu PT Package
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $package = PtPackage::with(['member', 'plan', 'invoice'])->findOrFail($id);
+        $package = $this->getPtPackageQuery($request)
+            ->with(['member', 'plan', 'invoice'])
+            ->findOrFail($id);
         
         return ApiResponse::success($package, 'Detail paket PT berhasil diambil');
     }

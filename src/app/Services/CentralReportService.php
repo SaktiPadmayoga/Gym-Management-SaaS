@@ -14,27 +14,26 @@ class CentralReportService
     public function getFinanceReport(Carbon $start, Carbon $end): array
     {
         $paymentsQuery = DB::connection('central')->table('payments')
-            ->where('payments.status', 'success') // <--- Tambahkan payments.
-            ->whereBetween('payments.paid_at', [$start, $end]); // <--- Tambahkan payments.
+            ->where('payments.status', 'success')
+            ->whereBetween('payments.paid_at', [$start, $end]);
 
         // Total Pendapatan di rentang waktu tersebut
         $totalRevenue = (clone $paymentsQuery)->sum('gross_amount');
+        $totalTransactionsCount = (clone $paymentsQuery)->count();
 
         // Distribusi Metode Pembayaran (Pie Chart)
-        // Menjawab: "Tenant kita lebih suka bayar pakai QRIS, Transfer, atau Credit Card?"
         $revenueByMethod = (clone $paymentsQuery)
-            ->selectRaw("COALESCE(payment_type, 'midtrans') as name, SUM(gross_amount) as value")
-            ->groupBy('payment_type')
+            ->selectRaw("COALESCE(payments.payment_type, 'midtrans') as name, SUM(payments.gross_amount) as value")
+            ->groupBy(DB::raw("COALESCE(payments.payment_type, 'midtrans')"))
             ->get();
 
         // Tren Pendapatan Harian (Line/Bar Chart)
         $dailyTrend = (clone $paymentsQuery)
-            ->selectRaw('DATE(paid_at) as date, SUM(gross_amount) as revenue')
-            ->groupBy(DB::raw('DATE(paid_at)'))
+            ->selectRaw('CAST(payments.paid_at AS DATE) as date, SUM(payments.gross_amount) as revenue')
+            ->groupBy(DB::raw('CAST(payments.paid_at AS DATE)'))
             ->orderBy('date', 'asc')
             ->get()
             ->map(function ($item) {
-                // Ubah format tanggal agar cantik di grafik Frontend
                 return [
                     'date'    => Carbon::parse($item->date)->translatedFormat('d M'),
                     'revenue' => (float) $item->revenue
@@ -60,12 +59,18 @@ class CentralReportService
                 'name'    => $item->name,
                 'revenue' => (float) $item->revenue,
             ]);
-        
-        // Lalu update return value:
+
+        // MRR kalkulasi
+        $mrrMonthly = DB::connection('central')->table('subscriptions')->where('status', 'active')->where('billing_cycle', 'monthly')->sum('amount');
+        $mrrYearly  = DB::connection('central')->table('subscriptions')->where('status', 'active')->where('billing_cycle', 'yearly')->sum('amount');
+        $currentMrr = $mrrMonthly + ($mrrYearly / 12);
+
         return [
             'summary' => [
                 'total_revenue'      => (float) $totalRevenue,
-                'total_transactions' => (clone $paymentsQuery)->count(),
+                'total_transactions' => $totalTransactionsCount,
+                'current_mrr'        => (float) $currentMrr,
+                'current_arr'        => (float) ($currentMrr * 12),
             ],
             'charts' => [
                 'revenue_trend'     => $dailyTrend,
@@ -97,9 +102,9 @@ class CentralReportService
 
         // Tren Pendaftaran Harian (Area Chart)
         $dailyAcquisition = DB::connection('central')->table('tenants')
-            ->selectRaw('DATE(created_at) as date, COUNT(id) as total')
+            ->selectRaw('CAST(created_at AS DATE) as date, COUNT(id) as total')
             ->whereBetween('created_at', [$start, $end])
-            ->groupBy(DB::raw('DATE(created_at)'))
+            ->groupBy(DB::raw('CAST(created_at AS DATE)'))
             ->orderBy('date', 'asc')
             ->get()
             ->map(function ($item) {

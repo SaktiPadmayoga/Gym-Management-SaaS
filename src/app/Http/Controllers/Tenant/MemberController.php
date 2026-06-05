@@ -27,12 +27,34 @@ class MemberController extends Controller
     /**
      * List member dengan filter lengkap
      */
+    /**
+     * Get member query with branch scoping for non-owners
+     */
+    private function getMemberQuery(Request $request)
+    {
+        $query = Member::query();
+        $staff = $request->user('staff');
+        $activeBranchId = $request->header('X-Branch-Id');
+
+        if ($staff && !$staff->isOwner()) {
+            $query->where('home_branch_id', $activeBranchId);
+        }
+
+        return $query;
+    }
+
+    /**
+     * List member dengan filter lengkap
+     */
     public function index(Request $request)
     {
-        $query = Member::query()->with(['homeBranch', 'memberships.plan']);
+        $query = $this->getMemberQuery($request)->with(['homeBranch', 'memberships.plan']);
 
-        if ($request->filled('home_branch_id')) {
-            $query->where('home_branch_id', $request->home_branch_id);
+        $staff = $request->user('staff');
+        if ($staff && $staff->isOwner()) {
+            if ($request->filled('home_branch_id')) {
+                $query->where('home_branch_id', $request->home_branch_id);
+            }
         }
 
         if ($request->filled('status')) {
@@ -71,7 +93,7 @@ class MemberController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $member = Member::with(['homeBranch', 'memberships.plan'])->findOrFail($id);
+        $member = $this->getMemberQuery($request)->with(['homeBranch', 'memberships.plan'])->findOrFail($id);
 
         return ApiResponse::success(new MemberResource($member));
     }
@@ -111,7 +133,7 @@ class MemberController extends Controller
      */
     public function update(UpdateMemberRequest $request, string $id)
     {
-        $member = Member::findOrFail($id);
+        $member = $this->getMemberQuery($request)->findOrFail($id);
         $data   = $request->validated();
 
         if ($request->hasFile('avatar')) {
@@ -136,7 +158,7 @@ class MemberController extends Controller
      */
     public function destroy(string $id)
     {
-        $member = Member::findOrFail($id);
+        $member = $this->getMemberQuery(request())->findOrFail($id);
 
         // Cancel semua membership yang sedang aktif
         Membership::where('member_id', $member->id)->update(['status' => 'cancelled']);
@@ -156,7 +178,7 @@ class MemberController extends Controller
      */
     public function assignMembership(Request $request, string $id)
     {
-        $member = Member::findOrFail($id);
+        $member = $this->getMemberQuery($request)->findOrFail($id);
 
         $request->validate([
             'plan_id'    => ['required', 'uuid', 'exists:membership_plans,id'],
@@ -219,7 +241,8 @@ class MemberController extends Controller
             'notes'        => ['nullable', 'string'],
         ]);
 
-        $membership = Membership::where('member_id', $memberId)->findOrFail($membershipId);
+        $member = $this->getMemberQuery($request)->findOrFail($memberId);
+        $membership = Membership::where('member_id', $member->id)->findOrFail($membershipId);
         $updateData = [];
 
         if ($request->filled('status'))       $updateData['status']       = $request->status;
@@ -238,12 +261,6 @@ class MemberController extends Controller
     /**
      * POST /members/{member}/memberships/{membership}/freeze
      * Freeze a membership for a specified number of days.
-     *
-     * Business rules:
-     * - Branch setting `freeze_allowed` must be true
-     * - Cannot exceed `max_freeze_days` (total cumulative)
-     * - Membership must be active
-     * - Membership must not already be frozen
      */
     public function freezeMembership(Request $request, string $memberId, string $membershipId)
     {
@@ -253,7 +270,8 @@ class MemberController extends Controller
         ]);
 
         $branchId = $request->header('X-Branch-Id');
-        $membership = Membership::where('member_id', $memberId)->findOrFail($membershipId);
+        $member = $this->getMemberQuery($request)->findOrFail($memberId);
+        $membership = Membership::where('member_id', $member->id)->findOrFail($membershipId);
 
         // Check: membership must be active
         if ($membership->status !== 'active') {
@@ -308,7 +326,8 @@ class MemberController extends Controller
      */
     public function unfreezeMembership(Request $request, string $memberId, string $membershipId)
     {
-        $membership = Membership::where('member_id', $memberId)->findOrFail($membershipId);
+        $member = $this->getMemberQuery($request)->findOrFail($memberId);
+        $membership = Membership::where('member_id', $member->id)->findOrFail($membershipId);
 
         if ($membership->status !== 'frozen') {
             return ApiResponse::error('Membership ini tidak sedang dalam status freeze.', null, 422);
@@ -331,7 +350,8 @@ class MemberController extends Controller
      */
     public function cancelMembership(string $memberId, string $membershipId)
     {
-        $membership = Membership::where('member_id', $memberId)->findOrFail($membershipId);
+        $member = $this->getMemberQuery(request())->findOrFail($memberId);
+        $membership = Membership::where('member_id', $member->id)->findOrFail($membershipId);
 
         $membership->update(['status' => 'cancelled']);
         $membership->delete(); // Soft delete
@@ -346,7 +366,7 @@ class MemberController extends Controller
      */
     public function memberships(string $id)
     {
-        $member = Member::findOrFail($id);
+        $member = $this->getMemberQuery(request())->findOrFail($id);
         
         $memberships = $member->memberships()->with('plan')->orderByDesc('created_at')->get();
 
@@ -391,6 +411,9 @@ class MemberController extends Controller
  */
     public function activeMemberships(Request $request)
     {
+        $staff = $request->user('staff');
+        $activeBranchId = $request->header('X-Branch-Id');
+
         $query = Membership::query()
             ->with([
                 'member:id,name,email,phone,avatar,home_branch_id',
@@ -400,9 +423,13 @@ class MemberController extends Controller
             ->where('status', 'active')
             ->where('end_date', '>=', now()->toDateString());
 
-        // Filter cabang (jika diperlukan)
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
+        if ($staff && !$staff->isOwner()) {
+            $query->where('branch_id', $activeBranchId);
+        } else {
+            // Filter cabang (jika diperlukan untuk owner)
+            if ($request->filled('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            }
         }
 
         // Filter yang akan expired dalam X hari (default 30 hari)
@@ -443,6 +470,9 @@ class MemberController extends Controller
  */
     public function membershipHistory(Request $request)
     {
+        $staff = $request->user('staff');
+        $activeBranchId = $request->header('X-Branch-Id');
+
         $query = Membership::query()
             ->with([
                 'member:id,name,email,phone,avatar',
@@ -451,14 +481,18 @@ class MemberController extends Controller
             ])
             ->withTrashed(); // Agar cancelled & soft deleted tetap muncul
 
+        if ($staff && !$staff->isOwner()) {
+            $query->where('branch_id', $activeBranchId);
+        } else {
+            // Filter berdasarkan cabang (owner)
+            if ($request->filled('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            }
+        }
+
         // Filter berdasarkan status (optional)
         if ($request->filled('status')) {
             $query->where('status', $request->status);
-        }
-
-        // Filter berdasarkan cabang
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
         }
 
         // Filter berdasarkan periode waktu

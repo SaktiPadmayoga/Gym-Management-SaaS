@@ -11,11 +11,7 @@ interface ProductGridProps {
     onAddToCart: (product: ProductItem) => void;
 }
 
-export const ProductGrid: React.FC<ProductGridProps> = ({ 
-    searchQuery = "", 
-    categoryFilter = "", 
-    onAddToCart 
-}) => {
+export const ProductGrid: React.FC<ProductGridProps> = ({ searchQuery = "", categoryFilter = "", onAddToCart }) => {
     // Fetch data produk dari backend menggunakan hook yang kamu sediakan
     const { data: productsResponse, isLoading, isError } = useProducts({
         per_page: 100, // Ambil cukup banyak untuk POS
@@ -34,7 +30,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
             id: String(p.id),
             name: String(p.name),
             image: p.image_url || p.image || "/images/placeholder.svg",
-            category: p.category?.name || p.category || "General", 
+            category: p.category?.name || p.category || "General",
             sellingPrice: Number(p.selling_price || p.price || 0),
             stock: Number(p.stock || 0),
         }));
@@ -65,13 +61,9 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3  gap-4">
             {products.map((product) => (
-                <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={onAddToCart}
-                />
+                <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
             ))}
         </div>
     );

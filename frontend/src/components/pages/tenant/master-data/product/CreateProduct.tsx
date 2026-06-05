@@ -35,8 +35,8 @@ interface CreateProductFormData {
 
 const unitOptions: DropdownOption<string>[] = [
     { key: "pcs",    label: "Pcs",    value: "pcs"    },
-    { key: "box",    label: "Box",    value: "box"    },
-    { key: "bottle", label: "Bottle", value: "bottle" },
+    { key: "box",    label: "Boks",    value: "box"    },
+    { key: "bottle", label: "Botol", value: "bottle" },
     { key: "sachet", label: "Sachet", value: "sachet" },
     { key: "kg",     label: "Kg",     value: "kg"     },
     { key: "liter",  label: "Liter",  value: "liter"  },
@@ -54,7 +54,7 @@ export default function CreateProduct() {
         mode: "onChange",
         defaultValues: {
             name:          "",
-            code:           "",
+            code:          "",
             category:      "",
             description:   "",
             selling_price: 0,
@@ -91,10 +91,10 @@ export default function CreateProduct() {
             };
 
             await createMutation.mutateAsync({ payload, imageFile });
-            toast.success("Product created successfully");
+            toast.success("Produk berhasil dibuat");
             router.push("/products?success=true");
         } catch (err) {
-            toast.error("Failed to create product");
+            toast.error("Gagal membuat produk");
             console.error(err);
         }
     };
@@ -117,8 +117,8 @@ export default function CreateProduct() {
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
                             <li>Master Data</li>
-                            <li><Link href="/products">Products</Link></li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li><Link href="/products">Produk</Link></li>
+                            <li className="text-aksen-secondary">Tambah baru</li>
                         </ul>
                     </div>
 
@@ -128,14 +128,14 @@ export default function CreateProduct() {
                             <button type="button" onClick={() => router.push("/products")}>
                                 <Icon name="back" className="h-7 w-7" />
                             </button>
-                            <h1 className="text-2xl font-semibold">Create Product</h1>
+                            <h1 className="text-2xl font-semibold">Tambah Produk</h1>
                         </div>
                         <CustomButton
                             type="submit"
                             disabled={createMutation.isPending}
                             className="bg-aksen-secondary text-white px-4 py-2.5 disabled:opacity-50"
                         >
-                            {createMutation.isPending ? "Creating..." : "Create and save"}
+                            {createMutation.isPending ? "Menyimpan..." : "Tambah dan Simpan"}
                         </CustomButton>
                     </div>
 
@@ -146,32 +146,32 @@ export default function CreateProduct() {
                         {/* NAME & CATEGORY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Product Name" placeholder="Enter product name" />
+                                <TextInput name="name" label="Nama Produk" placeholder="Masukkan nama produk" />
                             </div>
                             <div className="col-span-3">
-                                <TextInput name="category" label="Category" placeholder="e.g Supplements" />
+                                <TextInput name="category" label="Kategori" placeholder="Misal: Suplemen" />
                             </div>
                             <div className="col-span-3">
-                                <TextInput name="sku" label="SKU (optional)" placeholder="e.g WP-001" />
+                                <TextInput name="code" label="Kode/SKU (opsional)" placeholder="Misal: WP-001" />
                             </div>
                         </div>
 
                         {/* PRICES & STOCK */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-3">
-                                <NumberInput name="cost_price"    label="Cost Price (Rp)"    />
+                                <NumberInput name="cost_price"    label="Harga Beli (Rp)"    />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="selling_price" label="Selling Price (Rp)" />
+                                <NumberInput name="selling_price" label="Harga Jual (Rp)" />
                             </div>
                             <div className="col-span-2">
-                                <NumberInput name="stock"         label="Initial Stock"      />
+                                <NumberInput name="stock"         label="Stok Awal"      />
                             </div>
                             <div className="col-span-2">
-                                <NumberInput name="min_stock"     label="Min Stock Alert"    />
+                                <NumberInput name="min_stock"     label="Peringatan Stok Minim"    />
                             </div>
                             <div className="col-span-2">
-                                <SearchableDropdown name="unit" label="Unit" options={unitOptions} />
+                                <SearchableDropdown name="unit" label="Satuan" options={unitOptions} />
                             </div>
                         </div>
 
@@ -179,11 +179,11 @@ export default function CreateProduct() {
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
                                 <label className="block text-sm font-medium text-zinc-700 mb-1">
-                                    Description (optional)
+                                    Deskripsi (opsional)
                                 </label>
                                 <textarea
                                     {...form.register("description")}
-                                    placeholder="Enter product description..."
+                                    placeholder="Masukkan deskripsi produk..."
                                     rows={4}
                                     className="w-full px-4 py-3 border border-zinc-200 rounded-lg focus:outline-none focus:border-aksen-secondary focus:ring-2 focus:ring-aksen-secondary/10 transition resize-none text-sm"
                                 />
@@ -191,7 +191,7 @@ export default function CreateProduct() {
 
                             {/* IMAGE UPLOAD */}
                             <div className="col-span-6">
-                                <p className="block text-sm font-medium text-zinc-700 mb-1">Product Image</p>
+                                <p className="block text-sm font-medium text-zinc-700 mb-1">Gambar Produk</p>
                                 <div className="border border-zinc-200 rounded-lg p-6 flex flex-col items-center justify-center text-center min-h-[120px]">
                                     <input
                                         type="file"
@@ -204,19 +204,19 @@ export default function CreateProduct() {
                                     {!previewImage ? (
                                         <label htmlFor="product-image-upload" className="flex flex-col items-center cursor-pointer">
                                             <ArchiveBoxIcon className="h-8 w-8 text-aksen-secondary mb-2" />
-                                            <p className="text-aksen-secondary font-medium text-sm">Drop or upload file</p>
-                                            <p className="text-zinc-400 text-xs mt-1">PNG, JPG, JPEG, WEBP — max 2MB</p>
+                                            <p className="text-aksen-secondary font-medium text-sm">Pilih atau unggah file</p>
+                                            <p className="text-zinc-400 text-xs mt-1">PNG, JPG, JPEG, WEBP — maks. 2MB</p>
                                         </label>
                                     ) : (
                                         <div className="flex flex-col items-center gap-3">
                                             <img
                                                 src={previewImage}
-                                                alt="Preview"
+                                                alt="Pratinjau"
                                                 className="h-20 w-20 object-cover rounded-lg border border-zinc-200"
                                             />
                                             <div className="flex items-center gap-3 text-sm">
                                                 <label htmlFor="product-image-upload" className="text-blue-600 cursor-pointer hover:underline">
-                                                    Reupload
+                                                    Unggah Ulang
                                                 </label>
                                                 <span className="text-zinc-300">|</span>
                                                 <button
@@ -224,7 +224,7 @@ export default function CreateProduct() {
                                                     className="text-red-500 hover:underline"
                                                     onClick={() => { setPreviewImage(null); setImageFile(undefined); }}
                                                 >
-                                                    Remove
+                                                    Hapus
                                                 </button>
                                             </div>
                                         </div>
@@ -236,17 +236,17 @@ export default function CreateProduct() {
                         {/* PROFIT PREVIEW */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4 p-4 bg-gray-100 rounded-lg border border-zinc-200">
-                                <p className="text-sm text-zinc-500 mb-1">Profit per Unit</p>
+                                <p className="text-sm text-zinc-500 mb-1">Keuntungan per Unit</p>
                                 <p className="text-2xl font-bold text-zinc-800">
                                     Rp {Math.max(0, profitAmount).toLocaleString("id-ID")}
                                 </p>
                             </div>
                             <div className="col-span-4 p-4 bg-gray-100 rounded-lg border border-zinc-200">
-                                <p className="text-sm text-zinc-500 mb-1">Profit Margin</p>
+                                <p className="text-sm text-zinc-500 mb-1">Margin Keuntungan</p>
                                 <p className="text-2xl font-bold text-aksen-secondary">{profitPct}%</p>
                             </div>
                             <div className="col-span-4 p-4 bg-gray-100 rounded-lg border border-zinc-200">
-                                <p className="text-sm text-zinc-500 mb-1">Potential Revenue</p>
+                                <p className="text-sm text-zinc-500 mb-1">Potensi Pendapatan</p>
                                 <p className="text-2xl font-bold text-zinc-800">
                                     Rp {potentialRevenue.toLocaleString("id-ID")}
                                 </p>
@@ -256,7 +256,7 @@ export default function CreateProduct() {
                         {/* ACTIVE */}
                         <div className="flex items-center gap-3 text-gray-800">
                             <input type="checkbox" className="checkbox checkbox-sm" {...form.register("is_active")} />
-                            <span className="text-sm font-medium">Active</span>
+                            <span className="text-sm font-medium">Aktif</span>
                         </div>
                     </div>
                 </div>

@@ -31,12 +31,16 @@ class TenantReportService
         $revenueByMethod = (clone $invoicesQuery)
             ->selectRaw("COALESCE(payment_method, 'other') as name, SUM(total_amount) as value")
             ->groupBy('payment_method')
-            ->get();
+            ->get()
+            ->map(fn($item) => [
+                'name'  => $item->name,
+                'value' => (float) $item->value
+            ]);
 
         // Tren Pendapatan Harian (Line Chart)
         $dailyTrend = (clone $invoicesQuery)
-            ->selectRaw('DATE(paid_at) as date, SUM(total_amount) as revenue')
-            ->groupBy(DB::raw('DATE(paid_at)'))
+            ->selectRaw('CAST(paid_at AS DATE) as date, SUM(total_amount) as revenue')
+            ->groupBy(DB::raw('CAST(paid_at AS DATE)'))
             ->orderBy('date', 'asc')
             ->get()
             ->map(fn($item) => [
@@ -74,7 +78,15 @@ class TenantReportService
             )
             ->latest('tenant_invoices.paid_at')
             ->take(10)
-            ->get();
+            ->get()
+            ->map(fn($item) => [
+                'invoice_number' => $item->invoice_number,
+                'total_amount'   => (float) $item->total_amount,
+                'payment_method' => $item->payment_method,
+                'paid_at'        => $item->paid_at,
+                'member_name'    => $item->member_name,
+                'branch_name'    => $item->branch_name
+            ]);
 
         return [
             'summary' => [
@@ -127,8 +139,8 @@ class TenantReportService
             $dailyRegQuery->where('home_branch_id', $branchId);
         }
         $dailyRegistration = $dailyRegQuery
-            ->selectRaw('DATE(created_at) as date, COUNT(id) as total')
-            ->groupBy(DB::raw('DATE(created_at)'))
+            ->selectRaw('CAST(created_at AS DATE) as date, COUNT(id) as total')
+            ->groupBy(DB::raw('CAST(created_at AS DATE)'))
             ->orderBy('date', 'asc')
             ->get()
             ->map(fn($item) => [

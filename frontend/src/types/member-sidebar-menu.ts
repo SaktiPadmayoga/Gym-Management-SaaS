@@ -27,7 +27,7 @@ export interface MemberSidebarItem {
 }
 
 export const memberSidebarData: MemberSidebarItem[] = [
-    { id: "header-main", title: "Main Menu", isHeader: true },
+    { id: "header-main", title: "Menu Utama", isHeader: true },
     {
         id: "nav-dashboard",
         title: "Dashboard",
@@ -37,35 +37,42 @@ export const memberSidebarData: MemberSidebarItem[] = [
     },
     {
         id: "nav-reports",
-        title: "Reports",
+        title: "Laporan",
         path: "/member/reports",
         Icon: IconFileInvoice,
         IconSolid: IconFileInvoiceFilled,
     },
     {
         id: "nav-membership",
-        title: "Membership",
+        title: "Keanggotaan",
         path: "/member/membership",
         Icon: IconCreditCard,
         IconSolid: IconCreditCardFilled,
     },
     {
         id: "nav-class-schedule",
-        title: "Class Schedule",
+        title: "Jadwal Kelas",
         path: "/member/class-schedule",
         Icon: IconCalendar,
         IconSolid: IconCalendarFilled,
     },
     {
+        id: "nav-availability-calendar",
+        title: "Kalender Interaktif",
+        path: "/member/availability-calendar",
+        Icon: IconCalendar,
+        IconSolid: IconCalendarFilled,
+    },
+    {
         id: "nav-pt-session",
-        title: "PT Session",
+        title: "Sesi PT",
         path: "/member/pt-session",
         Icon: IconBarbell,
         IconSolid: IconBarbell,
     },
     {
         id: "nav-profile",
-        title: "Profile",
+        title: "Profil",
         path: "/member/profile",
         Icon: IconUser,
         IconSolid: IconUserFilled,

@@ -12,7 +12,8 @@ import {
     useCancelAttendance,
     useAddAttendance,
     useCancelClassSchedule,
-    useStaffBookClass, // <--- HOOK BARU YANG AKAN KITA BUAT
+    useStaffBookClass,
+    useUpdateClassSchedule,
 } from "@/hooks/tenant/useClassSchedules";
 import { useMembers } from "@/hooks/tenant/useMembers";
 import { ClassAttendanceData } from "@/types/tenant/class-schedules";
@@ -53,6 +54,7 @@ export default function ClassScheduleDetail() {
     const addAttendanceMutation  = useAddAttendance(); // Untuk kelas gratis
     const cancelScheduleMutation = useCancelClassSchedule();
     const staffBookClassMutation = useStaffBookClass(); // Untuk kelas berbayar
+    const updateMutation         = useUpdateClassSchedule();
 
     // Load Midtrans Snap Script
     useEffect(() => {
@@ -302,66 +304,89 @@ export default function ClassScheduleDetail() {
                     {!isCancelled && !isCompleted && (
                         <div className="flex gap-2">
                             <CustomButton
-                                className="border-none bg-red-600 text-white px-4 py-2"
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 font-bold"
                                 onClick={() => {
-                                    let reason = "";
-
-                                    toast.custom((t) => (
-                                        <div className="flex flex-col justify-center bg-white border p-4 rounded-lg shadow-lg w-[40vh] h-fit space-y-3">
-                                            <p className="font-semibold text-zinc-900">Alasan pembatalan</p>
-
-                                            <input
-                                                autoFocus
-                                                className="w-full border px-2 py-1 rounded text-sm"
-                                                placeholder="Tulis alasan..."
-                                                onChange={(e) => (reason = e.target.value)}
-                                            />
-
-                                            <div className="flex justify-end gap-2">
-                                                <button
-                                                    className="text-sm px-3 py-1 border text-zinc-900 rounded"
-                                                    onClick={() => toast.dismiss(t)}
-                                                >
-                                                    Batal
-                                                </button>
-
-                                                <button
-                                                    className="text-sm px-3 py-1 bg-red-600 text-white rounded"
-                                                    onClick={() => {
-                                                        if (!reason) {
-                                                            toast.error("Alasan wajib diisi");
-                                                            return;
-                                                        }
-
-                                                        toast.loading("Membatalkan...");
-
-                                                        cancelScheduleMutation.mutate(
-                                                            { id, reason },
-                                                            {
-                                                                onSuccess: () => {
-                                                                    toast.dismiss();
-                                                                    toast.success("Jadwal dibatalkan");
-                                                                },
-                                                                onError: (err: any) => {
-                                                                    toast.dismiss();
-                                                                    toast.error(
-                                                                        err?.response?.data?.message ||
-                                                                            "Gagal membatalkan"
-                                                                    );
-                                                                },
-                                                            }
-                                                        );
-                                                    }}
-                                                >
-                                                    Konfirmasi
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ));
+                                    if (confirm("Tandai kelas ini sebagai selesai?")) {
+                                        updateMutation.mutate(
+                                            { id: id as string, payload: { status: "completed" } },
+                                            {
+                                                onSuccess: () => {
+                                                    toast.success("Kelas selesai!");
+                                                    router.push("/class-schedules");
+                                                },
+                                                onError: (err: any) => {
+                                                    toast.error(err?.response?.data?.message || "Gagal menyelesaikan kelas");
+                                                }
+                                            }
+                                        );
+                                    }
                                 }}
                             >
-                                Batalkan Jadwal
+                                Tandai Selesai
                             </CustomButton>
+                            {schedule.status === "scheduled" && (
+                                <CustomButton
+                                    className="border-none bg-red-600 text-white px-4 py-2"
+                                    onClick={() => {
+                                        let reason = "";
+
+                                        toast.custom((t) => (
+                                            <div className="flex flex-col justify-center bg-white border p-4 rounded-lg shadow-lg w-[40vh] h-fit space-y-3">
+                                                <p className="font-semibold text-zinc-900">Alasan pembatalan</p>
+
+                                                <input
+                                                    autoFocus
+                                                    className="w-full border px-2 py-1 rounded text-sm"
+                                                    placeholder="Tulis alasan..."
+                                                    onChange={(e) => (reason = e.target.value)}
+                                                />
+
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        className="text-sm px-3 py-1 border text-zinc-900 rounded"
+                                                        onClick={() => toast.dismiss(t)}
+                                                    >
+                                                        Batal
+                                                    </button>
+
+                                                    <button
+                                                        className="text-sm px-3 py-1 bg-red-600 text-white rounded"
+                                                        onClick={() => {
+                                                            if (!reason) {
+                                                                toast.error("Alasan wajib diisi");
+                                                                return;
+                                                            }
+
+                                                            toast.loading("Membatalkan...");
+
+                                                            cancelScheduleMutation.mutate(
+                                                                { id, reason },
+                                                                {
+                                                                    onSuccess: () => {
+                                                                        toast.dismiss();
+                                                                        toast.success("Jadwal dibatalkan");
+                                                                    },
+                                                                    onError: (err: any) => {
+                                                                        toast.dismiss();
+                                                                        toast.error(
+                                                                            err?.response?.data?.message ||
+                                                                                "Gagal membatalkan"
+                                                                        );
+                                                                    },
+                                                                }
+                                                            );
+                                                        }}
+                                                    >
+                                                        Konfirmasi
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ));
+                                    }}
+                                >
+                                    Batalkan Jadwal
+                                </CustomButton>
+                            )}
                         </div>
                     )}
                 </div>

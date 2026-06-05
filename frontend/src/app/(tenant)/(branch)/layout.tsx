@@ -6,6 +6,7 @@ import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import { ReactNode, useEffect } from "react";
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { BranchProvider } from "@/providers/BranchProvider";
+import { BranchThemeInjector } from "@/providers/BranchThemeProvider";
 import { useRouter } from "next/navigation";
 
 function StaffGuard({ children }: { children: ReactNode }) {
@@ -42,6 +43,7 @@ function StaffGuard({ children }: { children: ReactNode }) {
 export default function BranchLayout({ children }: { children: ReactNode }) {
     return (
         <BranchProvider>
+            <BranchThemeInjector />
             <StaffGuard>
                 <LayoutWrapper>{children}</LayoutWrapper>
             </StaffGuard>

@@ -25,6 +25,14 @@ const memberStatusColor: Record<string, string> = {
     banned: "bg-red-100 text-red-700",
 };
 
+const statusLabels: Record<string, string> = {
+    active: "Aktif",
+    inactive: "Tidak Aktif",
+    expired: "Kedaluwarsa",
+    frozen: "Ditangguhkan",
+    banned: "Diblokir",
+};
+
 export default function Members() {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -69,15 +77,15 @@ export default function Members() {
         }
 
         if (success === "true" && !hasShownToast.current) {
-            toast.success("Member created successfully");
+            toast.success("Anggota berhasil dibuat");
             hasShownToast.current = true;
         }
         if (updated === "true" && !hasShownToast.current) {
-            toast.success("Member updated successfully");
+            toast.success("Anggota berhasil diperbarui");
             hasShownToast.current = true;
         }
         if (deleted === "true" && !hasShownToast.current) {
-            toast.success("Member deleted successfully");
+            toast.success("Anggota berhasil dihapus");
             hasShownToast.current = true;
         }
 
@@ -88,8 +96,8 @@ export default function Members() {
     const totalData = entries.length;
 
     if (isError) {
-        toast.error("Error loading members");
-        return <div className="py-10 text-center text-red-500">Error loading members</div>;
+        toast.error("Gagal memuat anggota");
+        return <div className="py-10 text-center text-red-500">Gagal memuat anggota</div>;
     }
 
     /* =========================
@@ -97,7 +105,7 @@ export default function Members() {
      * ========================= */
     const columns: Column<MemberData>[] = [
         {
-            header: "Name",
+            header: "Nama",
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.avatar_url ? (
@@ -109,14 +117,14 @@ export default function Members() {
                         <Link href={`/members/${item.id}`} className="font-medium text-zinc-800 hover:underline">
                             {item.name}
                         </Link>
-                        {item.home_branch && <p className="text-xs text-zinc-400">Home: {item.home_branch.name}</p>}
+                        {item.home_branch && <p className="text-xs text-zinc-400">Utama: {item.home_branch.name}</p>}
                     </div>
                 </div>
             ),
             width: "w-52",
         },
         {
-            header: "Contact",
+            header: "Kontak",
             render: (item) => (
                 <div>
                     <p className="text-sm text-zinc-700">{item.phone ?? "-"}</p>
@@ -127,15 +135,15 @@ export default function Members() {
         },
         {
             header: "Status",
-            render: (item) => <span className={`rounded-lg px-2 py-1 text-xs font-medium capitalize ${memberStatusColor[item.status] ?? "bg-zinc-100 text-zinc-600"}`}>{item.status}</span>,
+            render: (item) => <span className={`rounded-lg px-2 py-1 text-xs font-medium capitalize ${memberStatusColor[item.status] ?? "bg-zinc-100 text-zinc-600"}`}>{statusLabels[item.status] ?? item.status}</span>,
             width: "w-28",
         },
         {
-            header: "Membership",
+            header: "Keanggotaan",
             render: (item) => {
                 // Cari membership yang sedang aktif, atau ambil yang paling pertama jika tidak ada yang aktif
                 const mb = item.active_membership ?? item.memberships?.find((m) => m.status === "active");
-                if (!mb) return <span className="text-zinc-400 text-sm">No membership</span>;
+                if (!mb) return <span className="text-zinc-400 text-sm">Tanpa keanggotaan</span>;
 
                 // Kalkulasi sisa hari
                 let daysLeft = 0;
@@ -152,29 +160,29 @@ export default function Members() {
                 return (
                     <div>
                         <p className="text-sm text-zinc-700 font-medium">{mb.plan?.name ?? "Custom Plan"}</p>
-                        <p className="text-xs text-zinc-500 mb-1">Ends: {mb.end_date ? new Date(mb.end_date).toLocaleDateString() : "-"}</p>
+                        <p className="text-xs text-zinc-500 mb-1">Berakhir: {mb.end_date ? new Date(mb.end_date).toLocaleDateString("id-ID") : "-"}</p>
                         {mb.status === "active" && daysLeft !== null && (
-                            <p className={`text-[10px] font-semibold uppercase ${daysLeft <= 7 ? "text-orange-500" : "text-emerald-500"}`}>{daysLeft > 0 ? `${daysLeft} days left` : "Expires today"}</p>
+                            <p className={`text-[10px] font-semibold uppercase ${daysLeft <= 7 ? "text-orange-500" : "text-emerald-500"}`}>{daysLeft > 0 ? `${daysLeft} hari tersisa` : "Habis hari ini"}</p>
                         )}
-                        {mb.status !== "active" && <p className="text-[10px] font-semibold uppercase text-zinc-400">{mb.status}</p>}
+                        {mb.status !== "active" && <p className="text-[10px] font-semibold uppercase text-zinc-400">{statusLabels[mb.status] ?? mb.status}</p>}
                     </div>
                 );
             },
             width: "w-48",
         },
         {
-            header: "Gender",
-            render: (item) => <span className="text-sm text-zinc-500 capitalize">{item.gender ?? "-"}</span>,
+            header: "Jenis Kelamin",
+            render: (item) => <span className="text-sm text-zinc-500 capitalize">{item.gender === "male" ? "Laki-laki" : item.gender === "female" ? "Perempuan" : item.gender ?? "-"}</span>,
             width: "w-24",
         },
         {
-            header: "Member Since",
-            render: (item) => <span className="text-sm text-zinc-500">{item.member_since ? new Date(item.member_since).toLocaleDateString() : "-"}</span>,
+            header: "Anggota Sejak",
+            render: (item) => <span className="text-sm text-zinc-500">{item.member_since ? new Date(item.member_since).toLocaleDateString("id-ID") : "-"}</span>,
             width: "w-32",
         },
         {
-            header: "Last Check-in",
-            render: (item) => <span className="text-sm text-zinc-500">{item.last_checkin_at ? new Date(item.last_checkin_at).toLocaleDateString() : "-"}</span>,
+            header: "Check-in Terakhir",
+            render: (item) => <span className="text-sm text-zinc-500">{item.last_checkin_at ? new Date(item.last_checkin_at).toLocaleDateString("id-ID") : "-"}</span>,
             width: "w-32",
         },
     ];
@@ -184,26 +192,26 @@ export default function Members() {
      * ========================= */
     const actions: ActionItem<MemberData>[] = [
         {
-            label: "View Detail",
+            label: "Lihat Detail",
             icon: "eye",
             onClick: (row) => router.push(`/members/${row.id}`),
         },
         {
-            label: "Edit",
+            label: "Ubah",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
             onClick: (row) => router.push(`/members/${row.id}/edit`),
         },
         {
-            label: "Delete",
+            label: "Hapus",
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
             onClick: (row) => {
-                if (confirm("Are you sure you want to delete this member?")) {
+                if (confirm("Apakah Anda yakin ingin menghapus anggota ini?")) {
                     deleteMutation.mutate(row.id, {
-                        onSuccess: () => toast.success("Member deleted"),
-                        onError: () => toast.error("Failed to delete member"),
+                        onSuccess: () => toast.success("Anggota berhasil dihapus"),
+                        onError: () => toast.error("Gagal menghapus anggota"),
                     });
                 }
             },
@@ -219,23 +227,23 @@ export default function Members() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
-                            <li className="text-aksen-secondary">Members</li>
+                            <li>Manajemen</li>
+                            <li className="text-aksen-secondary">Anggota</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Members</h1>
-                            <p className="text-zinc-500">Manage gym members and their memberships</p>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Anggota</h1>
+                            <p className="text-zinc-500">Kelola anggota gym dan keanggotaan mereka</p>
                         </div>
                         <div className="flex gap-3">
                             <div className="w-64 text-zinc-800">
-                                <SearchInput name="search" />
+                                <SearchInput name="search" placeholder="Cari anggota..." />
                             </div>
                             <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/members/create")}>
-                                New Member
+                                Anggota Baru
                             </CustomButton>
                         </div>
                     </div>
@@ -254,12 +262,12 @@ export default function Members() {
                     </div>
 
                     <div className="mt-4 text-sm text-zinc-500">
-                        Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
+                        Menampilkan {entries.length > 0 ? 1 : 0} sampai {entries.length} dari {totalData} data
                     </div>
                 </div>
 
                 <div className="mt-4">
-                    <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={perPage} />
+                    <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 15, 20, 50]} defaultRowsPerPage={perPage} />
                 </div>
             </div>
         </FormProvider>

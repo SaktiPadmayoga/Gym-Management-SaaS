@@ -8,6 +8,8 @@ use App\Http\Requests\Tenant\StoreBranchRequest;
 use App\Http\Requests\Tenant\UpdateBranchRequest;
 use App\Http\Responses\ApiResponse;
 use App\Http\Resources\BranchResource;
+use App\Models\Tenant\StaffBranch;
+use App\Models\Tenant\Member;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -74,7 +76,23 @@ class BranchController extends Controller
     public function store(StoreBranchRequest $request)
     {
         try {
-            
+            // Validasi limit branch berdasarkan paket subscription
+            $maxBranches = \Illuminate\Support\Facades\DB::connection('central')
+                ->table('tenants')
+                ->where('id', tenant('id'))
+                ->value('max_branches') ?? 1;
+
+            if ($maxBranches > 0) {
+                $currentBranchesCount = Branch::count();
+                if ($currentBranchesCount >= $maxBranches) {
+                    return ApiResponse::error(
+                        "Anda telah mencapai batas maksimum branch untuk paket langganan Anda ({$maxBranches} branch). Silakan upgrade paket langganan Anda terlebih dahulu.",
+                        null,
+                        422
+                    );
+                }
+            }
+
             $validated = $request->validated();
             $validated['id'] = (string) Str::uuid();
 
@@ -145,9 +163,36 @@ class BranchController extends Controller
                 return ApiResponse::error('Branch not found', null, 404);
             }
 
-            $branch->update([
-                'is_active' => false
-            ]);
+            // ── Cek staff aktif di branch ini ─────────────────────────────────
+            $activeStaffCount = StaffBranch::where('branch_id', $id)
+                ->where('is_active', true)
+                ->whereNull('deleted_at')
+                ->count();
+
+            if ($activeStaffCount > 0) {
+                return ApiResponse::error(
+                    "Cabang tidak dapat dihapus karena masih memiliki {$activeStaffCount} staff aktif. Nonaktifkan atau pindahkan staff terlebih dahulu.",
+                    ['active_staff' => $activeStaffCount],
+                    422
+                );
+            }
+
+            // ── Cek member aktif yang home branch-nya di sini ─────────────────
+            $activeMemberCount = Member::where('home_branch_id', $id)
+                ->where('is_active', true)
+                ->whereNull('deleted_at')
+                ->count();
+
+            if ($activeMemberCount > 0) {
+                return ApiResponse::error(
+                    "Cabang tidak dapat dihapus karena masih memiliki {$activeMemberCount} member aktif. Pindahkan atau nonaktifkan member terlebih dahulu.",
+                    ['active_members' => $activeMemberCount],
+                    422
+                );
+            }
+
+            // ── Aman untuk dihapus ────────────────────────────────────────────
+            $branch->update(['is_active' => false]);
 
             // Hapus domain terkait di central
             Domain::where('branch_id', $id)->delete();

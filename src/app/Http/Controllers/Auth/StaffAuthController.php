@@ -45,6 +45,7 @@ class StaffAuthController extends Controller
             ->with(['branch', 'role'])
             ->where('is_active', true)
             ->get()
+            ->filter(fn($sb) => $sb->branch !== null)
             ->map(fn($sb) => [
                 'id'          => $sb->branch->id,
                 'name'        => $sb->branch->name,
@@ -54,6 +55,7 @@ class StaffAuthController extends Controller
                 'role'        => $sb->role?->name,
                 'permissions' => $staff->getPermissionsInBranch($sb->branch->id),
             ])
+            ->values()
             ->toArray();
     }
 
@@ -118,6 +120,21 @@ public function login(Request $request)
 
     if (!$staff->is_active) {
         return ApiResponse::error('Your account has been deactivated', null, 403);
+    }
+
+    // Periksa apakah masa aktif tenant sudah habis (kecuali untuk owner)
+    $tenant = tenant();
+    $isExpired = false;
+    if ($tenant) {
+        if (in_array($tenant->status, ['expired', 'suspended'])) {
+            $isExpired = true;
+        } elseif ($tenant->subscription_ends_at && \Carbon\Carbon::parse($tenant->subscription_ends_at)->isPast()) {
+            $isExpired = true;
+        }
+    }
+
+    if ($isExpired && !$staff->isOwner()) {
+        return ApiResponse::error('Masa aktif layanan gym Anda telah habis. Silakan hubungi Owner untuk memperbarui masa aktif.', null, 403);
     }
 
     $staff->tokens()->delete();
@@ -270,6 +287,21 @@ public function login(Request $request)
             return redirect("{$frontendUrl}/tenant-auth/callback?error=inactive");
         }
 
+        // Periksa apakah masa aktif tenant sudah habis (kecuali untuk owner)
+        $tenantModel = tenant();
+        $isExpired = false;
+        if ($tenantModel) {
+            if (in_array($tenantModel->status, ['expired', 'suspended'])) {
+                $isExpired = true;
+            } elseif ($tenantModel->subscription_ends_at && \Carbon\Carbon::parse($tenantModel->subscription_ends_at)->isPast()) {
+                $isExpired = true;
+            }
+        }
+
+        if ($isExpired && !$staff->isOwner()) {
+            return redirect("{$frontendUrl}/tenant-auth/callback?error=tenant_expired");
+        }
+
         $staff->update([
             'last_login_at' => now(),
             'avatar'        => $googleUser->getAvatar() ?? $staff->avatar,
@@ -345,7 +377,7 @@ public function login(Request $request)
             return ApiResponse::error('Token tidak valid atau sudah kedaluwarsa.', null, 422);
         }
 
-        if (now()->diffInMinutes($resetToken->created_at) > 60) {
+        if (\Carbon\Carbon::parse($resetToken->created_at)->addHour()->isPast()) {
             DB::table('staff_password_reset_tokens')->where('email', $request->email)->delete();
             return ApiResponse::error('Token sudah kedaluwarsa. Silakan minta link reset baru.', null, 422);
         }

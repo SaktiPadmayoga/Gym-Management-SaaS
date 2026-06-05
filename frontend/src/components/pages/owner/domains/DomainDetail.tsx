@@ -26,9 +26,14 @@ function StatusBadge({ status }: { status: string }) {
         approved: "text-green-700 bg-green-100",
         rejected: "text-red-700 bg-red-100",
     };
+    const labels = {
+        pending: "Menunggu",
+        approved: "Disetujui",
+        rejected: "Ditolak",
+    };
     return (
-        <span className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${colors[status as keyof typeof colors] ?? "text-gray-700 bg-gray-100"}`}>
-            {status}
+        <span className={`text-xs px-2 py-0.5 rounded font-medium ${colors[status as keyof typeof colors] ?? "text-gray-700 bg-gray-100"}`}>
+            {labels[status as keyof typeof labels] ?? status}
         </span>
     );
 }
@@ -59,11 +64,11 @@ function RequestDomainModal({
     const handleSubmit = async (data: CreateDomainRequest) => {
         try {
             await createMutation.mutateAsync(data);
-            toast.success("Domain request submitted successfully");
+            toast.success("Permintaan perubahan domain berhasil dikirim");
             form.reset();
             onClose();
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to submit domain request";
+            const message = err?.response?.data?.message || "Gagal mengirim permintaan perubahan domain";
             toast.error(message);
         }
     };
@@ -81,14 +86,14 @@ function RequestDomainModal({
             {/* Modal */}
             <div className="relative z-10 bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 font-figtree">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-zinc-800">Request Domain Change</h2>
+                    <h2 className="text-lg font-semibold text-zinc-800">Ajukan Perubahan Domain</h2>
                     <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600">
                         <Icon name="close" className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="mb-4 p-3 bg-zinc-50 rounded-lg text-sm text-zinc-600">
-                    <span className="text-zinc-500">Current domain: </span>
+                    <span className="text-zinc-500">Domain saat ini: </span>
                     <span className="font-medium text-zinc-800">{currentDomain}</span>
                 </div>
 
@@ -96,12 +101,12 @@ function RequestDomainModal({
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
                         <TextInput
                             name="requested_domain"
-                            label="Requested Domain"
-                            placeholder="e.g. mygym.com"
+                            label="Domain yang Diajukan"
+                            placeholder="contoh: gymsaya.com"
                         />
 
                         <p className="text-xs text-zinc-400">
-                            Your request will be reviewed by our team. You will be notified once it is approved or rejected.
+                            Permintaan Anda akan ditinjau oleh tim kami. Anda akan menerima notifikasi setelah disetujui atau ditolak.
                         </p>
 
                         <div className="flex gap-2 justify-end mt-2">
@@ -110,14 +115,14 @@ function RequestDomainModal({
                                 className="border px-4 py-2"
                                 onClick={onClose}
                             >
-                                Cancel
+                                Batal
                             </CustomButton>
                             <CustomButton
                                 type="submit"
                                 className="bg-aksen-secondary text-white px-4 py-2"
                                 disabled={createMutation.isPending}
                             >
-                                {createMutation.isPending ? "Submitting..." : "Submit Request"}
+                                {createMutation.isPending ? "Mengirim..." : "Kirim Permintaan"}
                             </CustomButton>
                         </div>
                     </form>
@@ -151,24 +156,24 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
     ) ?? [];
 
     const handleCancelRequest = async (id: string) => {
-        if (!confirm("Are you sure you want to cancel this request?")) return;
+        if (!confirm("Apakah Anda yakin ingin membatalkan permintaan ini?")) return;
         try {
             await cancelMutation.mutateAsync(id);
-            toast.success("Domain request cancelled successfully");
+            toast.success("Permintaan perubahan domain berhasil dibatalkan");
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to cancel domain request";
+            const message = err?.response?.data?.message || "Gagal membatalkan permintaan perubahan domain";
             toast.error(message);
         }
     };
 
     const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this domain?")) return;
+        if (!confirm("Apakah Anda yakin ingin menghapus domain ini?")) return;
         try {
             await deleteMutation.mutateAsync(domainId);
-            toast.success("Domain deleted successfully");
+            toast.success("Domain berhasil dihapus");
             router.back();
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to delete domain";
+            const message = err?.response?.data?.message || "Gagal menghapus domain";
             toast.error(message);
         }
     };
@@ -176,21 +181,21 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
     const handleTogglePrimary = async () => {
         try {
             await togglePrimaryMutation.mutateAsync(domainId);
-            toast.success("Primary status toggled successfully");
+            toast.success("Status utama berhasil diubah");
         } catch (err: any) {
-            const message = err?.response?.data?.message || "Failed to toggle primary status";
+            const message = err?.response?.data?.message || "Gagal mengubah status utama";
             toast.error(message);
         }
     };
 
     if (domainLoading) {
-        return <div className="flex justify-center items-center h-64">Loading domain details...</div>;
+        return <div className="flex justify-center items-center h-64">Memuat detail domain...</div>;
     }
 
     if (domainError || !domain) {
         return (
             <div className="flex justify-center items-center h-64 text-red-500">
-                Error loading domain details. Please try again.
+                Gagal memuat detail domain. Silakan coba lagi.
             </div>
         );
     }
@@ -203,9 +208,9 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                 {/* Breadcrumb */}
                                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                                         <ul>
-                                            <li>Tenant & Subscription</li>
+                                            <li>Penyewa & Langganan</li>
                                             <li>
-                                                <Link href="/owner/domains">Domains</Link>
+                                                <Link href="/owner/domains">Domain</Link>
                                             </li>
                                             <li className="text-aksen-secondary">{domain.domain}</li>
                                         </ul>
@@ -224,7 +229,7 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                             className="bg-aksen-secondary border-none text-white px-4 py-2"
                             onClick={() => setIsModalOpen(true)}
                         >
-                            Request Change
+                            Ajukan Perubahan
                         </CustomButton>
                     </div>
                 </div>
@@ -236,21 +241,21 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                     {/* Domain Info */}
                     <div className="md:col-span-4">
                         <div className="bg-zinc-50 rounded-lg p-5 shadow-sm h-full">
-                            <h3 className="font-semibold text-zinc-800 mb-4">Domain Information</h3>
+                            <h3 className="font-semibold text-zinc-800 mb-4">Informasi Domain</h3>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Domain name </span>
+                                    <span className="text-zinc-500">Nama domain</span>
                                     <span className="font-medium text-zinc-800">{domain.domain}</span>
                                 </div>
                                 
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Tenant</span>
+                                    <span className="text-zinc-500">Penyewa (Tenant)</span>
                                     <span className="font-medium text-zinc-800">{domain.tenant?.name || "—"}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Created at</span>
+                                    <span className="text-zinc-500">Dibuat pada</span>
                                     <span className="text-zinc-800">{domain.created_at 
-                                    ? new Date(domain.created_at).toLocaleString("en-US", {
+                                    ? new Date(domain.created_at).toLocaleString("id-ID", {
                                         month: "short", day: "numeric", year: "numeric",
                                         hour: "2-digit", minute: "2-digit"
                                       }) 
@@ -258,9 +263,9 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Updated at</span>
+                                    <span className="text-zinc-500">Diperbarui pada</span>
                                     <span className="text-zinc-800">{domain.updated_at 
-                                    ? new Date(domain.updated_at).toLocaleString("en-US", {
+                                    ? new Date(domain.updated_at).toLocaleString("id-ID", {
                                         month: "short", day: "numeric", year: "numeric",
                                         hour: "2-digit", minute: "2-digit"
                                       }) 
@@ -274,12 +279,12 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                     {/* Domain Change Requests — SELALU RENDER, meskipun kosong */}
                     <div className="md:col-span-8 h-full">
                         <div className="bg-zinc-50 rounded-lg p-5 shadow-sm h-full">
-                            <h3 className="font-semibold text-zinc-800 mb-4">Domain Change Requests History</h3>
+                            <h3 className="font-semibold text-zinc-800 mb-4">Riwayat Permintaan Perubahan Domain</h3>
 
                             {requestsLoading ? (
-                                <div className="text-center py-6 text-zinc-500">Loading requests...</div>
+                                <div className="text-center py-6 text-zinc-500">Memuat permintaan...</div>
                             ) : requestsError ? (
-                                <div className="text-center py-6 text-red-500">Failed to load requests</div>
+                                <div className="text-center py-6 text-red-500">Gagal memuat permintaan</div>
                             ) : domainRequests.length > 0 ? (
                                 <div className="flex flex-col gap-3">
                                     {domainRequests.map((req) => (
@@ -289,17 +294,17 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                                         >
                                             <div className="flex flex-col gap-1 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-zinc-500">Requested:</span>
+                                                    <span className="text-zinc-500">Diajukan:</span>
                                                     <span className="font-medium text-zinc-800">{req.requested_domain}</span>
                                                     <StatusBadge status={req.status} />
                                                 </div>
                                                 {req.rejection_reason && (
                                                     <p className="text-xs text-red-500 mt-1">
-                                                        Reason: {req.rejection_reason}
+                                                        Alasan: {req.rejection_reason}
                                                     </p>
                                                 )}
                                                 <p className="text-xs text-zinc-400 mt-1">
-                                                    Submitted: {new Date(req.created_at).toLocaleDateString("en-US", {
+                                                    Dikirim: {new Date(req.created_at).toLocaleDateString("id-ID", {
                                                         month: "short", day: "numeric", year: "numeric",
                                                     })}
                                                 </p>
@@ -307,11 +312,11 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
 
                                             {req.status === "pending" && (
                                                 <CustomButton
-                                                    className="text-red-500 border border-red-200 hover:bg-red-50 text-xs px-3 py-1.5 mt-2 sm:mt-0 whitespace-nowrap"
+                                                    className="text-white border-none text-xs px-3 py-1.5 mt-2 sm:mt-0 whitespace-nowrap bg-red-500 hover:bg-red-600"
                                                     onClick={() => handleCancelRequest(req.id)}
                                                     disabled={cancelMutation.isPending}
                                                 >
-                                                    Cancel
+                                                    Batal
                                                 </CustomButton>
                                             )}
                                         </div>
@@ -319,13 +324,13 @@ export default function DomainDetail({ domainId }: DomainDetailProps) {
                                 </div>
                             ) : (
                                 <div className="text-center py-6 text-zinc-500">
-                                    No domain change requests yet for this domain.
+                                    Belum ada permintaan perubahan domain untuk domain ini.
                                     <br />
                                     <button 
                                         className="text-green-600 hover:underline mt-2 text-sm"
                                         onClick={() => setIsModalOpen(true)}
                                     >
-                                        Request a change now →
+                                        Ajukan perubahan sekarang →
                                     </button>
                                 </div>
                             )}

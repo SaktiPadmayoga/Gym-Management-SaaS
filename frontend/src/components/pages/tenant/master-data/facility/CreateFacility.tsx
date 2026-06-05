@@ -19,18 +19,18 @@ import { FacilityCreateRequest, OperationalHours, DEFAULT_OPERATIONAL_HOURS } fr
  * ========================= */
 
 const accessTypeOptions: DropdownOption<string>[] = [
-    { key: "public", label: "Public — Anyone can book", value: "public" },
-    { key: "private", label: "Private — Members only", value: "private" },
+    { key: "public", label: "Publik — Siapa saja bisa memesan", value: "public" },
+    { key: "private", label: "Privat — Hanya anggota", value: "private" },
 ];
 
 const DAYS = [
-    { key: "mon", label: "Monday" },
-    { key: "tue", label: "Tuesday" },
-    { key: "wed", label: "Wednesday" },
-    { key: "thu", label: "Thursday" },
-    { key: "fri", label: "Friday" },
-    { key: "sat", label: "Saturday" },
-    { key: "sun", label: "Sunday" },
+    { key: "mon", label: "Senin" },
+    { key: "tue", label: "Selasa" },
+    { key: "wed", label: "Rabu" },
+    { key: "thu", label: "Kamis" },
+    { key: "fri", label: "Jumat" },
+    { key: "sat", label: "Sabtu" },
+    { key: "sun", label: "Minggu" },
 ] as const;
 
 /* =========================
@@ -101,10 +101,10 @@ export default function CreateFacility() {
             };
 
             await createMutation.mutateAsync(payload);
-            toast.success("Facility created successfully");
-            router.push("/facility?success=true");
+            toast.success("Fasilitas berhasil dibuat");
+            router.push("/facilities?success=true");
         } catch (err) {
-            toast.error("Failed to create facility");
+            toast.error("Gagal membuat fasilitas");
             console.error(err);
         }
     };
@@ -120,22 +120,22 @@ export default function CreateFacility() {
                         <ul>
                             <li>Master Data</li>
                             <li>
-                                <Link href="/facility">Facility</Link>
+                                <Link href="/facilities">Fasilitas</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li className="text-aksen-secondary">Buat baru</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/facility")}>
+                            <button type="button" onClick={() => router.push("/facilities")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
-                            <h1 className="text-2xl font-semibold">Create Facility</h1>
+                            <h1 className="text-2xl font-semibold">Buat Fasilitas</h1>
                         </div>
                         <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-4 py-2.5 disabled:opacity-50">
-                            {createMutation.isPending ? "Creating..." : "Create and save"}
+                            {createMutation.isPending ? "Membuat..." : "Buat dan simpan"}
                         </CustomButton>
                     </div>
 
@@ -145,40 +145,40 @@ export default function CreateFacility() {
                         {/* NAME */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-8">
-                                <TextInput name="name" label="Facility Name" placeholder="e.g Swimming Pool, Sauna" />
+                                <TextInput name="name" label="Nama Fasilitas" placeholder="misal: Kolam Renang, Sauna" />
                             </div>
                             <div className="col-span-4">
-                                <TextInput name="category" label="Category (optional)" placeholder="e.g Aquatic, Wellness" />
+                                <TextInput name="category" label="Kategori (opsional)" placeholder="misal: Akuatik, Kebugaran" />
                             </div>
                         </div>
 
                         {/* DESCRIPTION & ACCESS TYPE */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-8">
-                                <TextInput name="description" label="Description" placeholder="Enter description" />
+                                <TextInput name="description" label="Deskripsi" placeholder="Masukkan deskripsi" />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="access_type" label="Access Type" options={accessTypeOptions} />
+                                <SearchableDropdown name="access_type" label="Tipe Akses" options={accessTypeOptions} />
                             </div>
                         </div>
 
                         {/* PRICE, SESSION, CAPACITY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Price per Session (Rp)" />
+                                <NumberInput name="price" label="Harga per Sesi (Rp)" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="minutes_per_session" label="Minutes per Session" />
+                                <NumberInput name="minutes_per_session" label="Durasi per Sesi (menit)" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="capacity" label="Max Capacity (pax)" />
+                                <NumberInput name="capacity" label="Kapasitas Maksimal (pax)" />
                             </div>
                         </div>
 
                         {/* COLOR */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Color (optional)</label>
+                                <label className="block text-sm font-medium text-zinc-700 mb-1">Warna (opsional)</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" {...form.register("color")} className="w-10 h-10 rounded cursor-pointer border border-zinc-200" />
                                     <TextInput name="color" placeholder="#4F46E5" />
@@ -189,21 +189,21 @@ export default function CreateFacility() {
                         <hr />
 
                         {/* AVAILABILITY */}
-                        <h2 className="text-xl font-semibold text-gray-800">Availability</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Ketersediaan</h2>
 
                         <div className="flex flex-col gap-4 text-gray-800">
                             <div className="grid grid-cols-12 gap-3 items-center">
                                 <div className="col-span-4 flex items-center gap-3">
                                     <input type="checkbox" className="checkbox checkbox-sm" {...form.register("always_available")} />
-                                    <span className="text-sm font-medium">Always Available</span>
+                                    <span className="text-sm font-medium">Selalu Tersedia</span>
                                 </div>
                                 {!alwaysAvailable && (
                                     <>
                                         <div className="col-span-4">
-                                            <TextInput type="date" name="available_from" label="Available From" />
+                                            <TextInput type="date" name="available_from" label="Tersedia Mulai" />
                                         </div>
                                         <div className="col-span-4">
-                                            <TextInput type="date" name="available_until" label="Available Until" />
+                                            <TextInput type="date" name="available_until" label="Tersedia Hingga" />
                                         </div>
                                     </>
                                 )}
@@ -211,19 +211,19 @@ export default function CreateFacility() {
 
                             <div className="flex items-center gap-3">
                                 <input type="checkbox" className="checkbox checkbox-sm" {...form.register("is_active")} />
-                                <span className="text-sm font-medium">Active</span>
+                                <span className="text-sm font-medium">Aktif</span>
                             </div>
                         </div>
 
                         {/* OPERATIONAL HOURS */}
                         <div className="flex items-center gap-3 text-zinc-800">
                             <input type="checkbox" checked={showSchedule} onChange={() => setShowSchedule(!showSchedule)} className="checkbox checkbox-sm" />
-                            <span className="text-sm font-medium">Set Operational Hours</span>
+                            <span className="text-sm font-medium">Atur Jam Operasional</span>
                         </div>
 
                         {showSchedule && (
                             <div className="p-4 bg-gray-100 rounded-lg text-zinc-800">
-                                <p className="text-sm font-medium mb-4">Operational Hours</p>
+                                <p className="text-sm font-medium mb-4">Jam Operasional</p>
                                 <div className="flex flex-col gap-3">
                                     {DAYS.map((day) => {
                                         const isOpen = form.watch(`operational_hours.${day.key}.is_open`);

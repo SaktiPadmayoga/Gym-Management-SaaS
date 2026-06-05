@@ -135,7 +135,7 @@ class AdminAuthController extends Controller
         }
 
         // Cek kedaluwarsa (1 jam)
-        if (now()->diffInMinutes($resetToken->created_at) > 60) {
+        if (\Carbon\Carbon::parse($resetToken->created_at)->addHour()->isPast()) {
             DB::connection('central')->table('admin_password_reset_tokens')->where('email', $request->email)->delete();
             return ApiResponse::error('Token sudah kedaluwarsa. Silakan minta link reset baru.', null, 422);
         }

@@ -55,6 +55,9 @@ class TenantRegistrationService
                     'updated_at' => now(),
                 ]);
 
+                // Kirim email sukses & konfigurasi awal ke owner
+                $this->sendWelcomeMail($tenant, $data, $trialPlan->name ?? 'Trial Plan', 'trial');
+
                 return [
                     'tenant_domain' => $tenant->domains->first()->domain,
                     'slug'          => $tenant->slug,
@@ -85,9 +88,13 @@ class TenantRegistrationService
             'current_branch_count' => 1,
         ]);
 
+        // Dapatkan base domain dari env, jika tidak ada ekstrak dari APP_URL (gymfit.id / localhost)
+        $appUrlHost = parse_url(config('app.url'), PHP_URL_HOST);
+        $baseDomain = env('TENANT_BASE_DOMAIN') ?: ($appUrlHost ?: 'localhost');
+
         $tenant->domains()->create([
             'id'         => (string) Str::uuid(),
-            'domain'     => "{$slug}.localhost",
+            'domain'     => $slug . '.' . $baseDomain,
             'type'       => 'tenant',
             'is_primary' => true,
         ]);
@@ -127,6 +134,33 @@ class TenantRegistrationService
             Log::error('[ProvisioningFailed] Tenant ID: ' . $tenant->id . ' - Error: ' . $error);
         } catch (\Exception $e) {
             Log::error('[MarkAsFailed_Error] ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Kirim email selamat datang dan panduan setup awal ke email owner.
+     */
+    public function sendWelcomeMail(Tenant $tenant, array $data, string $planName, string $status): void
+    {
+        try {
+            $slug = $tenant->slug;
+            $protocol = str_contains(config('app.url'), 'https://') ? 'https://' : 'http://';
+            
+            $appUrlHost = parse_url(config('app.url'), PHP_URL_HOST);
+            $baseDomain = env('TENANT_BASE_DOMAIN') ?: ($appUrlHost ?: 'localhost');
+            
+            $loginUrl = $protocol . $slug . '.' . $baseDomain . '/tenant-auth/login';
+
+            \Illuminate\Support\Facades\Mail::to($data['owner_email'])->send(new \App\Mail\OwnerWelcomeMail(
+                $tenant,
+                $data['owner_name'],
+                $data['owner_email'],
+                $loginUrl,
+                $planName,
+                $status
+            ));
+        } catch (\Exception $e) {
+            Log::error('[MailError] Gagal mengirim email selamat datang ke owner ' . $data['owner_email'] . ': ' . $e->getMessage());
         }
     }
 }

@@ -24,15 +24,16 @@ const COLORS = ["#018790", "#3B82F6", "#F59E0B", "#10B981"];
 export default function SubscriptionTab({ data }: { data: any }) {
   const [filterStatus, setFilterStatus] = useState<"all" | "expiring" | "safe">("all");
   const [filterPlan, setFilterPlan] = useState<string>("all");
-  const { summary, tables, charts } = data;
-  const mrr = toNumber(summary.current_mrr);
-  const arr = mrr * 12;
 
   if (!data || !data.summary) {
     return (
       <div className="p-8 text-center text-zinc-500">Tidak ada data tersedia</div>
     );
   }
+
+  const { summary, tables, charts } = data;
+  const mrr = toNumber(summary?.current_mrr);
+  const arr = mrr * 12;
 
   const billingCycleData: { name: string; value: number }[] = charts?.billing_cycle || [];
 
@@ -141,14 +142,14 @@ export default function SubscriptionTab({ data }: { data: any }) {
       </div>
 
       {/* FILTER BAR */}
-      {/* <div className="flex flex-col md:flex-row md:items-center gap-3">
+      <div className="flex flex-col md:flex-row md:items-center gap-3">
         <span className="text-sm text-zinc-500 shrink-0">Filter Tabel:</span>
         <div className="flex items-center gap-2">
           <span className="text-xs text-zinc-400">Urgensi</span>
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value as any)}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-aksen-secondary text-zinc-600"
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-aksen-secondary text-zinc-600 bg-white"
           >
             <option value="all">Semua</option>
             <option value="expiring">Kritis (≤ 3 hari)</option>
@@ -160,7 +161,7 @@ export default function SubscriptionTab({ data }: { data: any }) {
           <select
             value={filterPlan}
             onChange={(e) => setFilterPlan(e.target.value)}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-aksen-secondary text-zinc-600"
+            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-aksen-secondary text-zinc-600 bg-white"
           >
             {planOptions.map((plan) => (
               <option key={plan} value={plan}>
@@ -177,7 +178,7 @@ export default function SubscriptionTab({ data }: { data: any }) {
             Reset Filter
           </button>
         )}
-      </div> */}
+      </div>
 
       {/* TABLE 1: ACTIVE EXPIRING SOON */}
       <div className="bg-white p-6 rounded-xl border border-gray-500/20 font-figtree">

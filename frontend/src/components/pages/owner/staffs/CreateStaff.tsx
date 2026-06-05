@@ -19,7 +19,7 @@ import { useRoles } from "@/hooks/tenant/useRoles";
  * OPTIONS
  * ========================= */
 const globalRoleOptions: DropdownOption<string>[] = [
-    { key: "staff", label: "Staff", value: "staff" },
+    { key: "staff", label: "Staf", value: "staff" },
     { key: "owner", label: "Owner", value: "owner" },
 ];
 
@@ -83,7 +83,7 @@ export default function CreateStaff() {
 
             if (formData.role === "staff") {
                 if (!formData.branch_id) {
-                    toast.error("Cabang harus dipilih untuk staff");
+                    toast.error("Cabang harus dipilih untuk staf");
                     return;
                 }
                 payload.branch_id = formData.branch_id;
@@ -98,7 +98,7 @@ export default function CreateStaff() {
                 error?.response?.data?.error ||
                 error?.response?.data?.message ||
                 error?.message ||
-                "Failed to create staff";
+                "Gagal membuat staf";
 
             toast.error(message);
         }
@@ -113,11 +113,11 @@ export default function CreateStaff() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>User Management</li>
+                            <li>Manajemen Pengguna</li>
                             <li>
-                                <Link href="/owner/staffs">Staff</Link>
+                                <Link href="/owner/staffs">Staf</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li className="text-aksen-secondary">Tambah baru</li>
                         </ul>
                     </div>
 
@@ -128,13 +128,13 @@ export default function CreateStaff() {
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div>
-                                <h1 className="text-2xl font-semibold">Create New Staff</h1>
-                                <p className="text-sm text-zinc-500">Tambahkan akun staff atau owner baru ke sistem</p>
+                                <h1 className="text-2xl font-semibold">Tambah Staf Baru</h1>
+                                <p className="text-sm text-zinc-500">Tambahkan akun staf atau owner baru ke sistem</p>
                             </div>
                         </div>
 
                         <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-6 py-2.5 disabled:opacity-50">
-                            {createMutation.isPending ? "Creating..." : "Create Staff"}
+                            {createMutation.isPending ? "Menyimpan..." : "Tambah Staf"}
                         </CustomButton>
                     </div>
 
@@ -144,27 +144,27 @@ export default function CreateStaff() {
                         {/* BASIC INFORMATION */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" rules={{ required: "Name is required" }} />
+                                <TextInput name="name" label="Nama Lengkap" placeholder="Contoh: John Doe" rules={{ required: "Nama wajib diisi" }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email Address" type="email" placeholder="e.g staff@gym.com" rules={{ required: "Email is required" }} />
+                                <TextInput name="email" label="Alamat Email" type="email" placeholder="Contoh: staff@gym.com" rules={{ required: "Email wajib diisi" }} />
                             </div>
                         </div>
 
                         {/* PASSWORD & PHONE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="password" label="Password" type="password" placeholder="Minimal 8 karakter" rules={{ required: "Password is required", minLength: { value: 8, message: "Password must be at least 8 characters" } }} />
+                                <TextInput name="password" label="Password" type="password" placeholder="Minimal 8 karakter" rules={{ required: "Password wajib diisi", minLength: { value: 8, message: "Password harus minimal 8 karakter" } }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Phone Number (optional)" placeholder="e.g +6281234567890" />
+                                <TextInput name="phone" label="Nomor Telepon (opsional)" placeholder="Contoh: +6281234567890" />
                             </div>
                         </div>
 
                         {/* GLOBAL ROLE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} rules={{ required: "Global role is required" }} />
+                                <SearchableDropdown name="role" label="Peran (Role) Global" options={globalRoleOptions} rules={{ required: "Role global wajib diisi" }} />
                             </div>
                         </div>
 
@@ -175,8 +175,8 @@ export default function CreateStaff() {
 
                                 <div className="space-y-4">
                                     <div>
-                                        <h2 className="text-lg font-semibold text-gray-800">Branch Assignment</h2>
-                                        <p className="text-sm text-zinc-500 mt-1">Pilih cabang dan peran staff di cabang tersebut</p>
+                                        <h2 className="text-lg font-semibold text-gray-800">Penugasan Cabang</h2>
+                                        <p className="text-sm text-zinc-500 mt-1">Pilih cabang dan peran staf di cabang tersebut</p>
                                     </div>
 
                                     <div className="grid grid-cols-12 gap-4">
@@ -185,12 +185,12 @@ export default function CreateStaff() {
                                             <Controller
                                                 name="branch_id"
                                                 control={form.control}
-                                                rules={{ required: "Cabang wajib dipilih untuk staff" }}
+                                                rules={{ required: "Cabang wajib dipilih untuk staf" }}
                                                 render={({ field, fieldState: { error } }) => (
                                                     <>
                                                         <SearchableDropdown
                                                             name="branch_id"
-                                                            label="Assign to Branch"
+                                                            label="Tugaskan ke Cabang"
                                                             options={branches.map((branch) => ({
                                                                 key: branch.id,
                                                                 label: branch.name,
@@ -206,7 +206,7 @@ export default function CreateStaff() {
                                         </div>
 
                                         <div className="col-span-6">
-                                            <SearchableDropdown name="branch_role" label="Role in Branch" options={branchRoleOptions} rules={{ required: "Branch role is required" }} />
+                                            <SearchableDropdown name="branch_role" label="Peran (Role) di Cabang" options={branchRoleOptions} rules={{ required: "Role cabang wajib diisi" }} />
                                         </div>
                                     </div>
                                 </div>
@@ -217,7 +217,7 @@ export default function CreateStaff() {
                         {selectedRole === "owner" && (
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
                                 <p>
-                                    <strong>Catatan:</strong> Akun dengan role <strong>Owner</strong> akan memiliki akses penuh ke semua cabang dan fitur Owner Dashboard. Tidak diperlukan penugasan cabang spesifik.
+                                    <strong>Catatan:</strong> Akun dengan role <strong>Owner</strong> akan memiliki akses penuh ke semua cabang dan fitur Dashboard Owner. Tidak diperlukan penugasan cabang spesifik.
                                 </p>
                             </div>
                         )}

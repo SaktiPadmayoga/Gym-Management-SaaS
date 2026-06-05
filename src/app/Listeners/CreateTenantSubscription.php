@@ -15,28 +15,9 @@ class CreateTenantSubscription implements ShouldQueue
 
     public function handle(TenantCreated $event): void
     {
-        $tenant = $event->tenant;
-
-        // Ambil trial plan berdasarkan CODE, bukan ID
-        $trialPlan = Plan::where('code', 'TRIAL')->firstOrFail();
-
-        // Buat subscription
-        $subscription = Subscription::create([
-            'id' => Str::uuid(), // jauh lebih aman daripada string manual
-            'tenant_id' => $tenant->id,
-            'plan_id' => $trialPlan->id,
-
-            'status' => 'trial',
-            'billing_cycle' => 'monthly',
-            'amount' => 0.00,
-            'auto_renew' => false,
-
-            'started_at' => now(),
-            'trial_ends_at' => now()->addDays(14),
-            'current_period_ends_at' => now()->addDays(14),
-        ]);
-
-        // Sync ke tenant table
-        $subscription->syncToTenant();
+        // Disable this listener to prevent duplicate subscription creation.
+        // Tenant subscriptions are already created explicitly and synchronously in:
+        // 1. TenantRegistrationService::registerTrial (for public signups)
+        // 2. TenantService::create (for admin manual creation)
     }
 }

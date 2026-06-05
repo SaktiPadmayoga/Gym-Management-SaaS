@@ -279,6 +279,9 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
     Route::get('/subscription/current', [SubscriptionTenantController::class, 'current']);
     Route::get('/subscription/history', [SubscriptionTenantController::class, 'history']);
 
+    // Gym Settings — Logo Upload
+    Route::post('/tenant/logo', [TenantController::class, 'uploadLogo']);
+
     // Misc
     Route::post('/upgrade', [PlanController::class, 'upgrade']);
 });

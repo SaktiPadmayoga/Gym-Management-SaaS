@@ -3,7 +3,7 @@
 import CustomTable, { Column, ActionItem } from "@/components/ui/table/CustomTable";
 import { InvoiceData } from "@/types/central/invoices";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { Toaster } from "sonner";
 import { SearchInput } from "@/components/ui/input/Input";
@@ -34,8 +34,11 @@ export default function Invoices() {
     const router      = useRouter();
     const searchParams = useSearchParams();
 
-    const page    = Number(searchParams.get("page")) || 1;
-    const perPage = Number(searchParams.get("per_page")) || 15;
+    // Controlled state untuk pagination agar lebih reaktif dan menghindari re-fetch routing yang berat
+    const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
+    const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
+
+    const status = searchParams.get("status") || "";
 
     const form = useForm<SearchForm>({
         defaultValues: { search: searchParams.get("search") || "" },
@@ -44,22 +47,26 @@ export default function Invoices() {
     const searchValue    = form.watch("search");
     const debouncedSearch = useDebounce(searchValue, 500);
 
+    // Reset ke page 1 saat pencarian berubah
     useEffect(() => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (debouncedSearch) {
-            params.set("search", debouncedSearch);
-        } else {
-            params.delete("search");
-        }
-        params.set("page", "1");
-        params.set("per_page", String(perPage));
-        router.replace(`${BASE_PATH}?${params.toString()}`);
+        setPage(1);
     }, [debouncedSearch]);
+
+    // Sinkronisasi filter ke URL tanpa re-fetch router.replace yang memicu lag
+    useEffect(() => {
+        const params = new URLSearchParams();
+        if (debouncedSearch) params.set("search", debouncedSearch);
+        if (status) params.set("status", status);
+        params.set("page", String(page));
+        params.set("per_page", String(perPage));
+        window.history.replaceState({}, "", `${BASE_PATH}?${params.toString()}`);
+    }, [debouncedSearch, status, page, perPage]);
 
     const { data, isLoading, isError } = useInvoices({
         page,
         per_page: perPage,
         search: debouncedSearch,
+        status,
     });
 
     const entries: InvoiceData[] = data?.data ?? [];
@@ -210,6 +217,10 @@ export default function Invoices() {
                             hasNextPage={page < (data?.meta?.last_page || 0)}
                             hasPrevPage={page > 1}
                             totalItems={totalData}
+                            currentPage={page}
+                            currentPerPage={perPage}
+                            onPageChange={setPage}
+                            onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
                             rowOptions={[5, 10, 15, 20, 50]}
                             defaultRowsPerPage={perPage}
                         />

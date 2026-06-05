@@ -12,6 +12,14 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+// Disk yang dipakai untuk gambar produk.
+// Production: 'r2' (Cloudflare R2) jika key tersedia
+// Local dev:  'public' (storage/app/public) jika R2 belum dikonfigurasi
+function getProductDisk(): string
+{
+    return env('CLOUDFLARE_R2_ACCESS_KEY_ID') ? 'r2' : 'public';
+}
+
 class ProductController extends Controller
 {
     public function index(Request $request)
@@ -48,7 +56,8 @@ class ProductController extends Controller
         }
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('products/images', 'public');
+            $prefix = $this->getTenantStoragePrefix();
+            $data['image'] = $request->file('image')->store("{$prefix}/products/images", getProductDisk());
         }
 
         $initialStock = $data['stock'] ?? 0;
@@ -75,8 +84,9 @@ class ProductController extends Controller
         $data    = $request->validated();
 
         if ($request->hasFile('image')) {
-            if ($product->image) Storage::disk('public')->delete($product->image);
-            $data['image'] = $request->file('image')->store('products/images', 'public');
+            if ($product->image) Storage::disk(getProductDisk())->delete($product->image);
+            $prefix = $this->getTenantStoragePrefix();
+            $data['image'] = $request->file('image')->store("{$prefix}/products/images", getProductDisk());
         }
 
         $product->update($data);
@@ -87,7 +97,7 @@ class ProductController extends Controller
     public function destroy(string $id)
     {
         $product = Product::findOrFail($id);
-        if ($product->image) Storage::disk('public')->delete($product->image);
+        if ($product->image) Storage::disk(getProductDisk())->delete($product->image);
         $product->delete();
 
         return ApiResponse::success(null, 'Product deleted successfully');
@@ -151,5 +161,22 @@ class ProductController extends Controller
             ->distinct()->pluck('category')->sort()->values();
 
         return ApiResponse::success($categories);
+    }
+
+    // =============================================
+    // Private Helpers
+    // =============================================
+
+    /**
+     * Kembalikan folder prefix per-tenant untuk isolasi storage R2.
+     * Format: tenant_{tenantId}  (misal: tenant_abc123)
+     * Semua gambar tenant disimpan di: tenant_{id}/products/images/
+     */
+    private function getTenantStoragePrefix(): string
+    {
+        // stancl/tenancy menyediakan helper tenant() global
+        // Fallback ke 'shared' jika konteks tenant tidak ada
+        $tenantId = function_exists('tenant') && tenant() ? tenant('id') : 'shared';
+        return "tenant_{$tenantId}";
     }
 }

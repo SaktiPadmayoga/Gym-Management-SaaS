@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Tenant;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Tenant\UpdateBranchSettingRequest;
 use App\Http\Resources\Tenant\BranchSettingResource;
-use App\Models\Branch;
 use App\Models\Tenant\BranchSetting;
 use App\Http\Responses\ApiResponse;
 use Database\Seeders\BranchSettingSeeder;
@@ -18,8 +17,6 @@ class BranchSettingController extends Controller
      */
     public function index(Request $request, string $branchId)
     {
-        $branch = Branch::findOrFail($branchId);
-
         $settings = BranchSetting::where('branch_id', $branchId)
             ->when($request->filled('group'), fn($q) => $q->where('group', $request->group))
             ->get();
@@ -58,8 +55,6 @@ class BranchSettingController extends Controller
      */
     public function update(UpdateBranchSettingRequest $request, string $branchId)
     {
-        Branch::findOrFail($branchId);
-
         $updated = [];
 
         foreach ($request->settings as $item) {
@@ -95,8 +90,6 @@ class BranchSettingController extends Controller
      */
     public function updateGroup(Request $request, string $branchId, string $group)
     {
-        Branch::findOrFail($branchId);
-
         $validated = $request->validate([
             '*' => ['nullable'],
         ]);
@@ -130,8 +123,6 @@ class BranchSettingController extends Controller
      */
     public function reset(string $branchId, string $group)
     {
-        Branch::findOrFail($branchId);
-
         // Hapus setting group ini
         BranchSetting::where('branch_id', $branchId)
             ->where('group', $group)

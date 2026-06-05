@@ -11,12 +11,14 @@ import { SearchInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
 import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
 import { useAdmins, useDeleteAdmin } from "@/hooks/useAdmins";
+import { useAdminAuth } from "@/providers/AdminAuthProvider";
 import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Admins() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
+    const { admin: currentAdmin } = useAdminAuth();
 
     const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
     const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
@@ -152,6 +154,7 @@ export default function Admins() {
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
+            disabled: (row) => currentAdmin?.id === row.id,
             onClick: (row) => {
                 if (confirm("Are you sure?")) {
                     deleteMutation.mutate(row.id);
@@ -235,7 +238,7 @@ export default function Admins() {
                             currentPerPage={perPage}
                             onPageChange={setPage}
                             onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
-                            rowOptions={[5, 10, 20, 50]}
+                            rowOptions={[5, 10, 15, 20, 50]}
                             defaultRowsPerPage={perPage}
                         />
                     </div>

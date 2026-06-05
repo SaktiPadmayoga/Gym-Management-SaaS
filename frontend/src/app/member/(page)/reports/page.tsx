@@ -25,6 +25,23 @@ import {
 import dayjs from "dayjs";
 import { useMemberReportSummary } from "@/hooks/tenant/useMemberReports";
 import ReportDateFilter from "@/components/pages/branch/report/ReportDateFilter";
+import { exportToPdf, buildPdfFilename, formatRpForPdf } from "@/lib/exportPdf";
+
+const mapItemType = (type: string) => {
+    const cleanType = type.split("\\").pop() || type;
+    switch (cleanType) {
+        case "MembershipPlan":
+            return "Membership";
+        case "PtSessionPlan":
+            return "Personal Trainer (PT)";
+        case "Product":
+            return "Produk / POS";
+        case "ClassPlan":
+            return "Kelas";
+        default:
+            return cleanType.replace(/([A-Z])/g, ' $1').trim();
+    }
+};
 
 const formatRupiah = (n: number) =>
     new Intl.NumberFormat("id-ID", {
@@ -54,6 +71,68 @@ export default function MemberReportsPage() {
 
     const report = data;
 
+    const handleExportPdf = () => {
+        if (!report) return;
+
+        const summary = [
+            { label: "Total Check-in", value: `${report.checkin_stats.total_checkins} kali` },
+            { label: "Total Kelas", value: `${report.class_summary.total} kelas` },
+            { label: "Kelas Hadir", value: `${report.class_summary.attended} kelas` },
+            { label: "Total Pengeluaran", value: formatRpForPdf(report.spending_summary.total_spent) },
+        ];
+
+        const classRows = [
+            { status: "Hadir", count: `${report.class_summary.attended} kelas` },
+            { status: "Batal", count: `${report.class_summary.cancelled} kelas` },
+            { status: "No Show", count: `${report.class_summary.no_show} kelas` },
+        ];
+
+        const spendingRows = Object.entries(report.spending_summary.breakdown).map(([type, item]: [string, any]) => ({
+            type: mapItemType(type),
+            amount: formatRpForPdf(item.amount),
+        }));
+
+        const trendRows = report.checkin_trend.map((item: any) => ({
+            month: item.month,
+            count: `${item.count} kali`,
+        }));
+
+        const tables = [
+            {
+                title: "Detail Kehadiran Kelas",
+                columns: [
+                    { header: "Status Kehadiran", key: "status" },
+                    { header: "Jumlah Sesi", key: "count", align: "right" as const },
+                ],
+                rows: classRows,
+            },
+            {
+                title: "Detail Pengeluaran",
+                columns: [
+                    { header: "Jenis Transaksi", key: "type" },
+                    { header: "Total Pengeluaran", key: "amount", align: "right" as const },
+                ],
+                rows: spendingRows,
+            },
+            {
+                title: "Tren Check-in Bulanan",
+                columns: [
+                    { header: "Bulan", key: "month" },
+                    { header: "Jumlah Check-in", key: "count", align: "right" as const },
+                ],
+                rows: trendRows,
+            },
+        ];
+
+        exportToPdf({
+            title: "Laporan Aktivitas Member",
+            subtitle: `Periode: ${dayjs(startDate).format("DD MMM YYYY")} s.d ${dayjs(endDate).format("DD MMM YYYY")}`,
+            filename: buildPdfFilename("Aktivitas_Member", startDate, endDate),
+            summary,
+            tables,
+        });
+    };
+
     return (
         <div className="space-y-6 font-figtree pb-10 bg-white p-5 rounded-xl border border-gray-500/20">
             {/* Header */}
@@ -69,6 +148,16 @@ export default function MemberReportsPage() {
                         Ringkasan aktivitas gym Anda.
                     </p>
                 </div>
+
+                {report && (
+                    <button
+                        type="button"
+                        onClick={handleExportPdf}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 transition-colors shadow-sm self-start md:self-center"
+                    >
+                        Export PDF
+                    </button>
+                )}
             </div>
 
             {/* Filter */}
@@ -371,10 +460,7 @@ export default function MemberReportsPage() {
                                                                     className="flex items-center justify-between"
                                                                 >
                                                                     <span className="text-xs font-bold text-zinc-600 uppercase tracking-wider">
-                                                                        {type.replace(
-                                                                            /_/g,
-                                                                            " "
-                                                                        )}
+                                                                        {mapItemType(type)}
                                                                     </span>
                                                                     <span className="text-sm font-bold text-zinc-900">
                                                                         {formatRupiah(

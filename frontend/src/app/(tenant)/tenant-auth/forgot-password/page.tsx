@@ -1,9 +1,10 @@
+import { Suspense } from "react";
 import StaffForgotForm from "@/components/pages/auth/StaffForgotForm";
 
 export default function TenantForgotPasswordPage() {
     return (
-        <div>
+        <Suspense fallback={<div className="min-h-screen bg-white flex items-center justify-center" />}>
             <StaffForgotForm />
-        </div>
+        </Suspense>
     );
 }

@@ -18,15 +18,20 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission): mixed
     {
-        $branchId = $request->header('X-Branch-Id');
         $staff = $request->user('staff');
-
-        if (!$branchId) {
-            return ApiResponse::error('Branch context required', null, 422);
-        }
 
         if (!$staff) {
             return ApiResponse::error('Unauthenticated', null, 401);
+        }
+
+        // Owner has absolute tenant-level permissions and is not bound to a branch context
+        if ($staff->isOwner()) {
+            return $next($request);
+        }
+
+        $branchId = $request->header('X-Branch-Id');
+        if (!$branchId) {
+            return ApiResponse::error('Branch context required', null, 422);
         }
 
         if (!$staff->hasPermissionInBranch($permission, $branchId)) {

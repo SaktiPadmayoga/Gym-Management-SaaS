@@ -58,15 +58,15 @@ export default function MembershipPlan() {
             return;
         }
         if (success === "true" && !hasShownToast.current) {
-            toast.success("Membership plan created successfully");
+            toast.success("Paket keanggotaan berhasil dibuat");
             hasShownToast.current = true;
         }
         if (updated === "true" && !hasShownToast.current) {
-            toast.success("Membership plan updated successfully");
+            toast.success("Paket keanggotaan berhasil diperbarui");
             hasShownToast.current = true;
         }
         if (deleted === "true" && !hasShownToast.current) {
-            toast.success("Membership plan deleted successfully");
+            toast.success("Paket keanggotaan berhasil dihapus");
             hasShownToast.current = true;
         }
 
@@ -77,8 +77,8 @@ export default function MembershipPlan() {
     const totalData = entries.length;
 
     if (isError) {
-        toast.error("Error loading membership plans");
-        return <div className="py-10 text-center text-red-500">Error loading membership plans</div>;
+        toast.error("Gagal memuat paket keanggotaan");
+        return <div className="py-10 text-center text-red-500">Gagal memuat paket keanggotaan</div>;
     }
 
     /* =========================
@@ -86,7 +86,7 @@ export default function MembershipPlan() {
      * ========================= */
     const columns: Column<MembershipPlanData>[] = [
         {
-            header: "Name",
+            header: "Nama",
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.color && <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />}
@@ -98,50 +98,50 @@ export default function MembershipPlan() {
             width: "w-52",
         },
         {
-            header: "Category",
+            header: "Kategori",
             render: (item) => <span className="rounded-lg px-2 py-1 text-xs font-medium bg-zinc-100 text-zinc-600">{item.category}</span>,
             width: "w-36",
         },
         {
-            header: "Duration",
+            header: "Durasi",
             render: (item) => (
                 <span className="text-sm text-zinc-700">
-                    {item.duration} {item.duration_unit}
+                    {item.duration} {item.duration_unit === "month" ? "bulan" : item.duration_unit === "day" ? "hari" : item.duration_unit === "year" ? "tahun" : item.duration_unit}
                 </span>
             ),
             width: "w-28",
         },
         {
-            header: "Price",
+            header: "Harga",
             render: (item) => <span className="font-medium text-zinc-800">Rp {Number(item.price).toLocaleString("id-ID")}</span>,
             width: "w-36",
         },
         {
             header: "Check-in",
-            render: (item) => <span className="text-sm text-zinc-600">{item.unlimited_checkin ? "Unlimited" : `${item.checkin_quota_per_month ?? "-"}x / month`}</span>,
+            render: (item) => <span className="text-sm text-zinc-600">{item.unlimited_checkin ? "Tak Terbatas" : `${item.checkin_quota_per_month ?? "-"}x / bulan`}</span>,
             width: "w-32",
         },
         {
-            header: "Access",
+            header: "Akses",
             render: (item) => (
                 <span className={`rounded-lg px-2 py-1 text-xs font-medium ${item.access_type === "cross_branch" ? "bg-indigo-100 text-indigo-700" : "bg-zinc-100 text-zinc-600"}`}>
-                    {item.access_type === "cross_branch" ? "Cross Branch" : "Single Branch"}
+                    {item.access_type === "cross_branch" ? "Multi Cabang" : "Satu Cabang"}
                 </span>
             ),
             width: "w-32",
         },
         {
-            header: "Quota",
-            render: (item) => <span className="text-sm text-zinc-600">{item.unlimited_sold ? "Unlimited" : `${item.remaining_quota ?? "-"} left`}</span>,
+            header: "Kuota",
+            render: (item) => <span className="text-sm text-zinc-600">{item.unlimited_sold ? "Tak Terbatas" : `Sisa ${item.remaining_quota ?? "-"}`}</span>,
             width: "w-28",
         },
         {
             header: "Status",
             render: (item) =>
                 item.is_active ? (
-                    <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium text-sm">Active</span>
+                    <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium text-sm">Aktif</span>
                 ) : (
-                    <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium text-sm">Inactive</span>
+                    <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium text-sm">Tidak Aktif</span>
                 ),
             width: "w-24",
         },
@@ -152,46 +152,46 @@ export default function MembershipPlan() {
      * ========================= */
     const actions: ActionItem<MembershipPlanData>[] = [
         {
-            label: "View Detail",
+            label: "Lihat Detail",
             icon: "eye",
             onClick: (row) => router.push(`/membership-plans/${row.id}`),
         },
         {
-            label: "Edit",
+            label: "Ubah",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
             onClick: (row) => router.push(`/membership-plans/${row.id}`),
         },
         {
-            label: (row) => (row.is_active ? "Deactivate" : "Activate"),
+            label: (row) => (row.is_active ? "Nonaktifkan" : "Aktifkan"),
             icon: "eye",
             onClick: (row) => {
                 toggleMutation.mutate(row.id, {
-                    onSuccess: () => toast.success(`Plan ${row.is_active ? "deactivated" : "activated"}`),
-                    onError: () => toast.error("Failed to update status"),
+                    onSuccess: () => toast.success(`Paket ${row.is_active ? "dinonaktifkan" : "diaktifkan"}`),
+                    onError: () => toast.error("Gagal memperbarui status"),
                 });
             },
         },
         {
-            label: "Duplicate",
+            label: "Duplikat",
             icon: "edit",
             onClick: (row) => {
                 duplicateMutation.mutate(row.id, {
-                    onSuccess: () => toast.success("Plan duplicated"),
-                    onError: () => toast.error("Failed to duplicate"),
+                    onSuccess: () => toast.success("Paket berhasil diduplikat"),
+                    onError: () => toast.error("Gagal menduplikat paket"),
                 });
             },
         },
         {
-            label: "Delete",
+            label: "Hapus",
             icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
             onClick: (row) => {
-                if (confirm("Are you sure you want to delete this membership plan?")) {
+                if (confirm("Apakah Anda yakin ingin menghapus paket keanggotaan ini?")) {
                     deleteMutation.mutate(row.id, {
-                        onSuccess: () => toast.success("Membership plan deleted"),
-                        onError: () => toast.error("Failed to delete"),
+                        onSuccess: () => toast.success("Paket keanggotaan berhasil dihapus"),
+                        onError: () => toast.error("Gagal menghapus paket"),
                     });
                 }
             },
@@ -208,22 +208,22 @@ export default function MembershipPlan() {
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
                             <li>Master Data</li>
-                            <li className="text-aksen-secondary">Membership Plan</li>
+                            <li className="text-aksen-secondary">Paket Keanggotaan</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Membership Plan</h1>
-                            <p className="text-zinc-500">Manage membership plans available for members</p>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Paket Keanggotaan</h1>
+                            <p className="text-zinc-500">Kelola paket keanggotaan yang tersedia untuk anggota</p>
                         </div>
                         <div className="flex gap-3">
                             <div className="w-64 text-zinc-800">
-                                <SearchInput name="search" />
+                                <SearchInput name="search" placeholder="Cari paket..." />
                             </div>
                             <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/membership-plans/create")}>
-                                New Plan
+                                Paket Baru
                             </CustomButton>
                         </div>
                     </div>
@@ -242,12 +242,11 @@ export default function MembershipPlan() {
                     </div>
 
                     <div className="mt-4 text-sm text-zinc-500">
-                        Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
+                        Menampilkan {entries.length > 0 ? 1 : 0} sampai {entries.length} dari {totalData} data
                     </div>
-                </div>
-
-                <div className="mt-4">
-                    <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 20, 50]} defaultRowsPerPage={perPage} />
+                    <div className="mt-4">
+                        <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 15, 20, 50]} defaultRowsPerPage={perPage} />
+                    </div>
                 </div>
             </div>
         </FormProvider>

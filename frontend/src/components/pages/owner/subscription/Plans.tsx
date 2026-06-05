@@ -29,15 +29,15 @@ function BillingToggle({ value, onChange }: { value: "monthly" | "yearly"; onCha
     return (
         <div className="flex items-center gap-2 bg-zinc-100 p-1 rounded-xl border border-zinc-200/50">
             <button type="button" onClick={() => onChange("monthly")} className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${value === "monthly" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}>
-                Monthly
+                Bulanan
             </button>
             <button
                 type="button"
                 onClick={() => onChange("yearly")}
                 className={`relative px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${value === "yearly" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700"}`}
             >
-                Yearly
-                <span className="absolute -top-1.5 -right-2 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">-20%</span>
+                Tahunan
+                <span className="absolute -top-1.5 -right-2 bg-green-500 text-white text-[8px] px-1.5 py-0.5 rounded-full border-2 border-white shadow-sm">Hemat 20%</span>
             </button>
         </div>
     );
@@ -52,7 +52,7 @@ function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { pl
     const isPopular = plan.code === "PREMIUM" || plan.code === "PRO";
 
     const formatPrice = (p?: number | null) => {
-        if (!p) return "Free";
+        if (!p) return "Gratis";
         return new Intl.NumberFormat("id-ID", {
             style: "currency",
             currency: plan.pricing?.currency ?? "IDR",
@@ -70,19 +70,19 @@ function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { pl
                         {isCurrentPlan && (
                             <span className="inline-flex items-center gap-1.5 mt-1 text-[9px] font-black text-aksen-secondary uppercase">
                                 <span className="w-1.5 h-1.5 rounded-full bg-aksen-secondary animate-pulse" />
-                                Current Plan
+                                Paket Aktif Anda
                             </span>
                         )}
                     </div>
-                    {isPopular && !isCurrentPlan && <span className="bg-aksen-secondary text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-aksen-secondary/20">Popular</span>}
+                    {isPopular && !isCurrentPlan && <span className="bg-aksen-secondary text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-lg shadow-aksen-secondary/20">Populer</span>}
                 </div>
 
                 <div className="pb-4 mb-4 border-b border-zinc-100">
                     <div className="flex items-baseline gap-1">
                         <span className="text-2xl md:text-3xl font-black text-zinc-900 tracking-tight">{formatPrice(price)}</span>
-                        {price ? <span className="text-zinc-400 font-medium text-xs">/{billing === "yearly" ? "yr" : "mo"}</span> : null}
+                        {price ? <span className="text-zinc-400 font-medium text-xs">/{billing === "yearly" ? "thn" : "bln"}</span> : null}
                     </div>
-                    {billing === "yearly" && plan.pricing?.monthly && plan.pricing?.yearly && <p className="text-[10px] text-green-600 mt-1 font-medium">Save {formatPrice(plan.pricing.monthly * 12 - plan.pricing.yearly)} vs monthly</p>}
+                    {billing === "yearly" && plan.pricing?.monthly && plan.pricing?.yearly && <p className="text-[10px] text-green-600 mt-1 font-medium">Hemat {formatPrice(plan.pricing.monthly * 12 - plan.pricing.yearly)} dibanding bulanan</p>}
                 </div>
 
                 <div className="flex flex-col gap-3 mb-6 flex-1">
@@ -93,7 +93,7 @@ function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { pl
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            {maxBranches === 0 || !maxBranches ? "Unlimited Outlets" : `${maxBranches} Outlets`}
+                            {maxBranches === 0 || !maxBranches ? "Cabang Tanpa Batas" : `${maxBranches} Cabang`}
                         </li>
                         {Array.isArray(plan.features) &&
                             plan.features.map((feature: string, i: number) => (
@@ -114,7 +114,7 @@ function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { pl
                     onClick={() => onSelect(plan)}
                     className={`w-full py-3 rounded-xl text-[10px] md:text-xs font-black transition-all active:scale-95 uppercase tracking-widest ${
                         isCurrentPlan
-                            ? "bg-zinc-100 text-zinc-400 cursor-not-allowed"
+                             ? "bg-zinc-100 text-zinc-400 cursor-not-allowed"
                             : isProcessing
                             ? "bg-zinc-200 text-zinc-400 cursor-wait"
                             : isPopular
@@ -122,7 +122,7 @@ function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { pl
                             : "bg-zinc-900 text-white hover:bg-black"
                     }`}
                 >
-                    {isCurrentPlan ? "Your Active Plan" : isProcessing ? "Processing..." : "Choose Plan"}
+                    {isCurrentPlan ? "Paket Aktif Anda" : isProcessing ? "Memproses..." : "Pilih Paket"}
                 </button>
             </div>
         </div>
@@ -176,7 +176,7 @@ export default function PlansModal() {
                 },
             });
         } catch (err) {
-            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to initiate payment";
+            const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message || "Gagal memproses pembayaran";
             toast.error(message);
             setProcessingPlanId(null);
         }
@@ -189,7 +189,7 @@ export default function PlansModal() {
             {/* Backdrop */}
             <div className="absolute inset-0 bg-zinc-900/60 backdrop-blur-md transition-opacity animate-in fade-in duration-300" onClick={handleClose} />
 
-            {/* Modal Container - Max Width diperkecil ke 5xl agar grid card lebih rapat */}
+            {/* Modal Container */}
             <div className="relative w-full max-w-6xl max-h-[90vh] overflow-y-auto bg-zinc-50 rounded-[28px] shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-500 ease-out no-scrollbar px-20">
                 
                 {/* Close Button */}
@@ -202,13 +202,13 @@ export default function PlansModal() {
                 <div className="p-6 md:p-8">
                     {/* Header */}
                     <div className="flex flex-col items-center text-center mb-8">
-                        <div className="inline-block px-3 py-1 mb-3 rounded-full bg-aksen-secondary/10 text-aksen-secondary text-[10px] font-black uppercase tracking-[0.2em]">Pricing Plans</div>
-                        <h1 className="text-2xl md:text-3xl font-black text-zinc-900 mb-2 tracking-tight">Upgrade your experience</h1>
-                        <p className="text-zinc-500 text-sm max-w-md mb-6">Join thousands of businesses growing with our platform. Choose the best plan for your needs.</p>
+                        <div className="inline-block px-3 py-1 mb-3 rounded-full bg-aksen-secondary/10 text-aksen-secondary text-[10px] font-black uppercase tracking-[0.2em]">Pilihan Paket</div>
+                        <h1 className="text-2xl md:text-3xl font-black text-zinc-900 mb-2 tracking-tight">Tingkatkan Paket Anda</h1>
+                        <p className="text-zinc-500 text-sm max-w-md mb-6">Bergabunglah dengan ribuan bisnis yang berkembang bersama platform kami. Pilih paket terbaik untuk kebutuhan Anda.</p>
                         <BillingToggle value={billing} onChange={setBilling} />
                     </div>
 
-                    {/* Plans Grid - Gap diperkecil ke gap-5 */}
+                    {/* Plans Grid */}
                     {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                             {[...Array(3)].map((_, i) => (
@@ -216,7 +216,7 @@ export default function PlansModal() {
                             ))}
                         </div>
                     ) : !plans || plans.length === 0 ? (
-                        <div className="text-center py-10 text-zinc-400 text-sm">No plans available.</div>
+                        <div className="text-center py-10 text-zinc-400 text-sm">Paket tidak tersedia.</div>
                     ) : (
                         <div className={`grid gap-5 ${plans.length === 1 ? "max-w-sm mx-auto" : plans.length === 2 ? "max-w-3xl mx-auto md:grid-cols-2" : "grid-cols-1 md:grid-cols-3"}`}>
                             {plans.map((plan: Plan) => (
@@ -228,7 +228,7 @@ export default function PlansModal() {
                     {/* Footer */}
                     <div className="mt-8 text-center pb-2">
                         <p className="text-xs text-zinc-400">
-                            Need a custom plan for more than 50 outlets? <span className="text-aksen-secondary font-bold cursor-pointer hover:underline">Contact Sales</span>
+                            Butuh paket kustom untuk lebih dari 50 cabang? <span className="text-aksen-secondary font-bold cursor-pointer hover:underline">Hubungi Tim Penjualan</span>
                         </p>
                     </div>
                 </div>

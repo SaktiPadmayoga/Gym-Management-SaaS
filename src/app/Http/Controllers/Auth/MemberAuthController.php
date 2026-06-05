@@ -74,6 +74,7 @@ class MemberAuthController extends Controller
         }
 
         $member->tokens()->delete();
+        $member->checkAndExpireMembership();
         $member->update(['last_login_at' => now()]);
 
         $token = $member->createToken('member-token', ['role:member'])->plainTextToken;
@@ -97,7 +98,9 @@ class MemberAuthController extends Controller
 
     public function me(Request $request)
     {
-        $member = $request->user()->load(['activeMembership.branch', 'activeMembership.plan']);
+        $member = $request->user();
+        $member->checkAndExpireMembership();
+        $member->load(['activeMembership.branch', 'activeMembership.plan']);
         return ApiResponse::success(new MemberResource($member));
     }
 
@@ -206,6 +209,7 @@ class MemberAuthController extends Controller
         // 3. Generate Sanctum Token khusus Member
         // handleGoogleCallback — ganti bagian redirect terakhir
         $member->tokens()->delete();
+        $member->checkAndExpireMembership();
         $token = $member->createToken('member-token', ['role:member'])->plainTextToken;
 
         $member->load(['homeBranch', 'activeMembership.plan']);
@@ -262,7 +266,7 @@ class MemberAuthController extends Controller
             return ApiResponse::error('Token tidak valid atau sudah kedaluwarsa.', null, 422);
         }
 
-        if (now()->diffInMinutes($resetToken->created_at) > 60) {
+        if (\Carbon\Carbon::parse($resetToken->created_at)->addHour()->isPast()) {
             DB::table('member_password_reset_tokens')->where('email', $request->email)->delete();
             return ApiResponse::error('Token sudah kedaluwarsa. Silakan minta link reset baru.', null, 422);
         }

@@ -19,14 +19,14 @@ import { useTenantBranches } from "@/hooks/useTenantBranches";
  * OPTIONS
  * ===================== */
 const typeOptions: DropdownOption<string>[] = [
-    { key: "tenant", label: "Tenant", value: "tenant" },
-    { key: "branch", label: "Branch", value: "branch" },
-    { key: "custom", label: "Custom", value: "custom" },
+    { key: "tenant", label: "Penyewa (Tenant)", value: "tenant" },
+    { key: "branch", label: "Cabang", value: "branch" },
+    { key: "custom", label: "Kustom", value: "custom" },
 ];
 
 const primaryOptions: DropdownOption<string>[] = [
-    { key: "true", label: "Yes", value: "true" },
-    { key: "false", label: "No", value: "false" },
+    { key: "true", label: "Ya", value: "true" },
+    { key: "false", label: "Tidak", value: "false" },
 ];
 
 export default function CreateDomain() {
@@ -36,7 +36,7 @@ export default function CreateDomain() {
     const { data: branchesData } = useTenantBranches({ per_page: 100 });
 
     const branchOptions: DropdownOption<string>[] = [
-        { key: "", label: "-- No Branch --", value: "" },
+        { key: "", label: "-- Tanpa Cabang --", value: "" },
         ...(branchesData?.data?.map((branch) => ({
             key: branch.id,
             label: branch.name,
@@ -65,11 +65,11 @@ export default function CreateDomain() {
             };
 
             await createMutation.mutateAsync(payload);
-            toast.success("Domain created successfully");
+            toast.success("Domain berhasil dibuat");
             router.push("/owner/domains?success=true");
         } catch (error) {
             console.error(error);
-            toast.error("Failed to create domain");
+            toast.error("Gagal membuat domain");
         }
     };
 
@@ -82,11 +82,11 @@ export default function CreateDomain() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Manajemen</li>
                             <li>
-                                <Link href="/owner/domains">Domains</Link>
+                                <Link href="/owner/domains">Domain</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create New</li>
+                            <li className="text-aksen-secondary">Buat Baru</li>
                         </ul>
                     </div>
 
@@ -96,11 +96,11 @@ export default function CreateDomain() {
                             <button type="button" onClick={() => router.push("/owner/domains")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
-                            <h1 className="text-2xl font-semibold ">Create Domain</h1>
+                            <h1 className="text-2xl font-semibold ">Buat Domain</h1>
                         </div>
 
                         <CustomButton type="submit" className="px-4 py-2" disabled={createMutation.isPending}>
-                            {createMutation.isPending ? "Creating..." : "Create & Save"}
+                            {createMutation.isPending ? "Membuat..." : "Buat & Simpan"}
                         </CustomButton>
                     </div>
 
@@ -108,23 +108,23 @@ export default function CreateDomain() {
 
                     <div className="flex flex-col gap-6 mt-6">
                         {/* DOMAIN INFO */}
-                        <h2 className="text-lg font-semibold text-zinc-800">Domain Information</h2>
+                        <h2 className="text-lg font-semibold text-zinc-800">Informasi Domain</h2>
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-8">
-                                <TextInput name="domain" label="Domain Name" placeholder="e.g. main.gymbali.localhost" />
+                                <TextInput name="domain" label="Nama Domain" placeholder="contoh: utama.gymbali.localhost" />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="type" label="Type" options={typeOptions} />
+                                <SearchableDropdown name="type" label="Tipe" options={typeOptions} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="branch_id" label="Branch (Optional)" options={branchOptions} />
+                                <SearchableDropdown name="branch_id" label="Cabang (Opsional)" options={branchOptions} />
                             </div>
                             <div className="col-span-6">
-                                <SearchableDropdown name="is_primary" label="Primary Domain" options={primaryOptions} />
+                                <SearchableDropdown name="is_primary" label="Domain Utama" options={primaryOptions} />
                             </div>
                         </div>
                     </div>

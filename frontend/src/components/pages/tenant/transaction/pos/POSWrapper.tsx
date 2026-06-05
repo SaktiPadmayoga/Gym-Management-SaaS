@@ -251,11 +251,6 @@ export const POSWrapper: React.FC = () => {
                                 <div className="flex-1">
                                     <SearchBar value={searchQuery} onChange={setSearchQuery} />
                                 </div>
-                                {activeTab === "product" && (
-                                    <div className="w-40 shrink-0">
-                                        <FilterDropdown label="Category" options={CATEGORIES} value={selectedCategory} onChange={setSelectedCategory} />
-                                    </div>
-                                )}
                             </div>
                         </div>
 

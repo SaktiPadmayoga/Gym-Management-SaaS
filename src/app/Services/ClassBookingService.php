@@ -43,16 +43,22 @@ class ClassBookingService
     private function bookFree(ClassSchedule $schedule, Member $member, ?string $staffId, ?string $notes): array
     {
         $attendance = DB::transaction(function () use ($schedule, $member, $staffId, $notes) {
-            $attendance = ClassAttendance::create([
-                'class_schedule_id' => $schedule->id,
-                'member_id'         => $member->id,
-                'checked_in_by'     => $staffId,
-                'status'            => 'booked',
-                'payment_status'    => 'free',
-                'tenant_invoice_id' => null,
-                'booked_at'         => now(),
-                'notes'             => $notes,
-            ]);
+            $attendance = ClassAttendance::withTrashed()->updateOrCreate(
+                [
+                    'class_schedule_id' => $schedule->id,
+                    'member_id'         => $member->id,
+                ],
+                [
+                    'checked_in_by'     => $staffId,
+                    'status'            => 'booked',
+                    'payment_status'    => 'free',
+                    'tenant_invoice_id' => null,
+                    'booked_at'         => now(),
+                    'cancelled_at'      => null,
+                    'notes'             => $notes,
+                    'deleted_at'        => null,
+                ]
+            );
 
             $schedule->increment('total_booked');
 
@@ -111,17 +117,23 @@ class ClassBookingService
                 'total_price' => $plan->price,
             ]);
 
-            // 3. Buat ClassAttendance
-            $attendance = ClassAttendance::create([
-                'class_schedule_id' => $schedule->id,
-                'member_id'         => $member->id,
-                'checked_in_by'     => $staffId,
-                'status'            => 'booked',
-                'payment_status'    => $isCash ? 'paid' : 'pending',
-                'tenant_invoice_id' => $invoice->id,
-                'booked_at'         => now(),
-                'notes'             => $notes,
-            ]);
+            // 3. Buat/Update ClassAttendance
+            $attendance = ClassAttendance::withTrashed()->updateOrCreate(
+                [
+                    'class_schedule_id' => $schedule->id,
+                    'member_id'         => $member->id,
+                ],
+                [
+                    'checked_in_by'     => $staffId,
+                    'status'            => 'booked',
+                    'payment_status'    => $isCash ? 'paid' : 'pending',
+                    'tenant_invoice_id' => $invoice->id,
+                    'booked_at'         => now(),
+                    'cancelled_at'      => null,
+                    'notes'             => $notes,
+                    'deleted_at'        => null,
+                ]
+            );
 
             // 4. Update external reference
             $invoice->update([

@@ -65,7 +65,15 @@ class Product extends Model
 
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image ? Storage::disk('public')->url($this->image) : null;
+        if (!$this->image) return null;
+
+        // Gunakan disk yang sama dengan saat upload:
+        // R2 jika key tersedia (production), public disk jika tidak (local dev)
+        if (!env('CLOUDFLARE_R2_ACCESS_KEY_ID')) {
+            return '/storage/' . $this->image;
+        }
+
+        return Storage::disk('r2')->url($this->image);
     }
 
     public function getMarginAttribute(): float

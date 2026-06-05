@@ -13,6 +13,7 @@ interface CustomButtonProps {
   disabled?: boolean;
   type?: 'button' | 'submit' | 'reset';
   size?: 'sm' | 'md' | 'lg';
+  title?: string;
 }
 
 export default function CustomButton({
@@ -24,6 +25,7 @@ export default function CustomButton({
   style,
   disabled = false,
   type = 'button',
+  title,
 }: CustomButtonProps) {
   const baseClasses = `border border-aksen-secondary bg-aksen-secondary flex items-center justify-center gap-1 rounded-lg text-sm font-medium hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed`;
   const iconElement = iconName ? <Icon name={iconName} className={iconClassName} /> : null;
@@ -35,6 +37,7 @@ export default function CustomButton({
       style={style}
       onClick={onClick}
       disabled={disabled}
+      title={title}
     >
       {iconElement}
       {children}

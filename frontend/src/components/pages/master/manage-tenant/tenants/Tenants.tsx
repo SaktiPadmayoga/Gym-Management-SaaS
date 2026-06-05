@@ -326,7 +326,7 @@ export default function TenantsPage() {
                                             currentPerPage={perPage}
                                             onPageChange={setPage}
                                             onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
-                                            rowOptions={[5, 10, 20, 50]}
+                                            rowOptions={[5, 10, 15, 20, 50]}
                                             defaultRowsPerPage={perPage}
                                         />
                 </div>

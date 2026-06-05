@@ -11,7 +11,7 @@ import { Eye, EyeOff, Dumbbell, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface LoginFormData {
-    email:    string;
+    email: string;
     password: string;
 }
 
@@ -36,14 +36,15 @@ export default function AdminLogin() {
     const onSubmit = async (data: LoginFormData) => {
         try {
             await login(data.email, data.password);
-        } catch (err: any) {
+        } catch (err) {
             let message = "Login gagal";
-            
-            if (err?.response?.data?.errors) {
-                const firstError = Object.values(err.response.data.errors)[0] as string[];
+            const error = err as any;
+
+            if (error?.response?.data?.errors) {
+                const firstError = Object.values(error.response.data.errors)[0] as string[];
                 message = firstError[0] || "Validasi gagal";
-            } else if (err?.response?.data?.message) {
-                message = err.response.data.message;
+            } else if (error?.response?.data?.message) {
+                message = error.response.data.message;
             } else if (err instanceof Error) {
                 message = err.message;
             }
@@ -62,9 +63,8 @@ export default function AdminLogin() {
             </div>
 
             <div className="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-4 lg:gap-6 items-stretch">
-                
                 {/* --- SEBELAH KIRI: VISUAL BRANDING GYMFIT --- */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, x: -50 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -73,9 +73,9 @@ export default function AdminLogin() {
                     {/* --- SILUET TIPIS BACKGROUND --- */}
                     <div className="absolute inset-0 z-0 pointer-events-none">
                         {/* Gambar Siluet */}
-                        <div 
+                        <div
                             className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.15] mix-blend-luminosity grayscale"
-                            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')" }} 
+                            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')" }}
                         />
                         {/* Gradient Masking agar gambar menyatu halus dengan warna hitam */}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
@@ -96,14 +96,12 @@ export default function AdminLogin() {
                                 GYMFIT<span className="text-teal-400">.</span>
                             </span>
                         </div>
-                        
+
                         <h1 className="text-5xl md:text-6xl font-black text-white tracking-tighter uppercase leading-[0.85] mb-6">
                             Admin <br />
                             <span className="text-teal-400">Workspace.</span>
                         </h1>
-                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest max-w-sm leading-relaxed">
-                            Pusat kendali utama untuk mengelola operasional, member, dan pertumbuhan bisnis gym Anda.
-                        </p>
+                        <p className="text-sm font-bold text-slate-400 uppercase tracking-widest max-w-sm leading-relaxed">Pusat kendali utama untuk mengelola operasional, tenant, dan pertumbuhan bisnis gym Anda.</p>
                     </div>
 
                     <div className="relative z-10 flex items-center gap-4 pt-12 border-t border-slate-800">
@@ -116,15 +114,14 @@ export default function AdminLogin() {
                     </div>
                 </motion.div>
 
-
                 {/* --- SEBELAH KANAN: FORM LOGIN --- */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
                     className="w-full md:w-md shrink-0 rounded-[2.5rem] bg-white border border-slate-200 p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.03)] flex flex-col justify-center relative overflow-hidden"
                 >
-                     {/* Subtle Teal Accent Line */}
+                    {/* Subtle Teal Accent Line */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-teal-500 rounded-b-full" />
 
                     <div className="mb-10 text-center flex flex-col items-center">
@@ -134,40 +131,21 @@ export default function AdminLogin() {
 
                     <FormProvider {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-
-                            <TextInput
-                                name="email"
-                                label="Alamat Email"
-                                placeholder="admin@gymfit.id"
-                                type="email"
-                            />
+                            <TextInput name="email" label="Alamat Email" placeholder="admin@gymfit.id" type="email" />
 
                             <div className="relative group">
-                                <TextInput
-                                    name="password"
-                                    label="Kata Sandi"
-                                    placeholder="••••••••••••"
-                                    type={showPassword ? "text" : "password"}
-                                />
+                                <TextInput name="password" label="Kata Sandi" placeholder="••••••••••••" type={showPassword ? "text" : "password"} />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-[32px] p-1.5 text-slate-400 hover:text-teal-600 transition-colors bg-white rounded-md group-focus-within:text-teal-500"
                                     tabIndex={-1}
                                 >
-                                    {showPassword ? (
-                                        <EyeOff className="mt-1.5 w-4 h-4" />
-                                    ) : (
-                                        <Eye className="mt-1.5 w-4 h-4" />
-                                    )}
+                                    {showPassword ? <EyeOff className="mt-1.5 w-4 h-4" /> : <Eye className="mt-1.5 w-4 h-4" />}
                                 </button>
-                                
+
                                 <div className="flex justify-end mt-2">
-                                    <button 
-                                        type="button" 
-                                        onClick={() => router.push('/auth/forgot-password')}
-                                        className="text-xs font-bold text-slate-400 hover:text-teal-500 transition-colors uppercase tracking-wider"
-                                    >
+                                    <button type="button" onClick={() => router.push("/auth/forgot-password")} className="text-xs font-bold text-slate-400 hover:text-teal-500 transition-colors uppercase tracking-wider">
                                         Lupa Kata Sandi?
                                     </button>
                                 </div>
@@ -184,11 +162,8 @@ export default function AdminLogin() {
                     </FormProvider>
 
                     {/* Footer */}
-                    <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-12">
-                        &copy; 2026 GYMFIT OS. Hak Cipta Dilindungi.
-                    </p>
+                    <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-12">&copy; 2026 GYMFIT OS. Hak Cipta Dilindungi.</p>
                 </motion.div>
-
             </div>
         </div>
     );

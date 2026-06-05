@@ -25,6 +25,14 @@ const memberStatusColor: Record<string, string> = {
     banned:   "bg-red-100 text-red-700",
 };
 
+const memberStatusLabels: Record<string, string> = {
+    active:   "Aktif",
+    inactive: "Tidak Aktif",
+    expired:  "Kedaluwarsa",
+    frozen:   "Ditangguhkan",
+    banned:   "Diblokir",
+};
+
 export default function Members() {
     const router       = useRouter();
     const searchParams = useSearchParams();
@@ -40,7 +48,6 @@ export default function Members() {
     const searchValue     = form.watch("search");
     const debouncedSearch = useDebounce(searchValue, 500);
 
-    // ✅ TIDAK ADA branch_id lagi → ambil semua member dalam tenant
     const { data, isLoading, isError } = useMembers({
         search:   debouncedSearch,
         page,
@@ -64,9 +71,9 @@ export default function Members() {
 
         if (!success && !updated && !deleted) { hasShownToast.current = false; return; }
 
-        if (success === "true" && !hasShownToast.current) { toast.success("Member created successfully"); hasShownToast.current = true; }
-        if (updated === "true" && !hasShownToast.current) { toast.success("Member updated successfully"); hasShownToast.current = true; }
-        if (deleted === "true" && !hasShownToast.current) { toast.success("Member deleted successfully"); hasShownToast.current = true; }
+        if (success === "true" && !hasShownToast.current) { toast.success("Member berhasil dibuat"); hasShownToast.current = true; }
+        if (updated === "true" && !hasShownToast.current) { toast.success("Member berhasil diperbarui"); hasShownToast.current = true; }
+        if (deleted === "true" && !hasShownToast.current) { toast.success("Member berhasil dihapus"); hasShownToast.current = true; }
 
         window.history.replaceState({}, "", "/owner/members");
     }, [searchParams]);
@@ -75,8 +82,8 @@ export default function Members() {
     const totalData = entries.length;
 
     if (isError) {
-        toast.error("Error loading members");
-        return <div className="py-10 text-center text-red-500">Error loading members</div>;
+        toast.error("Gagal memuat data member");
+        return <div className="py-10 text-center text-red-500">Gagal memuat data member</div>;
     }
 
     /* =========================
@@ -84,7 +91,7 @@ export default function Members() {
      * ========================= */
     const columns: Column<MemberData>[] = [
         {
-            header: "Name",
+            header: "Nama",
             render: (item) => (
                 <div className="flex items-center gap-2">
                     {item.avatar_url     ? (
@@ -107,7 +114,7 @@ export default function Members() {
             width: "w-52",
         },
         {
-            header: "Contact",
+            header: "Kontak",
             render: (item) => (
                 <div>
                     <p className="text-sm text-zinc-700">{item.phone ?? "-"}</p>
@@ -119,27 +126,27 @@ export default function Members() {
         {
             header: "Status",
             render: (item) => (
-                <span className={`rounded-lg px-2 py-1 text-xs font-medium capitalize ${memberStatusColor[item.status] ?? "bg-zinc-100 text-zinc-600"}`}>
-                    {item.status}
+                <span className={`rounded-lg px-2 py-1 text-xs font-medium ${memberStatusColor[item.status] ?? "bg-zinc-100 text-zinc-600"}`}>
+                    {memberStatusLabels[item.status] ?? item.status}
                 </span>
             ),
             width: "w-28",
         },
         {
-            header: "Membership",
+            header: "Keanggotaan",
             render: (item) => {
                 const mb = item.memberships?.[0];
-                if (!mb) return <span className="text-zinc-400 text-sm">No membership</span>;
+                if (!mb) return <span className="text-zinc-400 text-sm">Tidak ada keanggotaan</span>;
                 return (
                     <div>
                         <p className="text-sm text-zinc-700">
-                            {mb.start_date ? new Date(mb.start_date).toLocaleDateString() : "-"}
+                            {mb.start_date ? new Date(mb.start_date).toLocaleDateString("id-ID") : "-"}
                         </p>
                         {mb.end_date !== null && mb.end_date !== undefined && (
                             <p className={`text-xs ${mb.end_date <= "7" ? "text-orange-500" : "text-zinc-400"}`}>
                                 {mb.end_date > "0"
-                                    ? `${mb.end_date}d left`
-                                    : "Expired"}
+                                    ? `${mb.end_date} hari tersisa`
+                                    : "Kedaluwarsa"}
                             </p>
                         )}
                     </div>
@@ -148,26 +155,28 @@ export default function Members() {
             width: "w-36",
         },
         {
-            header: "Gender",
+            header: "Jenis Kelamin",
             render: (item) => (
-                <span className="text-sm text-zinc-500 capitalize">{item.gender ?? "-"}</span>
+                <span className="text-sm text-zinc-500">
+                    {item.gender === "male" ? "Laki-laki" : item.gender === "female" ? "Perempuan" : item.gender ?? "-"}
+                </span>
             ),
             width: "w-24",
         },
         {
-            header: "Member Since",
+            header: "Member Sejak",
             render: (item) => (
                 <span className="text-sm text-zinc-500">
-                    {item.member_since ? new Date(item.member_since).toLocaleDateString() : "-"}
+                    {item.member_since ? new Date(item.member_since).toLocaleDateString("id-ID") : "-"}
                 </span>
             ),
             width: "w-32",
         },
         {
-            header: "Last Check-in",
+            header: "Check-in Terakhir",
             render: (item) => (
                 <span className="text-sm text-zinc-500">
-                    {item.last_checkin_at ? new Date(item.last_checkin_at).toLocaleDateString() : "-"}
+                    {item.last_checkin_at ? new Date(item.last_checkin_at).toLocaleDateString("id-ID") : "-"}
                 </span>
             ),
             width: "w-32",
@@ -179,7 +188,7 @@ export default function Members() {
      * ========================= */
     const actions: ActionItem<MemberData>[] = [
         {
-            label: "View Detail",
+            label: "Lihat Detail",
             icon:  "eye",
             onClick: (row) => router.push(`/members/${row.id}`),
         },
@@ -193,19 +202,19 @@ export default function Members() {
 
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>User Management</li>
-                            <li className="text-aksen-secondary">Members</li>
+                            <li>Manajemen Pengguna</li>
+                            <li className="text-aksen-secondary">Member</li>
                         </ul>
                     </div>
 
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Members</h1>
-                            <p className="text-zinc-500">Manage gym members and their memberships</p>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Member</h1>
+                            <p className="text-zinc-500">Kelola member gym dan keanggotaan mereka</p>
                         </div>
                         <div className="flex gap-3">
                             <div className="w-64 text-zinc-800">
-                                <SearchInput name="search" />
+                                <SearchInput name="search" placeholder="Cari member..." />
                             </div>
                         </div>
                     </div>
@@ -228,7 +237,7 @@ export default function Members() {
                     </div>
 
                     <div className="mt-4 text-sm text-zinc-500">
-                        Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
+                        Menampilkan {entries.length > 0 ? 1 : 0} sampai {entries.length} dari {totalData} data
                     </div>
                     <div className="mt-4">
                         <PaginationWithRows
@@ -239,7 +248,7 @@ export default function Members() {
                             currentPerPage={perPage}
                             onPageChange={setPage}
                             onRowsPerPageChange={setPerPage}
-                            rowOptions={[5, 10, 20, 50]}
+                            rowOptions={[5, 10, 15, 20, 50]}
                             defaultRowsPerPage={perPage}
                         />
                     </div>

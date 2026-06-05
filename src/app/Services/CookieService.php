@@ -71,21 +71,57 @@ class CookieService
 
     public static function clearStaffCookie(): Cookie
     {
-        return cookie('staff_token', '', -1, '/');
+        return cookie(
+            name:     'staff_token',
+            value:    '',
+            minutes:  -1,
+            path:     '/',
+            domain:   null,
+            secure:   true,
+            httpOnly: true,
+            sameSite: 'None',
+        );
     }
 
     public static function clearOwnerCookie(): Cookie
     {
-        return cookie('owner_token', '', -1, '/');
+        return cookie(
+            name:     'owner_token',
+            value:    '',
+            minutes:  -1,
+            path:     '/',
+            domain:   null,
+            secure:   true,
+            httpOnly: true,
+            sameSite: 'None',
+        );
     }
 
     public static function clearMemberCookie(): Cookie
     {
-        return cookie('member_token', '', -1, '/');
+        return cookie(
+            name:     'member_token',
+            value:    '',
+            minutes:  -1,
+            path:     '/',
+            domain:   null,
+            secure:   true,
+            httpOnly: true,
+            sameSite: 'None',
+        );
     }
 
     public static function clearAdminCookie(): Cookie
     {
-        return cookie('admin_token', '', -1, '/');
+        return cookie(
+            name:     'admin_token',
+            value:    '',
+            minutes:  -1,
+            path:     '/',
+            domain:   null,
+            secure:   true,
+            httpOnly: true,
+            sameSite: 'None',
+        );
     }
 }

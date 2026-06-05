@@ -12,8 +12,10 @@ import {
     useClassSchedules,
     useDeleteClassSchedule,
     useCancelClassSchedule,
+    useUpdateClassSchedule,
 } from "@/hooks/tenant/useClassSchedules";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { ClassScheduleData } from "@/types/tenant/class-schedules";
 
 type TabKey = "list" | "calendar";
@@ -50,6 +52,8 @@ function ListTab() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
+    const { staff, selectedBranch } = useStaffAuth();
+    const isTrainer = selectedBranch?.role === "trainer";
 
     const [page, setPage]       = useState(() => Number(searchParams.get("page")) || 1);
     const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
@@ -64,9 +68,11 @@ function ListTab() {
         per_page: perPage,
         status,
         date,
+        ...(isTrainer && staff?.id ? { instructor_id: staff.id } : {}),
     });
 
     const deleteMutation = useCancelClassSchedule();
+    const updateMutation = useUpdateClassSchedule();
 
     useEffect(() => {
         const params = new URLSearchParams();
@@ -125,7 +131,7 @@ function ListTab() {
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
-                              })
+                               })
                             : "—"}
                     </p>
                     <p className="text-xs text-zinc-400">
@@ -190,7 +196,24 @@ function ListTab() {
             label: "Edit",
             icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
+            hidden: (row) => row.status !== "scheduled",
             onClick: (row) => router.push(`/class-schedules/${row.id}/edit`),
+        },
+        {
+            label: "Tandai Selesai",
+            className: "text-green-600 hover:bg-green-50",
+            hidden: (row) => row.status !== "scheduled" && row.status !== "ongoing",
+            onClick: (row) => {
+                if (confirm(`Tandai kelas ${row.class_plan?.name} sebagai selesai?`)) {
+                    updateMutation.mutate(
+                        { id: row.id, payload: { status: "completed" } },
+                        {
+                            onSuccess: () => toast.success("Kelas berhasil ditandai selesai"),
+                            onError: () => toast.error("Gagal menandai kelas selesai"),
+                        }
+                    );
+                }
+            },
         },
         {
             label: "Batalkan Jadwal",
@@ -293,12 +316,16 @@ function CalendarTab() {
     const router = useRouter();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
+    const { staff, selectedBranch } = useStaffAuth();
+    const isTrainer = selectedBranch?.role === "trainer";
 
     const { data, isLoading } = useClassSchedules({
         date: selectedDate || undefined,
+        ...(isTrainer && staff?.id ? { instructor_id: staff.id } : {}),
     });
 
     const deleteMutation = useCancelClassSchedule();
+    const updateMutation = useUpdateClassSchedule();
 
     const schedules = data?.data ?? [];
 
@@ -504,19 +531,39 @@ function CalendarTab() {
                                         >
                                             Detail
                                         </CustomButton>
-                                        <CustomButton 
-                                            
-                                            size="sm"
-                                            className="text-red-600 hover:bg-red-50"
-                                            onClick={() => {
-                                                const reason = prompt("Alasan pembatalan:");
-                                                if (reason !== null) {
-                                                    deleteMutation.mutate({ id: schedule.id, reason });
-                                                }
-                                            }}
-                                        >
-                                            Batalkan
-                                        </CustomButton>
+                                        {(schedule.status === "scheduled" || schedule.status === "ongoing") && (
+                                            <CustomButton 
+                                                size="sm"
+                                                className="bg-green-600 hover:bg-green-700 text-white font-bold"
+                                                onClick={() => {
+                                                    if (confirm(`Tandai kelas ${schedule.class_plan?.name} sebagai selesai?`)) {
+                                                        updateMutation.mutate(
+                                                            { id: schedule.id, payload: { status: "completed" } },
+                                                            {
+                                                                onSuccess: () => toast.success("Kelas selesai"),
+                                                                onError: () => toast.error("Gagal menyelesaikan kelas"),
+                                                            }
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                Selesai
+                                            </CustomButton>
+                                        )}
+                                        {schedule.status === "scheduled" && (
+                                            <CustomButton 
+                                                size="sm"
+                                                className="text-red-600 hover:bg-red-50"
+                                                onClick={() => {
+                                                    const reason = prompt("Alasan pembatalan:");
+                                                    if (reason !== null) {
+                                                        deleteMutation.mutate({ id: schedule.id, reason });
+                                                    }
+                                                }}
+                                            >
+                                                Batalkan
+                                            </CustomButton>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -537,8 +584,10 @@ function CalendarTab() {
 // =============================================
 export default function ClassSchedules() {
     const searchParams = useSearchParams();
+    const { selectedBranch } = useStaffAuth();
+    const isTrainer = selectedBranch?.role === "trainer";
     const [activeTab, setActiveTab] = useState<TabKey>(
-        () => (searchParams.get("tab") as TabKey) || "list"
+        () => (searchParams.get("tab") as TabKey) || (isTrainer ? "calendar" : "list")
     );
 
     return (

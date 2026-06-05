@@ -15,6 +15,8 @@ import {
     IconLink,
     IconShield,
     IconShieldFilled,
+    IconSettings,
+    IconSettingsFilled,
 } from "@tabler/icons-react";
 
 /**
@@ -77,14 +79,18 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
         Icon: IconCreditCard,
         IconSolid: IconCreditCardFilled,
     },
-    
-
-
+    {
+        id: "nav-gym-settings",
+        title: "Pengaturan Gym",
+        path: "/owner/settings",
+        Icon: IconSettings,
+        IconSolid: IconSettingsFilled,
+    },
 
     // =========================
     // USER MANAGEMENT
     // =========================
-    { id: "header-user", title: "Data Pengguna", isHeader: true },
+    { id: "header-user", title: "Manajemen Pengguna", isHeader: true },
     {
         id: "nav-members",
         title: "Member",
@@ -101,7 +107,7 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     },
     {
         id: "nav-roles",
-        title: "Role & Izin",
+        title: "Role & Hak Akses",
         path: "/owner/roles",
         Icon: IconShield,
         IconSolid: IconShieldFilled,
@@ -110,12 +116,12 @@ export const ownerSidebarData: OwnerSidebarItem[] = [
     // =========================
     // ANALYTICS & CONTROL
     // =========================
-    { id: "header-analytics", title: "Riwayat & Kendali", isHeader: true },
-    {
-        id: "nav-activity-log",
-        title: "Riwayat Aktivitas",
-        path: "/owner/activity-logs",
-        Icon: IconClock,
-        IconSolid: IconClockFilled,
-    },
+    // { id: "header-analytics", title: "Riwayat & Kendali", isHeader: true },
+    // {
+    //     id: "nav-activity-log",
+    //     title: "Riwayat Aktivitas",
+    //     path: "/owner/activity-logs",
+    //     Icon: IconClock,
+    //     IconSolid: IconClockFilled,
+    // },
 ];

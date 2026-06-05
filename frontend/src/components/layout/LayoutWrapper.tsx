@@ -40,7 +40,7 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
     const { data: tenantData } = useTenantHeader();
 
     let isExpired = false;
-    if (tenantData?.status === 'expired' || tenantData?.status === 'suspended') {
+    if (tenantData?.status === "expired" || tenantData?.status === "suspended") {
         isExpired = true;
     } else if (tenantData?.subscription_ends_at) {
         const endDate = dayjs(tenantData.subscription_ends_at);
@@ -59,13 +59,12 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
 
     return (
         <div className="">
-            <div className="flex flex-col h-full bg-zinc-100 py-4">
+            <div className="flex flex-col h-full min-h-screen bg-zinc-100 py-4">
                 {/* Header - akan fetch tenant sendiri */}
                 <TenantHeader />
 
                 {/* Main Container */}
                 <div className="flex flex-1 overflow-visible h-full relative">
-                    
                     {/* --- EXPIRED BLOCKING OVERLAY FOR STAFF --- */}
                     {isExpired && (
                         <div className="absolute inset-0 z-50 bg-zinc-100/90 backdrop-blur-sm flex flex-col items-center justify-center p-4 rounded-tl-2xl border-t border-l border-white/50">
@@ -74,16 +73,12 @@ const LayoutWrapper: React.FC<LayoutWrapperProps> = ({ children }) => {
                                     <AlertTriangle size={32} />
                                 </div>
                                 <h2 className="text-2xl font-black text-zinc-900 mb-2">Layanan Nonaktif</h2>
-                                <p className="text-zinc-600 mb-2 leading-relaxed">
-                                    Layanan aplikasi untuk gym ini sedang dinonaktifkan sementara.
-                                </p>
-                                <p className="text-sm text-zinc-500 font-medium">
-                                    Silakan hubungi Owner atau Administrator gym Anda.
-                                </p>
+                                <p className="text-zinc-600 mb-2 leading-relaxed">Layanan aplikasi untuk gym ini sedang dinonaktifkan sementara.</p>
+                                <p className="text-sm text-zinc-500 font-medium">Silakan hubungi Owner atau Administrator gym Anda.</p>
                             </div>
                         </div>
                     )}
-                    <div className="relative mb-4">
+                    <div className="relative mb-4 hidden md:block">
                         <Sidebar isOpen={isOpen} pathname={pathname} />
 
                         {/* Toggle Button */}

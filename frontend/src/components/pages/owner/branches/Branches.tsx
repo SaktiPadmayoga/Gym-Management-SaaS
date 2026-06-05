@@ -11,6 +11,7 @@ import CustomButton from "@/components/ui/button/CustomButton";
 import PaginationWithRows from "@/components/ui/navigation/PaginationWithRows";
 import { useTenantBranches, useDeleteTenantBranch, useToggleActiveTenantBranch } from "@/hooks/useTenantBranches";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useCurrentSubscription } from "@/hooks/useSubscriptionTenant";
 import Link from "next/link";
 
 type BranchSearchForm = {
@@ -43,6 +44,25 @@ export default function BranchesPage() {
 
     const deleteMutation = useDeleteTenantBranch();
     const toggleActiveMutation = useToggleActiveTenantBranch();
+    const { data: currentSub } = useCurrentSubscription();
+
+    // Tampilkan error dari delete mutation
+    useEffect(() => {
+        if (deleteMutation.error) {
+            const err = deleteMutation.error as any;
+            const message =
+                err?.response?.data?.message ||
+                err?.message ||
+                "Gagal menghapus cabang";
+            toast.error(message);
+        }
+    }, [deleteMutation.error]);
+
+    useEffect(() => {
+        if (deleteMutation.isSuccess) {
+            toast.success("Cabang berhasil dihapus");
+        }
+    }, [deleteMutation.isSuccess]);
 
     useEffect(() => {
         const params = new URLSearchParams();
@@ -85,6 +105,9 @@ export default function BranchesPage() {
     const entries: TenantBranchData[] = data?.data ?? [];
     const totalData = data?.meta?.total ?? entries.length;
 
+    const maxBranches = currentSub?.max_branches ?? 0;
+    const isLimitReached = maxBranches > 0 && totalData >= maxBranches;
+
     if (isError) {
         toast.error("Gagal memuat data cabang");
         return <div className="py-10 text-center text-red-500">Gagal memuat data cabang</div>;
@@ -126,24 +149,8 @@ export default function BranchesPage() {
             width: "w-48",
         },
         {
-            header: "Domain",
-            render: (item) => {
-                const primaryDomain = item.domains?.find((d) => d.is_primary);
-                return (
-                    <div className="text-sm">
-                        <div className="text-zinc-700 font-medium">{primaryDomain ? primaryDomain.domain : "-"}</div>
-                    </div>
-                );
-            },
-            width: "w-48",
-        },
-        {
             header: "Status",
-            render: (item) => (
-                <span className={`inline-block rounded-lg px-3 py-1.5 text-sm font-medium ${getStatusColor(item.is_active)}`}>
-                    {item.is_active ? "Aktif" : "Tidak Aktif"}
-                </span>
-            ),
+            render: (item) => <span className={`inline-block rounded-lg px-3 py-1.5 text-sm font-medium ${getStatusColor(item.is_active)}`}>{item.is_active ? "Aktif" : "Tidak Aktif"}</span>,
             width: "w-28",
         },
         {
@@ -207,8 +214,21 @@ export default function BranchesPage() {
             className: "text-red-600 hover:bg-red-50",
             divider: true,
             onClick: (row) => {
-                if (confirm(`Apakah kamu yakin ingin menghapus cabang "${row.name}"?`)) {
-                    deleteMutation.mutate(row.id);
+                if (confirm(
+                    `Hapus cabang "${row.name}"?\n\nCabang hanya bisa dihapus jika tidak memiliki staff atau member aktif.`
+                )) {
+                    deleteMutation.mutate(row.id, {
+                        onError: (err: any) => {
+                            const message =
+                                err?.response?.data?.message ||
+                                err?.message ||
+                                "Gagal menghapus cabang";
+                            toast.error(message, { duration: 6000 });
+                        },
+                        onSuccess: () => {
+                            toast.success("Cabang berhasil dihapus");
+                        },
+                    });
                 }
             },
         },
@@ -224,9 +244,10 @@ export default function BranchesPage() {
                         <ul>
                             <li>Cabang & Langganan</li>
                             <li>
-                                <Link className="text-aksen-secondary" href="/owner/branches">Cabang</Link>
+                                <Link className="text-aksen-secondary" href="/owner/branches">
+                                    Cabang
+                                </Link>
                             </li>
-
                         </ul>
                     </div>
 
@@ -240,7 +261,13 @@ export default function BranchesPage() {
                             <div className="w-64 text-zinc-800">
                                 <SearchInput name="search" placeholder="Cari cabang..." />
                             </div>
-                            <CustomButton iconName="plus" className="text-white px-3" onClick={() => router.push("/owner/branches/create")}>
+                            <CustomButton
+                                iconName="plus"
+                                className="text-white px-3"
+                                onClick={() => router.push("/owner/branches/create")}
+                                disabled={isLimitReached}
+                                title={isLimitReached ? `Anda telah mencapai batas maksimum branch untuk paket langganan Anda (${maxBranches} cabang).` : undefined}
+                            >
                                 Cabang Baru
                             </CustomButton>
                         </div>
@@ -263,17 +290,15 @@ export default function BranchesPage() {
                     </div>
 
                     <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={data?.meta?.current_page && data?.meta?.last_page ? data?.meta?.current_page < data?.meta?.last_page : false}
-                        hasPrevPage={(data?.meta?.current_page ?? 0) > 1}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 15, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
+                        <PaginationWithRows
+                            hasNextPage={data?.meta?.current_page && data?.meta?.last_page ? data?.meta?.current_page < data?.meta?.last_page : false}
+                            hasPrevPage={(data?.meta?.current_page ?? 0) > 1}
+                            totalItems={totalData}
+                            rowOptions={[5, 10, 15, 20, 50]}
+                            defaultRowsPerPage={perPage}
+                        />
+                    </div>
                 </div>
-                </div>
-
-                
             </div>
         </FormProvider>
     );

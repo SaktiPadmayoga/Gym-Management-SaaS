@@ -14,12 +14,37 @@ use Illuminate\Support\Facades\Log;
 class PtSessionController extends Controller
 {
     /**
+     * Helper to get base query with branch scoping for non-owners/admins
+     */
+    private function getPtSessionQuery(Request $request)
+    {
+        $query = PtSession::query();
+        $staff = $request->user();
+
+        if ($staff && !$staff->isOwner() && $staff->role !== 'admin') {
+            $activeBranchId = $request->header('X-Branch-Id');
+            $query->where('branch_id', $activeBranchId);
+        }
+
+        return $query;
+    }
+
+    /**
      * List semua jadwal PT dengan filter
      */
     public function index(Request $request)
     {
         $staff = $request->user();
-        $query = PtSession::with(['member', 'trainer', 'package.plan']);
+        $query = $this->getPtSessionQuery($request)->with(['member', 'trainer', 'package.plan']);
+
+        // Filter branch for global managers (owner/admin)
+        if ($staff && ($staff->isOwner() || $staff->role === 'admin')) {
+            if ($request->filled('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            } elseif ($branchId = $request->header('X-Branch-Id')) {
+                $query->where('branch_id', $branchId);
+            }
+        }
 
         // Filter: Trainer hanya melihat sesinya sendiri, kecuali dia manager/owner
         $isBranchTrainer = $staff->staffBranches()->whereHas('role', fn($q) => $q->where('name', 'trainer'))->exists();
@@ -39,13 +64,15 @@ class PtSessionController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Search berdasarkan nama member atau trainer
+        // Search berdasarkan nama member atau trainer (nested where to prevent OR clause bypass)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('member', function($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%");
-            })->orWhereHas('trainer', function($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereHas('member', function($qm) use ($search) {
+                    $qm->where('name', 'ilike', "%{$search}%");
+                })->orWhereHas('trainer', function($qt) use ($search) {
+                    $qt->where('name', 'ilike', "%{$search}%");
+                });
             });
         }
 
@@ -67,9 +94,9 @@ class PtSessionController extends Controller
     /**
      * Detail Jadwal
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $session = PtSession::with(['member', 'trainer', 'package.plan', 'attendance'])->findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->with(['member', 'trainer', 'package.plan', 'attendance'])->findOrFail($id);
         return ApiResponse::success($session);
     }
 
@@ -86,7 +113,12 @@ class PtSessionController extends Controller
             'end_at'        => 'required|after:start_at',
         ]);
 
-        $package = PtPackage::findOrFail($request->pt_package_id);
+        $staff = $request->user();
+        $packageQuery = PtPackage::query();
+        if ($staff && !$staff->isOwner() && $staff->role !== 'admin') {
+            $packageQuery->where('branch_id', $request->header('X-Branch-Id'));
+        }
+        $package = $packageQuery->findOrFail($request->pt_package_id);
 
         // 1. Pastikan paket aktif
         if ($package->status !== 'active') {
@@ -127,7 +159,7 @@ class PtSessionController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $session = PtSession::findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->findOrFail($id);
         $session->update($request->only(['date', 'start_at', 'end_at', 'trainer_id', 'status', 'notes']));
 
         // Jika status diubah menjadi completed, jangan lupa update used_sessions di package
@@ -141,7 +173,7 @@ class PtSessionController extends Controller
      */
     public function cancel(Request $request, $id)
     {
-        $session = PtSession::findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->findOrFail($id);
 
         if ($session->status === 'completed') {
             return ApiResponse::error("Sesi yang sudah selesai tidak dapat dibatalkan.", null, 422);
@@ -165,7 +197,7 @@ class PtSessionController extends Controller
             'notes' => 'nullable|string|max:2000',
         ]);
 
-        $session = PtSession::with('package')->findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->with('package')->findOrFail($id);
 
         if (!in_array($session->status, ['scheduled', 'ongoing'])) {
             return ApiResponse::error(
@@ -204,7 +236,7 @@ class PtSessionController extends Controller
         ]);
 
         $staff   = $request->user();
-        $session = PtSession::findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->findOrFail($id);
 
         // Trainer hanya boleh edit notes sesi yang dia ampu,
         // kecuali owner/admin yang bisa edit semuanya.
@@ -222,11 +254,20 @@ class PtSessionController extends Controller
     public function getRequests(Request $request)
     {
         $staff = $request->user();
-        $query = PtSession::with(['member:id,name', 'package.plan'])
+        $query = $this->getPtSessionQuery($request)->with(['member:id,name', 'package.plan'])
             ->where('status', 'requested');
 
+        // Filter branch for global managers (owner/admin)
+        if ($staff && ($staff->isOwner() || $staff->role === 'admin')) {
+            if ($request->filled('branch_id')) {
+                $query->where('branch_id', $request->branch_id);
+            } elseif ($branchId = $request->header('X-Branch-Id')) {
+                $query->where('branch_id', $branchId);
+            }
+        }
+
         // Filter: Trainer hanya melihat request untuk dirinya sendiri,
-        // Branch manager bisa melihat semua request di cabang mereka (di-handle oleh global scope jika ada, atau tambahkan manual).
+        // Branch manager bisa melihat semua request di cabang mereka.
         $isGlobalTrainer = $staff->role === 'trainer';
         $isBranchTrainer = $staff->staffBranches()->whereHas('role', fn($q) => $q->where('name', 'trainer'))->exists();
         $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->staffBranches()->whereHas('role', fn($q) => $q->whereIn('name', ['branch_manager']))->exists();
@@ -249,7 +290,7 @@ class PtSessionController extends Controller
 
     public function approveRequest(Request $request, $id)
     {
-        $session = PtSession::findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->findOrFail($id);
         
         if ($session->status !== 'requested') {
             return ApiResponse::error('Sesi ini tidak dalam status requested', null, 400);
@@ -272,7 +313,7 @@ class PtSessionController extends Controller
             'cancelled_reason' => 'required|string|max:255'
         ]);
 
-        $session = PtSession::findOrFail($id);
+        $session = $this->getPtSessionQuery($request)->findOrFail($id);
         
         if ($session->status !== 'requested') {
             return ApiResponse::error('Sesi ini tidak dalam status requested', null, 400);

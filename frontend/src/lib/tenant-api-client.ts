@@ -39,6 +39,12 @@ tenantApiClient.interceptors.request.use(
         const branchId = getCurrentBranchId();
         if (branchId) config.headers["X-Branch-Id"] = branchId;
 
+        // Tentukan role berdasarkan path halaman aktif di browser (owner vs staff)
+        if (typeof window !== "undefined") {
+            const isOwnerPath = window.location.pathname.startsWith("/owner");
+            config.headers["X-Auth-Role"] = isOwnerPath ? "owner" : "staff";
+        }
+
         if (process.env.NODE_ENV === "development") {
             console.log(`[Tenant API] ${config.method?.toUpperCase()} ${config.url}`);
         }

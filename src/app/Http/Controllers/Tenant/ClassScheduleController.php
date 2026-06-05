@@ -274,10 +274,7 @@ class ClassScheduleController extends Controller
                 'cancelled_at' => now(),
             ]);
 
-            // Kembalikan slot HANYA jika sudah paid/free (sudah dihitung ke total_booked)
-            if ($attendance->payment_status !== 'pending') {
-                $attendance->schedule->decrement('total_booked');
-            }
+            $attendance->schedule->decrement('total_booked');
 
             DB::commit();
 

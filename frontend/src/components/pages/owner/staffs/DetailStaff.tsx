@@ -20,7 +20,7 @@ import { useRoles } from "@/hooks/tenant/useRoles";
  * OPTIONS
  * ===================== */
 const globalRoleOptions: DropdownOption<string>[] = [
-    { key: "staff", label: "Staff", value: "staff" },
+    { key: "staff", label: "Staf", value: "staff" },
     { key: "owner", label: "Owner", value: "owner" },
 ];
 
@@ -109,7 +109,7 @@ export default function DetailStaff() {
                 error?.response?.data?.error || 
                 error?.response?.data?.message || 
                 error?.message ||                 
-                "Failed to update staff";
+                "Gagal memperbarui staf";
 
             toast.error(message);
         }
@@ -121,7 +121,7 @@ export default function DetailStaff() {
         const branchRole = form.getValues("add_branch_role");
 
         if (!branchId || !branchRole) {
-            toast.error("Pilih cabang dan role terlebih dahulu");
+            toast.error("Pilih cabang dan peran terlebih dahulu");
             return;
         }
 
@@ -131,7 +131,7 @@ export default function DetailStaff() {
                 payload: { branch_id: branchId, role: branchRole },
             });
 
-            toast.success("Staff berhasil ditambahkan ke cabang baru");
+            toast.success("Staf berhasil ditambahkan ke cabang baru");
 
             // Reset field add
             form.setValue("add_branch_id", undefined);
@@ -143,7 +143,7 @@ export default function DetailStaff() {
                 error?.response?.data?.error || 
                 error?.response?.data?.message || 
                 error?.message ||                 
-                "Failed to assign staff to branch";
+                "Gagal menambahkan staf ke cabang";
 
             toast.error(message);
         }
@@ -170,9 +170,9 @@ export default function DetailStaff() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>User Management</li>
+                            <li>Manajemen Pengguna</li>
                             <li>
-                                <Link href="/owner/staffs">Staff</Link>
+                                <Link href="/owner/staffs">Staf</Link>
                             </li>
                             <li>
                                 <Link href={`/owner/staffs/${staffId}`}>{staff.name}</Link>
@@ -188,7 +188,7 @@ export default function DetailStaff() {
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div>
-                                <h1 className="text-2xl font-semibold">Edit Staff</h1>
+                                <h1 className="text-2xl font-semibold">Edit Staf</h1>
                             </div>
                         </div>
 
@@ -201,10 +201,10 @@ export default function DetailStaff() {
                             ) : (
                                 <>
                                     <CustomButton type="button" className=" px-4 py-2.5  text-white cursor-pointer" onClick={() => setIsEditMode(false)}>
-                                        Cancel
+                                        Batal
                                     </CustomButton>
                                     <CustomButton type="submit" className="px-4 py-2.5 cursor-pointer" disabled={updateMutation.isPending}>
-                                        {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                                        {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                     </CustomButton>
                                 </>
                             )}
@@ -217,26 +217,26 @@ export default function DetailStaff() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" disabled={!isEditMode} rules={{ required: "Name is required" }}/>
+                                <TextInput name="name" label="Nama Lengkap" placeholder="Contoh: John Doe" disabled={!isEditMode} rules={{ required: "Nama wajib diisi" }}/>
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email Address" type="email" disabled={!isEditMode} rules={{ required: "Email is required" }} />
+                                <TextInput name="email" label="Alamat Email" type="email" disabled={!isEditMode} rules={{ required: "Email wajib diisi" }} />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Phone Number" placeholder="e.g +6281234567890" disabled={!isEditMode} />
+                                <TextInput name="phone" label="Nomor Telepon" placeholder="Contoh: +6281234567890" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="newPassword" label="New Password (optional)" type="password" placeholder="Leave blank to keep current" disabled={!isEditMode} />
+                                <TextInput name="newPassword" label="Password Baru (opsional)" type="password" placeholder="Biarkan kosong jika tidak ingin mengubah" disabled={!isEditMode} />
                             </div>
                         </div>
 
                         {/* GLOBAL ROLE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="role" label="Global Role" options={globalRoleOptions} disabled={!isEditMode} />
+                                <SearchableDropdown name="role" label="Peran (Role) Global" options={globalRoleOptions} disabled={!isEditMode} />
                             </div>
                         </div>
 
@@ -246,13 +246,13 @@ export default function DetailStaff() {
                                 <hr className="mt-2" />
                                 {/* Add to New Branch */}
                                 <div className="">
-                                    <h2 className="text-lg font-semibold text-zinc-800 mb-1">Add to New Branch</h2>
-                                    <p className="text-sm text-zinc-500 mb-4">Tambahkan staff ini ke cabang lain</p>
-
+                                    <h2 className="text-lg font-semibold text-zinc-800 mb-1">Tugaskan ke Cabang Baru</h2>
+                                    <p className="text-sm text-zinc-500 mb-4">Tambahkan staf ini ke cabang lain</p>
+ 
                                     <div className="grid grid-cols-12 gap-4">
                                         {/* Current Assignments */}
                                         <div className="col-span-4">
-                                            <h2 className="text-sm font-semibold text-zinc-800 mb-1">Current Branch Assignments</h2>
+                                            <h2 className="text-sm font-semibold text-zinc-800 mb-1">Penugasan Cabang Saat Ini</h2>
                                             {staff.branches && staff.branches.length > 0 ? (
                                                 <div className="flex flex-wrap  gap-2">
                                                     {staff.branches.map((assignment) => (
@@ -274,7 +274,7 @@ export default function DetailStaff() {
                                                 render={({ field }) => (
                                                     <SearchableDropdown
                                                         name="add_branch_id"
-                                                        label="Select Branch"
+                                                        label="Pilih Cabang"
                                                         options={branches.map((b) => ({
                                                             key: b.id,
                                                             label: b.name,
@@ -289,12 +289,12 @@ export default function DetailStaff() {
                                         </div>
 
                                         <div className="col-span-3">
-                                            <SearchableDropdown name="add_branch_role" label="Role in Branch" options={branchRoleOptions} disabled={!isEditMode} />
+                                            <SearchableDropdown name="add_branch_role" label="Peran (Role) di Cabang" options={branchRoleOptions} disabled={!isEditMode} />
                                         </div>
 
                                         <div className="col-span-2 flex items-start mt-7">
                                             <CustomButton type="button" onClick={handleAddBranch} className="w-full bg-aksen-secondary border-none text-white px-3 py-3.5" disabled={!isEditMode}>
-                                                Add
+                                                Tambah
                                             </CustomButton>
                                         </div>
                                     </div>

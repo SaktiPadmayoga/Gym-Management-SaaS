@@ -18,8 +18,8 @@ class BranchSettingSeeder extends Seeder
             // -------------------------
             // APPEARANCE
             // -------------------------
-            ['group' => 'appearance', 'key' => 'primary_color',   'value' => '#4F46E5', 'type' => 'color',   'is_public' => true],
-            ['group' => 'appearance', 'key' => 'accent_color',    'value' => '#7C3AED', 'type' => 'color',   'is_public' => true],
+            ['group' => 'appearance', 'key' => 'primary_color',   'value' => '#00b7b5', 'type' => 'color',   'is_public' => true],
+            ['group' => 'appearance', 'key' => 'accent_color',    'value' => '#018790', 'type' => 'color',   'is_public' => true],
             ['group' => 'appearance', 'key' => 'logo_url',        'value' => null,      'type' => 'string',  'is_public' => true],
 
             // -------------------------

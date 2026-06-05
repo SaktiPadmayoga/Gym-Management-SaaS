@@ -41,7 +41,7 @@ class TenantService
             // =====================
             $tenant->domains()->create([
                 'id' => (string) Str::uuid(),
-                'domain' => "{$slug}.localhost",
+                'domain' => $slug . '.' . env('TENANT_BASE_DOMAIN', 'localhost'),
                 'type' => 'tenant',
                 'is_primary' => true,
             ]);

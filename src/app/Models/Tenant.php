@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Stancl\Tenancy\Contracts\TenantWithDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDatabase;
@@ -52,6 +53,35 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'subscription_ends_at',
             'data',
         ];
+    }
+
+    // =============================================
+    // Accessors
+    // =============================================
+
+    /**
+     * Kembalikan full URL logo gym.
+     * Jika logo_url adalah path R2 (tenant_xxx/logos/...) → generate via Storage::disk('r2')
+     * Jika sudah berupa URL lengkap (http/https) → return as-is (backward compatible)
+     * Jika null → return null
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        $raw = $this->attributes['logo_url'] ?? null;
+        if (!$raw) return null;
+
+        // Sudah berupa URL lengkap (data lama atau URL eksternal)
+        if (str_starts_with($raw, 'http://') || str_starts_with($raw, 'https://')) {
+            return $raw;
+        }
+
+        // Gunakan disk R2 jika key R2 tersedia (production)
+        if (!env('CLOUDFLARE_R2_ACCESS_KEY_ID')) {
+            return '/storage/' . $raw;
+        }
+
+        // Path R2 relatif → generate full CDN URL
+        return Storage::disk('r2')->url($raw);
     }
 
     // CATATAN: branches(), users(), settings() sekarang ada di tenant database

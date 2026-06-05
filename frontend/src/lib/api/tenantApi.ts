@@ -30,6 +30,15 @@ export const tenantAPI = {
         if (res.data?.data) return res.data.data;
         return res.data;
     },
+
+    uploadLogo: async (file: File): Promise<{ logo_url: string; path: string }> => {
+        const formData = new FormData();
+        formData.append("logo", file);
+        const res = await apiClient.post("/tenant/logo", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+        });
+        return res.data.data;
+    },
 };
 
 export default apiClient;

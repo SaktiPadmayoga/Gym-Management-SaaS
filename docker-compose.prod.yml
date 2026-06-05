@@ -104,6 +104,23 @@ services:
             GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
             GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-}
             GOOGLE_MEMBER_REDIRECT_URL: ${GOOGLE_MEMBER_REDIRECT_URL:-}
+
+            # Cloudflare R2 — Product Image Storage
+            CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+            CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+            CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET:-gymfit-assets}
+            CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
+            CLOUDFLARE_R2_URL: ${CLOUDFLARE_R2_URL:-https://cdn.gymfit.id}
+
+            # Midtrans Payment Gateway
+            # WAJIB: Ganti dengan Production Key dari https://dashboard.midtrans.com
+            # Settings → Access Keys → toggle ke "Production"
+            MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
+            MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
+            MIDTRANS_IS_PRODUCTION: "true"   # Hardcode true — file ini khusus production
+            MIDTRANS_IS_SANITIZED: "true"
+            MIDTRANS_IS_3DS: "true"
+            FRONTEND_URL: https://gymfit.id
         volumes:
             - ./src:/var/www/html
             - laravel_storage:/var/www/html/storage

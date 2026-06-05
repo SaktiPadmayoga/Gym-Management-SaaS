@@ -13,10 +13,32 @@ const nextConfig: NextConfig = {
     // Images optimization
     images: {
         unoptimized: true,
-        domains: [
-            "localhost",
-            "gymfit.id",
-            "*.gymfit.id",
+        remotePatterns: [
+            // Local development
+            {
+                protocol: 'http',
+                hostname: 'localhost',
+            },
+            // App domain
+            {
+                protocol: 'https',
+                hostname: 'gymfit.id',
+            },
+            // Tenant subdomains
+            {
+                protocol: 'https',
+                hostname: '*.gymfit.id',
+            },
+            // Cloudflare R2 CDN — gambar produk
+            {
+                protocol: 'https',
+                hostname: 'cdn.gymfit.id',
+            },
+            // R2 public URL (fallback jika custom domain belum diset)
+            {
+                protocol: 'https',
+                hostname: '*.r2.dev',
+            },
         ],
     },
 

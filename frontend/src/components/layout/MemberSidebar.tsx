@@ -4,18 +4,22 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
-import { adminSidebarData, type AdminSidebarItem } from "@/types/central-sidebar-menu";
 import { memberSidebarData, MemberSidebarItem } from "@/types/member-sidebar-menu";
+import { GripVertical } from "lucide-react";
 
 interface MemberSidebarProps {
   isOpen: boolean;
+  onToggle: () => void;
   pathname: string;
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
+const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, onToggle, pathname, isMobileOpen, onMobileClose }) => {
+  console.log("MemberSidebar props:", { isOpen, pathname, isMobileOpen });
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
-  const findActiveItem = (items: AdminSidebarItem[], currentPath: string): AdminSidebarItem | null => {
+  const findActiveItem = (items: MemberSidebarItem[], currentPath: string): MemberSidebarItem | null => {
     for (const item of items) {
       if (item.isHeader) continue;
 
@@ -30,7 +34,7 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
     return null;
   };
 
-  const getParentPaths = (items: AdminSidebarItem[], targetId: string, currentPath: string[] = []): string[] => {
+  const getParentPaths = (items: MemberSidebarItem[], targetId: string, currentPath: string[] = []): string[] => {
     for (const item of items) {
       if (item.isHeader) continue;
 
@@ -49,9 +53,9 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
   };
 
   useEffect(() => {
-    const activeItem = findActiveItem(adminSidebarData, pathname);
+    const activeItem = findActiveItem(memberSidebarData, pathname);
     if (activeItem) {
-      const pathsToExpand = getParentPaths(adminSidebarData, activeItem.id);
+      const pathsToExpand = getParentPaths(memberSidebarData, activeItem.id);
       const newExpanded: Record<string, boolean> = {};
       pathsToExpand.forEach(path => {
         newExpanded[path] = true;
@@ -80,7 +84,7 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
     return false;
   };
 
-  const renderChildren = (children: MemberSidebarItem[]) => {
+  const renderChildren = (children: MemberSidebarItem[], isSidebarOpen: boolean = isOpen) => {
     return children.map((child) => {
       const itemActive = isActive(child);
       const CurrentIcon = itemActive && child.IconSolid ? child.IconSolid : child.Icon;
@@ -88,7 +92,7 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
       return (
         <div key={child.id} className="relative">
           {/* Branch lines */}
-          {isOpen && (
+          {isSidebarOpen && (
             <div className="absolute left-0 top-0 bottom-0 flex items-start">
               <div className="w-px bg-zinc-200 ml-3 h-full" />
               <div className="w-4 h-px bg-zinc-200 mt-6" />
@@ -96,22 +100,22 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
           )}
 
           {/* Menu item */}
-          <div className={`flex items-center ${isOpen ? 'ml-9' : ''}`}>
+          <div className={`flex items-center ${isSidebarOpen ? 'ml-9' : ''}`}>
             <Link
               href={child.path || '#'}
-              className={`w-full flex items-center py-2 px-3 mt-2 rounded-lg transition-all duration-200 group ${
+              className={`w-full flex items-center py-2 ${isSidebarOpen ? 'px-3 justify-start' : 'px-0 justify-center'} mt-2 rounded-lg transition-all duration-200 group ${
                 itemActive
                   ? 'bg-aksen-primary text-white border border-gray-500/20 shadow-sm font-semibold text-md' 
                   : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
               }`}
             >
               {CurrentIcon && (
-                <div className={`${isOpen ? 'w-4 h-4 mr-3' : 'w-5 h-5'} flex-shrink-0 flex items-center justify-center`}>
-                  <CurrentIcon width={isOpen ? 16 : 20} height={isOpen ? 16 : 20} stroke={1.5} />
+                <div className={`${isSidebarOpen ? 'w-4 h-4 mr-3' : 'w-5 h-5'} flex-shrink-0 flex items-center justify-center`}>
+                  <CurrentIcon width={isSidebarOpen ? 16 : 20} height={isSidebarOpen ? 16 : 20} stroke={1.5} />
                 </div>
               )}
 
-              {isOpen && (
+              {isSidebarOpen && (
                 <span className="text-sm truncate">{child.title}</span>
               )}
             </Link>
@@ -121,10 +125,10 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
     });
   };
 
-  const renderMenuItem = (item: MemberSidebarItem) => {
+  const renderMenuItem = (item: MemberSidebarItem, isSidebarOpen: boolean = isOpen) => {
     // Render header
     if (item.isHeader) {
-      if (!isOpen) return null;
+      if (!isSidebarOpen) return null;
 
       return (
         <div key={item.id} className="mt-6 mb-2 px-2">
@@ -146,7 +150,7 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
         {hasChildren ? (
           <button
             onClick={() => toggleExpanded(item.id)}
-            className={`w-full flex items-center justify-between py-2 px-3 rounded-lg transition-all duration-200 group ${
+            className={`w-full flex items-center py-2 ${isSidebarOpen ? 'justify-between px-3' : 'justify-center px-0'} rounded-lg transition-all duration-200 group ${
               itemActive || parentActive 
                 ? 'bg-aksen-primary text-white border border-gray-500/20 shadow-sm font-semibold text-md' 
                 : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
@@ -154,15 +158,15 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
           >
             <div className="flex items-center min-w-0">
               {CurrentIcon && (
-                <CurrentIcon size={isOpen ? 20 : 24} className={`${isOpen ? 'mr-3' : ''} flex-shrink-0`} />
+                <CurrentIcon size={isSidebarOpen ? 20 : 24} className={`${isSidebarOpen ? 'mr-3' : ''} flex-shrink-0`} />
               )}
               
-              {isOpen && (
+              {isSidebarOpen && (
                 <span className="truncate">{item.title}</span>
               )}
             </div>
 
-            {hasChildren && isOpen && (
+            {hasChildren && isSidebarOpen && (
               <div className="ml-2">
                 {isExpanded ? (
                   <ChevronDownIcon className="w-4 h-4" />
@@ -175,27 +179,27 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
         ) : (
           <Link
             href={item.path || '#'}
-            className={`w-full flex items-center py-2 px-3 rounded-lg transition-all duration-200 group ${
+            className={`w-full flex items-center py-2 ${isSidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} rounded-lg transition-all duration-200 group ${
               itemActive 
                 ? 'bg-aksen-primary/90 text-white border border-gray-500/20 shadow-sm font-semibold text-md' 
                 : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'
             }`}
           >
             {CurrentIcon && (
-              <CurrentIcon size={isOpen ? 20 : 24} className={`${isOpen ? 'mr-3' : ''} flex-shrink-0`} />
+              <CurrentIcon size={isSidebarOpen ? 20 : 24} className={`${isSidebarOpen ? 'mr-3' : ''} flex-shrink-0`} />
             )}
             
-            {isOpen && (
+            {isSidebarOpen && (
               <span className="truncate">{item.title}</span>
             )}
           </Link>
         )}
 
         {/* Children with branch design */}
-        {hasChildren && isOpen && (
+        {hasChildren && isSidebarOpen && (
           <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
             <div className="relative ml-2 mt-1">
-              {renderChildren(item.children!)}
+              {renderChildren(item.children!, isSidebarOpen)}
             </div>
           </div>
         )}
@@ -204,30 +208,72 @@ const MemberSidebar: React.FC<MemberSidebarProps> = ({ isOpen, pathname }) => {
   };
 
   return (
-    <aside
-      className={`
-        ${isOpen ? "w-64" : "w-21 py-5"}
-        relative
-        sticky
-        top-0
-        z-20
-        m-4
-        h-[84vh]
-        overflow-y-scroll
-        rounded-lg
-        border
-        border-gray-200
-        bg-white
-        transition-all
-        duration-500
-        ease-in-out
-      `}
-    >
-      {/* MENU ITEMS */}
-      <div className="pb-4 px-4 font-figtree">
-        {memberSidebarData.map(renderMenuItem)}
+    <>
+      {/* --- MOBILE DRAWER SIDEBAR --- */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
+      <aside
+        className={`fixed top-0 left-0 bottom-0 z-50 w-64 bg-white p-5 overflow-y-auto transition-transform duration-300 ease-in-out md:hidden border-r border-zinc-200 ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+      >
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-100">
+          <span className="text-xl font-black font-outfit text-zinc-900 tracking-tight uppercase">
+            GYMFIT
+          </span>
+          <button 
+            onClick={onMobileClose} 
+            className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="pb-4 font-figtree">
+          {memberSidebarData.map((item) => renderMenuItem(item, true))}
+        </div>
+      </aside>
+
+      {/* --- DESKTOP SIDEBAR --- */}
+      <div className="relative hidden md:block">
+        <aside
+          className={`${isOpen ? "w-64" : "w-20 py-5"} relative sticky top-0 z-20 m-4 h-[84vh] overflow-y-auto rounded-lg border border-gray-200 bg-white transition-all duration-300 ease-in-out`}
+        >
+          {/* MENU ITEMS */}
+          <div className="pb-4 px-4 mt-4 md:mt-0 font-figtree">
+            {memberSidebarData.map((item) => renderMenuItem(item, isOpen))}
+          </div>
+        </aside>
+
+        {/* TOGGLE FLOATING */}
+        <button
+          onClick={onToggle}
+          title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
+          className="
+            absolute
+            top-9
+            right-1
+            z-30
+            flex
+            items-center
+            justify-center
+          "
+        >
+          {isOpen ? (
+            <div className="rounded-md transition-all duration-200 w-6 h-8 flex items-center justify-center mr-5 hover:cursor-pointer">
+              <GripVertical className="h-6 w-6 hover:text-gray-500 text-gray-400" />
+            </div>
+          ) : (
+            <div className="rounded-md bg-white border border-gray-200 shadow hover:bg-gray-100 transition-all duration-200 py-0.5 hover:cursor-pointer">
+              <GripVertical className="h-6 w-6 hover:text-gray-500 text-gray-400" />
+            </div>
+          )}
+        </button>
       </div>
-    </aside>
+    </>
   );
 };
 

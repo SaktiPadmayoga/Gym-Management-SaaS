@@ -73,12 +73,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
 
     const isTrainer = selectedBranch?.role === 'trainer';
 
-    // Menu khusus trainer — bypass permission system
     const trainerMenu: SidebarItem[] = [
-        { id: "header-trainer", title: "Trainer Menu", isHeader: true },
+        { id: "header-trainer", title: "Menu Pelatih", isHeader: true },
         { id: "t-dashboard",  title: "Dashboard",       path: "/dashboard/trainer", Icon: Squares2X2Icon, IconSolid: Squares2X2IconSolid },
         { id: "t-schedule",   title: "Jadwal Saya",     path: "/pt-sessions",       Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
         { id: "t-requests",   title: "Request Sesi",    path: "/pt-sessions/requests", Icon: ClockIcon, IconSolid: ClockIconSolid },
+        { id: "t-classes",    title: "Jadwal Kelas",    path: "/class-schedules",   Icon: CalendarDaysIcon, IconSolid: CalendarDaysIconSolid },
         { id: "t-members",    title: "Member Saya",     path: "/trainer/members",   Icon: UsersIcon, IconSolid: UsersIconSolid },
     ];
 
@@ -90,17 +90,32 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
         });
 
     const findActiveItem = (items: SidebarItem[], currentPath: string): SidebarItem | null => {
+        let bestMatch: SidebarItem | null = null;
         for (const item of items) {
             if (item.isHeader) continue;
-            if (item.path && (currentPath === item.path || currentPath.startsWith(item.path + "/"))) {
-                return item;
+            if (item.path) {
+                if (currentPath === item.path) {
+                    return item;
+                }
+                if (currentPath.startsWith(item.path + "/")) {
+                    if (!bestMatch || item.path.length > (bestMatch.path?.length ?? 0)) {
+                        bestMatch = item;
+                    }
+                }
             }
             if (item.children) {
                 const found = findActiveItem(item.children, currentPath);
-                if (found) return found;
+                if (found) {
+                    if (currentPath === found.path) {
+                        return found;
+                    }
+                    if (!bestMatch || (found.path?.length ?? 0) > (bestMatch.path?.length ?? 0)) {
+                        bestMatch = found;
+                    }
+                }
             }
         }
-        return null;
+        return bestMatch;
     };
 
     const getParentPaths = (items: SidebarItem[], targetId: string, currentPath: string[] = []): string[] => {
@@ -132,7 +147,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
 
     const isActive = (item: SidebarItem): boolean => {
         if (!item.path) return false;
-        return pathname === item.path || pathname.startsWith(item.path + "/");
+        if (pathname === item.path) return true;
+        if (pathname.startsWith(item.path + "/")) {
+            const hasMoreSpecificMatch = visibleItems.some(otherItem => {
+                if (otherItem.id === item.id || !otherItem.path) return false;
+                return otherItem.path.startsWith(item.path + "/") && 
+                       (pathname === otherItem.path || pathname.startsWith(otherItem.path + "/"));
+            });
+            return !hasMoreSpecificMatch;
+        }
+        return false;
     };
 
     const isParentActive = (item: SidebarItem): boolean => {
@@ -249,6 +273,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, pathname }) => {
 
     return (
         <aside className={`
+            hidden md:block
             ${isOpen ? "w-64" : "w-21 py-5"}
             relative sticky top-0 z-20 m-4  h-full
             overflow-y-scroll rounded-lg border border-gray-200

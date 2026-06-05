@@ -13,21 +13,21 @@ import Footer from "@/components/landing/Footer";
 import DeviceShowcase from "@/components/landing/DeviceShowcase";
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-white overflow-hidden">
-      <Navbar />
-      <HeroSection />
-      <LogoCloud />
-      <DashboardPreview />
-      <FeaturesSection />
-      <DeviceShowcase />
-      <HowItWorksSection />
-      <MetricsSection />
-      <PricingSection />
-      <TestimonialsSection />
-      <FaqSection />
-      <CtaSection />
-      <Footer />
-    </div>
-  );
+    return (
+        <div className="min-h-screen bg-white overflow-hidden">
+            <Navbar />
+            <HeroSection />
+            {/* <LogoCloud /> */}
+            <DashboardPreview />
+            <FeaturesSection />
+            <DeviceShowcase />
+            <HowItWorksSection />
+            <MetricsSection />
+            <PricingSection />
+            <TestimonialsSection />
+            <FaqSection />
+            <CtaSection />
+            <Footer />
+        </div>
+    );
 }

@@ -222,7 +222,7 @@ export default function UsersPage() {
                         // Note: totalItems butuh data 'meta' dari API untuk akurasi
                         // Untuk sekarang kita disable total items exact number jika tidak ada meta
                         totalItems={hasNextPage ? page * per_page + 1 : (page - 1) * per_page + users.length}
-                        rowOptions={[5, 10, 20, 50]}
+                        rowOptions={[5, 10, 15, 20, 50]}
                         defaultRowsPerPage={10}
                     />
                 </div>

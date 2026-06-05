@@ -42,13 +42,22 @@ class InjectTokenFromCookie
             $cookieName = 'admin_token';
             $token = $request->cookie($cookieName);
         } else {
-            // Staff & owner route: coba owner_token dulu, fallback ke staff_token.
-            // Ini memungkinkan owner & staff login bersamaan di tab berbeda
-            // karena masing-masing punya cookie terpisah.
+            // Staff & owner route: coba sesuai header X-Auth-Role jika dikirim, fallback ke owner_token/staff_token.
+            // Ini memungkinkan owner & staff login bersamaan di tab berbeda karena masing-masing punya cookie terpisah.
+            $authRole = $request->header('X-Auth-Role');
             $ownerToken = $request->cookie('owner_token');
             $staffToken = $request->cookie('staff_token');
-            $token      = $ownerToken ?? $staffToken;
-            $cookieName = $ownerToken ? 'owner_token' : 'staff_token';
+
+            if ($authRole === 'owner') {
+                $token = $ownerToken;
+                $cookieName = 'owner_token';
+            } elseif ($authRole === 'staff') {
+                $token = $staffToken;
+                $cookieName = 'staff_token';
+            } else {
+                $token = $ownerToken ?? $staffToken;
+                $cookieName = $ownerToken ? 'owner_token' : 'staff_token';
+            }
         }
 
         Log::info('[Cookie Check]', [

@@ -7,6 +7,7 @@ import {
 import { useRouter } from "next/navigation";
 import { adminAuthAPI } from "@/lib/api/adminAuth";
 import { AdminData } from "@/types/central/admin-auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AdminAuthState {
     admin:     AdminData | null;
@@ -50,6 +51,7 @@ const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
     const router  = useRouter();
+    const queryClient = useQueryClient();
     const [state, dispatch] = useReducer(authReducer, initialState);
     const didInit = useRef(false);
 
@@ -88,9 +90,10 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
         try {
             await adminAuthAPI.logout();
         } catch { /* tetap logout */ }
+        queryClient.clear();
         dispatch({ type: "LOGOUT" });
         router.push("/admin/auth/login");
-    }, [router]);
+    }, [router, queryClient]);
 
     return (
         <AdminAuthContext.Provider value={{ ...state, login, logout }}>

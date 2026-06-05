@@ -26,11 +26,12 @@ export default function AuthCallbackPage() {
 
         if (error) {
             const messages: Record<string, string> = {
-                google_failed: "Google login failed. Please try again.",
-                inactive: "Your account has been deactivated.",
-                tenant_not_found: "Tenant not found.",
+                google_failed: "Login Google gagal. Silakan coba lagi.",
+                inactive: "Akun Anda telah dinonaktifkan.",
+                tenant_not_found: "Workspace tidak ditemukan.",
+                tenant_expired: "Masa aktif layanan gym Anda telah habis. Silakan hubungi Owner untuk memperbarui masa aktif.",
             };
-            alert(messages[error] ?? "Login failed");
+            alert(messages[error] ?? "Login gagal");
             router.replace("/tenant-auth/login");
             return;
         }

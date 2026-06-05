@@ -90,7 +90,6 @@ class POSService
             
             $invoice->update(['external_reference' => $invoice->invoice_number]);
 
-            // Jika CASH: Eksekusi perubahan stok/paket langsung
             if ($isCash) {
                 TenantPayment::create([
                     'tenant_invoice_id' => $invoice->id,
@@ -108,12 +107,9 @@ class POSService
                 return ['invoice' => $invoice->load('items', 'payments'), 'snap_token' => null];
             }
 
-            // Jika MIDTRANS: Kembalikan Token untuk Frontend (Hooks ditahan sampai webhook sukses)
-            // Note: Karena POS bisa tidak pakai member_id (guest), siapkan mock object
-            // KODE BARU YANG BENAR:
             $mockMember = $invoice->member ?? new \App\Models\Tenant\Member([
                 'name'  => $invoice->guest_name ?? 'Walk-In Customer',
-                'email' => $invoice->guest_email ?? 'guest@example.com',
+                'email' => $invoice->guest_email ?? 'guest@email.com',
                 'phone' => $invoice->guest_phone ?? '000',
             ]);
 
@@ -128,9 +124,6 @@ class POSService
         });
     }
 
-    // -------------------------------------------------------
-    // Resolve each cart item → normalized shape with pricing
-    // -------------------------------------------------------
     private function resolveItems(array $items): array
     {
         $resolved = [];

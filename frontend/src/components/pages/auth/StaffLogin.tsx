@@ -47,14 +47,15 @@ function LoginForm({ primaryColor }: LoginFormProps) {
     const onSubmit = async (data: { email: string; password: string }) => {
         try {
             await login(data.email, data.password);
-        } catch (err: any) {
+        } catch (err) {
             let message = "Login gagal";
-            
-            if (err?.response?.data?.errors) {
-                const firstError = Object.values(err.response.data.errors)[0] as string[];
+            const error = err as any;
+
+            if (error?.response?.data?.errors) {
+                const firstError = Object.values(error.response.data.errors)[0] as string[];
                 message = firstError[0] || "Validasi gagal";
-            } else if (err?.response?.data?.message) {
-                message = err.response.data.message;
+            } else if (error?.response?.data?.message) {
+                message = error.response.data.message;
             } else if (err instanceof Error) {
                 message = err.message;
             }
@@ -66,37 +67,23 @@ function LoginForm({ primaryColor }: LoginFormProps) {
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-                <TextInput 
-                    name="email" 
-                    label="Alamat Email" 
-                    placeholder="staff@gym.com" 
-                    type="email" 
-                />
+                <TextInput name="email" label="Alamat Email" placeholder="staff@gym.com" type="email" />
 
-                <div className="relative group">
-                    <TextInput 
-                        name="password" 
-                        label="Kata Sandi" 
-                        placeholder="••••••••••••" 
-                        type={showPassword ? "text" : "password"} 
-                    />
-                    <button 
-                        type="button" 
-                        onClick={() => setShowPassword(!showPassword)} 
-                        className="absolute right-3 top-[34px] p-1.5 text-zinc-400 hover:text-zinc-700 transition-colors bg-transparent rounded-md focus:outline-none"
+                <div className="relative">
+                    <TextInput name="password" label="Kata Sandi" placeholder="••••••••••••" type={showPassword ? "text" : "password"} />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-[34px] p-1.5 text-zinc-400 hover:text-zinc-700 transition-colors bg-transparent rounded-md focus:outline-none flex items-center justify-center"
                         tabIndex={-1}
                     >
-                        {showPassword ? <EyeOff className="mt-1.5 w-4 h-4" /> : <Eye className="mt-1.5 w-4 h-4" />}
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                 </div>
 
                 <div className="flex items-center justify-between mt-[-8px]">
                     <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                            type="checkbox" 
-                            className="w-4 h-4 rounded border-zinc-300 focus:ring-2 focus:ring-offset-1" 
-                            style={{ accentColor: primaryColor }}
-                        />
+                        <input type="checkbox" className="w-4 h-4 rounded border-zinc-300 focus:ring-2 focus:ring-offset-1" style={{ accentColor: primaryColor }} />
                         <span className="text-xs font-semibold text-zinc-500">Ingat saya</span>
                     </label>
                     <Link href="/tenant-auth/forgot-password" className="text-xs font-bold transition-colors hover:opacity-80" style={{ color: primaryColor }}>
@@ -104,14 +91,14 @@ function LoginForm({ primaryColor }: LoginFormProps) {
                     </Link>
                 </div>
 
-                <CustomButton 
-                    type="submit" 
-                    disabled={isLoading} 
+                <CustomButton
+                    type="submit"
+                    disabled={isLoading}
                     className="w-full h-14 mt-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
-                    style={{ 
-                        backgroundColor: primaryColor, 
-                        color: isColorDark(primaryColor) ? '#ffffff' : '#18181b',
-                        boxShadow: `0 10px 25px -5px ${primaryColor}40`
+                    style={{
+                        backgroundColor: primaryColor,
+                        color: isColorDark(primaryColor) ? "#ffffff" : "#18181b",
+                        boxShadow: `0 10px 25px -5px ${primaryColor}40`,
                     }}
                 >
                     {isLoading ? "Memproses..." : "Masuk ke Portal"}
@@ -123,9 +110,9 @@ function LoginForm({ primaryColor }: LoginFormProps) {
                     <hr className="flex-1 border-zinc-100" />
                 </div>
 
-                <button 
-                    type="button" 
-                    onClick={loginWithGoogle} 
+                <button
+                    type="button"
+                    onClick={loginWithGoogle}
                     className="w-full h-14 flex items-center justify-center gap-3 border border-zinc-200 bg-white rounded-xl text-sm font-semibold text-zinc-700 hover:bg-zinc-50 active:scale-[0.98] transition-all shadow-sm"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -153,7 +140,7 @@ export default function StaffLoginPage() {
     const { data: publicSettings } = usePublicBranchSettings(undefined);
 
     const primaryColor = publicSettings?.primary_color ?? "#0f766e"; // Default Teal
-    const logoUrl = publicSettings?.logo_url ?? null;
+    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || null;
     const tenantName = tenant?.name ?? "Loading Workspace...";
 
     useEffect(() => {
@@ -182,73 +169,26 @@ export default function StaffLoginPage() {
             {/* ========================================================= */}
             <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-950 flex-col justify-between p-12 overflow-hidden">
                 {/* Gym Background Image */}
-                <div 
+                <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop')" }} 
+                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop')" }}
                 />
-                
+
                 {/* Gradient Masking dengan Hint PrimaryColor milik Tenant */}
                 <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
                 <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-transparent to-transparent" />
-                <div 
-                    className="absolute inset-0 opacity-20 mix-blend-color" 
-                    style={{ backgroundColor: primaryColor }} 
-                />
+                <div className="absolute inset-0 opacity-20 mix-blend-color" style={{ backgroundColor: primaryColor }} />
 
                 {/* Top Branding (Tenant Logo & Name) */}
                 <div className="relative z-10 flex items-center gap-4">
                     {logoUrl ? (
-                        <img 
-                            src={logoUrl} 
-                            alt={tenantName} 
-                            className="w-12 h-12 rounded-xl object-cover bg-white p-0.5 shadow-lg"
-                        />
+                        <img src={logoUrl} alt={tenantName} className="w-12 h-12 rounded-xl object-cover bg-white p-0.5 shadow-lg" />
                     ) : (
                         <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
                             <Building2 className="w-6 h-6 text-white" />
                         </div>
                     )}
-                    <span className="text-2xl font-black text-white uppercase tracking-tighter">
-                        {tenantName}
-                    </span>
-                </div>
-
-                {/* Floating SaaS Widgets (Menegeaskan ini software portal) */}
-                <div className="relative z-10 flex flex-col gap-4 mt-auto mb-12 max-w-sm">
-                    <motion.div 
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center gap-4 shadow-2xl"
-                    >
-                        <div 
-                            className="w-12 h-12 rounded-xl flex items-center justify-center shadow-inner"
-                            style={{ backgroundColor: primaryColor }}
-                        >
-                            <CheckCircle2 size={22} className="text-white" />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Check-in Aktif</p>
-                            <p className="text-2xl font-black text-white leading-none mt-1">
-                                48 <span className="text-sm font-bold ml-1 opacity-80">Anggota</span>
-                            </p>
-                        </div>
-                    </motion.div>
-
-                    <motion.div 
-                        initial={{ opacity: 0, x: -30 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                        className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 flex items-center gap-4 shadow-2xl ml-8"
-                    >
-                        <div className="w-12 h-12 bg-zinc-800 rounded-xl flex items-center justify-center text-white border border-white/5">
-                            <Dumbbell size={20} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest">Kelas Hari Ini</p>
-                            <p className="text-2xl font-black text-white leading-none mt-1">12 <span className="text-sm font-bold ml-1 opacity-80">Sesi</span></p>
-                        </div>
-                    </motion.div>
+                    <span className="text-2xl font-black text-white uppercase tracking-tighter">{tenantName}</span>
                 </div>
 
                 {/* Bottom Copywriting */}
@@ -257,12 +197,8 @@ export default function StaffLoginPage() {
                         Staff & <br />
                         <span style={{ color: primaryColor }}>Management.</span>
                     </h1>
-                    <p className="text-sm font-semibold text-zinc-400 max-w-md leading-relaxed">
-                        Sistem terpusat untuk memantau kehadiran, jadwal kelas, dan operasional harian fasilitas {tenantName}.
-                    </p>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-6">
-                        Powered by GYMFIT OS
-                    </p>
+                    <p className="text-sm font-semibold text-zinc-400 max-w-md leading-relaxed">Sistem terpusat untuk memantau kehadiran, jadwal kelas, dan operasional harian fasilitas {tenantName}.</p>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-6">Powered by GYMFIT OS</p>
                 </div>
             </div>
 
@@ -270,7 +206,6 @@ export default function StaffLoginPage() {
             {/* KANAN: FORM LOGIN AREA                                      */}
             {/* ========================================================= */}
             <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-white">
-                
                 {/* Mobile Header (Hanya muncul jika di HP) */}
                 <div className="absolute top-8 left-6 lg:hidden flex items-center gap-3">
                     {logoUrl ? (
@@ -280,47 +215,18 @@ export default function StaffLoginPage() {
                             <Building2 className="w-4 h-4 text-white" />
                         </div>
                     )}
-                    <span className="text-lg font-black text-zinc-900 uppercase tracking-tighter">
-                        {tenantName}
-                    </span>
+                    <span className="text-lg font-black text-zinc-900 uppercase tracking-tighter">{tenantName}</span>
                 </div>
 
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="w-full max-w-md"
-                >
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md">
                     <div className="mb-10">
                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6">
                             <Activity className="w-3 h-3" style={{ color: primaryColor }} />
                             Portal Staf
                         </div>
                         <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Selamat Datang Kembali</h2>
-                        <p className="text-sm font-medium text-zinc-500">
-                            Silakan masuk menggunakan kredensial staf Anda.
-                        </p>
+                        <p className="text-sm font-medium text-zinc-500">Silakan masuk menggunakan kredensial staf Anda.</p>
                     </div>
-
-                    {/* Banner Sesi Aktif — tampil jika sudah login */}
-                    {staff && (
-                        <div className="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50 flex items-start gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                <Users className="w-4 h-4 text-amber-600" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-bold text-amber-800 uppercase tracking-wide">Sesi Aktif</p>
-                                <p className="text-sm font-semibold text-amber-900 truncate mt-0.5">{staff.name}</p>
-                                <p className="text-xs text-amber-600 truncate">{staff.email}</p>
-                                <button
-                                    onClick={() => router.push(dashboardUrl)}
-                                    className="mt-2 text-xs font-bold text-amber-700 hover:text-amber-900 underline underline-offset-2 transition-colors"
-                                >
-                                    Kembali ke Dashboard →
-                                </button>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Mengoper primaryColor ke form komponen */}
                     <LoginForm primaryColor={primaryColor} />
@@ -328,9 +234,7 @@ export default function StaffLoginPage() {
                     {/* Security Notice */}
                     <div className="mt-12 pt-6 border-t border-zinc-100 flex items-center justify-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-                            Sistem Terenkripsi & Terlindungi
-                        </p>
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Sistem Terenkripsi & Terlindungi</p>
                     </div>
                 </motion.div>
             </div>

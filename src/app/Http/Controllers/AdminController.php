@@ -67,7 +67,13 @@ class AdminController extends Controller
 
     public function destroy($id)
     {
-        $admin = Admin::find($id);
+        $admin = Admin::findOrFail($id);
+
+        $currentUser = request()->user('admin') ?? auth('admin')->user();
+        if ($currentUser && $currentUser->id === $admin->id) {
+            return ApiResponse::error('Anda tidak dapat menghapus akun Anda sendiri!', null, 403);
+        }
+
         $admin->delete();
         return ApiResponse::success(null, 'Admin deleted');
     }

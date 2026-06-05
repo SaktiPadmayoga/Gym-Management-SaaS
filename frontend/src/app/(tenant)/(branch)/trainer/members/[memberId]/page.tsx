@@ -53,7 +53,7 @@ export default function TrainerMemberProgressPage() {
     }
 
     return (
-        <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6 font-figtree">
+        <div className="space-y-6 font-figtree pb-10 bg-white p-5 rounded-xl border border-gray-500/20 shadow-sm">
             <Toaster position="top-right" richColors />
 
             {/* Header */}
@@ -68,7 +68,7 @@ export default function TrainerMemberProgressPage() {
                     <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-0.5">
                         Progress Member
                     </p>
-                    <h1 className="text-2xl font-black text-zinc-900 tracking-tight">{memberName}</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">{memberName}</h1>
                     <p className="text-sm text-zinc-500 mt-1">
                         {sessions.length} sesi selesai
                     </p>
@@ -77,23 +77,23 @@ export default function TrainerMemberProgressPage() {
 
             {/* Summary stats */}
             {sessions.length > 0 && (
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-4 text-center shadow-sm">
-                        <p className="text-2xl font-black text-zinc-900">{sessions.length}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="bg-white border border-gray-500/20 rounded-xl p-4 text-center shadow-sm">
+                        <p className="text-2xl font-bold text-zinc-900">{sessions.length}</p>
                         <p className="text-xs text-zinc-500 font-semibold mt-1 flex items-center justify-center gap-1">
                             <CalendarDays className="w-3 h-3" /> Sesi Selesai
                         </p>
                     </div>
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-4 text-center shadow-sm">
-                        <p className="text-2xl font-black text-teal-600">
+                    <div className="bg-white border border-gray-500/20 rounded-xl p-4 text-center shadow-sm">
+                        <p className="text-2xl font-bold text-teal-600">
                             {sessions.filter((s: any) => s.notes).length}
                         </p>
                         <p className="text-xs text-zinc-500 font-semibold mt-1 flex items-center justify-center gap-1">
                             <NotebookPen className="w-3 h-3" /> Punya Catatan
                         </p>
                     </div>
-                    <div className="bg-white border border-zinc-200 rounded-2xl p-4 text-center shadow-sm">
-                        <p className="text-2xl font-black text-zinc-900">
+                    <div className="bg-white border border-gray-500/20 rounded-xl p-4 text-center shadow-sm">
+                        <p className="text-2xl font-bold text-zinc-900">
                             {sessions[0]?.package?.plan?.name
                                 ? sessions[0].package.plan.name.split(" ").slice(0, 2).join(" ")
                                 : "—"}
@@ -107,11 +107,11 @@ export default function TrainerMemberProgressPage() {
             {isLoading ? (
                 <div className="space-y-3">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-24 bg-zinc-100 rounded-2xl animate-pulse" />
+                        <div key={i} className="h-24 bg-zinc-100 rounded-xl animate-pulse" />
                     ))}
                 </div>
             ) : sessions.length === 0 ? (
-                <div className="py-20 text-center border-2 border-dashed border-zinc-200 rounded-3xl">
+                <div className="py-20 text-center border border-dashed border-gray-500/20 rounded-xl bg-zinc-50/50">
                     <CheckCircle2 className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
                     <p className="text-zinc-500 font-medium">Belum ada sesi selesai untuk member ini.</p>
                 </div>
@@ -126,7 +126,7 @@ export default function TrainerMemberProgressPage() {
                         return (
                             <div
                                 key={session.id}
-                                className="bg-white border border-zinc-200 rounded-2xl shadow-sm overflow-hidden"
+                                className="bg-white border border-gray-500/20 rounded-xl shadow-sm overflow-hidden"
                             >
                                 {/* Row utama */}
                                 <div
@@ -159,7 +159,7 @@ export default function TrainerMemberProgressPage() {
 
                                 {/* Detail ekspansi */}
                                 {isExpanded && (
-                                    <div className="border-t border-zinc-100 p-5 bg-zinc-50 space-y-4">
+                                    <div className="border-t border-zinc-100 p-5 bg-zinc-50/50 space-y-4">
                                         <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
                                             Catatan Progress
                                         </p>
@@ -172,7 +172,7 @@ export default function TrainerMemberProgressPage() {
                                                     rows={3}
                                                     autoFocus
                                                     placeholder="Tulis catatan progress untuk sesi ini..."
-                                                    className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-sm text-zinc-700 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 resize-none transition"
+                                                    className="w-full px-4 py-3 bg-white border border-gray-500/20 rounded-xl text-sm text-zinc-700 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 resize-none transition"
                                                 />
                                                 <div className="flex gap-2">
                                                     <button
@@ -193,7 +193,7 @@ export default function TrainerMemberProgressPage() {
                                         ) : (
                                             <div>
                                                 {session.notes ? (
-                                                    <p className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap bg-white border border-zinc-100 rounded-xl px-4 py-3">
+                                                    <p className="text-sm text-zinc-700 leading-relaxed whitespace-pre-wrap bg-white border border-gray-500/20 rounded-xl px-4 py-3">
                                                         {session.notes}
                                                     </p>
                                                 ) : (

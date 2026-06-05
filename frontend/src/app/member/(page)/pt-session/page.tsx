@@ -42,6 +42,7 @@ function BuyPtTab({ setActiveTab }: { setActiveTab: (tab: TabKey) => void }) {
 
     const { data: plansData, isLoading, isError } = usePtPlans();
     const purchaseMutation = usePurchasePtPackage();
+    const [confirmingPlan, setConfirmingPlan] = useState<any | null>(null);
 
     const handlePurchase = (planId: string) => {
         purchaseMutation.mutate(planId, {
@@ -184,7 +185,7 @@ function BuyPtTab({ setActiveTab }: { setActiveTab: (tab: TabKey) => void }) {
                                     </div>
 
                                     <button
-                                        onClick={() => handlePurchase(plan.id)}
+                                        onClick={() => setConfirmingPlan(plan)}
                                         disabled={isPending}
                                         className="w-full py-3.5 rounded-xl text-sm font-black uppercase tracking-widest transition-all bg-zinc-900 hover:bg-teal-600 text-white shadow-lg shadow-zinc-900/20 hover:shadow-teal-500/30"
                                     >
@@ -196,6 +197,89 @@ function BuyPtTab({ setActiveTab }: { setActiveTab: (tab: TabKey) => void }) {
                     })}
                 </div>
             )}
+
+            {/* Modal Konfirmasi Pembelian Paket PT */}
+            <AnimatePresence>
+                {confirmingPlan && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl border border-zinc-200"
+                        >
+                            <div className="p-5 border-b border-zinc-100 flex items-center justify-between">
+                                <h3 className="font-bold text-lg text-zinc-900">Konfirmasi Pembelian Paket PT</h3>
+                                <button 
+                                    onClick={() => setConfirmingPlan(null)} 
+                                    className="text-zinc-400 hover:text-zinc-600 transition p-1 hover:bg-zinc-100 rounded-lg"
+                                >
+                                    <XCircle className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-4">
+                                <div className="bg-teal-50 border border-teal-200/50 p-4 rounded-xl space-y-2">
+                                    <div className="text-xs text-teal-700 font-bold uppercase tracking-wider">Detail Paket</div>
+                                    <div className="text-base font-black text-zinc-900">{confirmingPlan.name}</div>
+                                    {confirmingPlan.description && (
+                                        <p className="text-xs text-zinc-500 line-clamp-2">
+                                            {confirmingPlan.description}
+                                        </p>
+                                    )}
+                                    
+                                    <div className="space-y-1.5 pt-2 border-t border-teal-100/50 text-xs text-zinc-600 font-semibold">
+                                        <div className="flex items-center gap-2">
+                                            <Zap className="w-3.5 h-3.5 text-amber-500 font-bold" />
+                                            <span>Total {confirmingPlan.total_sessions} Sesi</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Clock className="w-3.5 h-3.5 text-blue-500 font-bold" />
+                                            <span>{confirmingPlan.minutes_per_session} Menit / Sesi</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <CalendarIcon className="w-3.5 h-3.5 text-emerald-500 font-bold" />
+                                            <span>Masa Aktif {confirmingPlan.duration} {confirmingPlan.duration_unit}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-between items-center bg-zinc-50 p-4 rounded-xl border border-zinc-200/60">
+                                    <span className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Harga</span>
+                                    <span className="text-lg font-black text-zinc-900">
+                                        {confirmingPlan.price && parseFloat(confirmingPlan.price) > 0
+                                            ? `Rp ${parseFloat(confirmingPlan.price).toLocaleString("id-ID")}`
+                                            : "Gratis"}
+                                    </span>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfirmingPlan(null)}
+                                        className="flex-1 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold text-xs uppercase tracking-wider transition"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const targetId = confirmingPlan.id;
+                                            setConfirmingPlan(null);
+                                            handlePurchase(targetId);
+                                        }}
+                                        className="flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider transition shadow-md shadow-teal-500/10"
+                                    >
+                                        {confirmingPlan.price && parseFloat(confirmingPlan.price) > 0
+                                            ? "Lanjut Pembayaran"
+                                            : "Konfirmasi Pembelian"}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 }

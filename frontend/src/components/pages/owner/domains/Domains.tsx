@@ -26,7 +26,16 @@ function StatusBadge({ status }: { status: string }) {
         approved: "text-green-700 bg-green-100",
         rejected: "text-red-700 bg-red-100",
     };
-    return <span className={`text-xs px-2 py-0.5 rounded font-medium capitalize ${colors[status as keyof typeof colors] ?? "text-gray-700 bg-gray-100"}`}>{status}</span>;
+    const labels = {
+        pending: "Menunggu",
+        approved: "Disetujui",
+        rejected: "Ditolak",
+    };
+    return (
+        <span className={`text-xs px-2 py-0.5 rounded font-medium ${colors[status as keyof typeof colors] ?? "text-gray-700 bg-gray-100"}`}>
+            {labels[status as keyof typeof labels] ?? status}
+        </span>
+    );
 }
 
 /* =====================================
@@ -45,12 +54,12 @@ function RequestDomainModal({ isOpen, onClose, currentDomain, branchId }: { isOp
     const handleSubmit = async (data: CreateDomainRequest) => {
         try {
             await createMutation.mutateAsync(data);
-            toast.success("Domain request submitted successfully");
+            toast.success("Permintaan perubahan domain berhasil dikirim");
             form.reset();
             onClose();
         } catch (err) {
             const error = err as AxiosError<{ message: string }>;
-            const message = error.response?.data?.message || "Failed to submit domain request";
+            const message = error.response?.data?.message || "Gagal mengirim permintaan perubahan domain";
             toast.error(message);
         }
     };
@@ -65,14 +74,14 @@ function RequestDomainModal({ isOpen, onClose, currentDomain, branchId }: { isOp
             {/* Modal */}
             <div className="relative z-10 bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 font-figtree">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-zinc-800">Request Domain Change</h2>
+                    <h2 className="text-lg font-semibold text-zinc-800">Ajukan Perubahan Domain</h2>
                     <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600">
                         <Icon name="close" className="h-5 w-5" />
                     </button>
                 </div>
 
                 <div className="mb-4 p-3 bg-zinc-50 rounded-lg text-sm text-zinc-600">
-                    <span className="text-zinc-500">Current domain: </span>
+                    <span className="text-zinc-500">Domain saat ini: </span>
                     <span className="font-medium text-zinc-800">{currentDomain}</span>
                 </div>
 
@@ -80,21 +89,21 @@ function RequestDomainModal({ isOpen, onClose, currentDomain, branchId }: { isOp
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-4">
                         <TextInput
                             name="requested_domain"
-                            label="Requested Domain"
-                            placeholder="e.g. mygym.com"
+                            label="Domain yang Diajukan"
+                            placeholder="contoh: gymsaya.com"
                             rules={{
-                                required: "Requested Domain is required",
+                                required: "Domain yang diajukan wajib diisi",
                             }}
                         />
 
-                        <p className="text-xs text-zinc-400">Your request will be reviewed by our team. You will be notified once it is approved or rejected.</p>
+                        <p className="text-xs text-zinc-400">Permintaan Anda akan ditinjau oleh tim kami. Anda akan menerima notifikasi setelah disetujui atau ditolak.</p>
 
                         <div className="flex gap-2 justify-end mt-2">
                             <CustomButton type="button" className="border px-4 py-2" onClick={onClose}>
-                                Cancel
+                                Batal
                             </CustomButton>
                             <CustomButton type="submit" className="bg-aksen-secondary text-white px-4 py-2" disabled={createMutation.isPending}>
-                                {createMutation.isPending ? "Submitting..." : "Submit Request"}
+                                {createMutation.isPending ? "Mengirim..." : "Kirim Permintaan"}
                             </CustomButton>
                         </div>
                     </form>
@@ -124,34 +133,34 @@ export default function OwnerDomainPage() {
     const domainRequests = requestsData?.data?.filter((r) => r.current_domain === domain?.domain || r.requested_domain === domain?.domain) ?? [];
 
     const handleCancelRequest = (id: string) => {
-        toast("Are you sure you want to cancel this request?", {
+        toast("Apakah Anda yakin ingin membatalkan permintaan ini?", {
             action: {
-                label: "Confirm",
+                label: "Konfirmasi",
                 onClick: async () => {
                     try {
                         await cancelMutation.mutateAsync(id);
-                        toast.success("Domain request cancelled successfully");
+                        toast.success("Permintaan perubahan domain berhasil dibatalkan");
                     } catch (err) {
                         const error = err as AxiosError<{ message: string }>;
-                        const message = error.response?.data?.message || "Failed to cancel domain request";
+                        const message = error.response?.data?.message || "Gagal membatalkan permintaan perubahan domain";
                         toast.error(message);
                     }
                 },
             },
             cancel: {
-                label: "Cancel",
-                onClick: () => console.log("Cancellation aborted"),
+                label: "Batal",
+                onClick: () => console.log("Pembatalan diabaikan"),
             },
             duration: 5000,
         });
     };
 
     if (tenantLoading || domainLoading) {
-        return <div className="flex justify-center items-center h-64">Loading domain details...</div>;
+        return <div className="flex justify-center items-center h-64">Memuat detail domain...</div>;
     }
 
     if (tenantError || domainError || !domain) {
-        return <div className="flex justify-center items-center h-64 text-red-500">Error loading domain details. Please try again.</div>;
+        return <div className="flex justify-center items-center h-64 text-red-500">Gagal memuat detail domain. Silakan coba lagi.</div>;
     }
 
     return (
@@ -162,8 +171,8 @@ export default function OwnerDomainPage() {
                 {/* Breadcrumb */}
                 <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                     <ul>
-                        <li>Tenant & Subscription</li>
-                        <li className="text-aksen-secondary">Domains</li>
+                        <li>Penyewa & Langganan</li>
+                        <li className="text-aksen-secondary">Domain</li>
                     </ul>
                 </div>
                 {/* Header */}
@@ -175,7 +184,7 @@ export default function OwnerDomainPage() {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <CustomButton className="bg-aksen-secondary border-none text-white px-4 py-2" onClick={() => setIsModalOpen(true)}>
-                            Request Change
+                            Ajukan Perubahan
                         </CustomButton>
                     </div>
                 </div>
@@ -187,22 +196,22 @@ export default function OwnerDomainPage() {
                     {/* Domain Info */}
                     <div className="md:col-span-4">
                         <div className="bg-zinc-50 rounded-lg p-5 shadow-sm h-full">
-                            <h3 className="font-semibold text-zinc-800 mb-4">Domain Information</h3>
+                            <h3 className="font-semibold text-zinc-800 mb-4">Informasi Domain</h3>
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Domain name </span>
+                                    <span className="text-zinc-500">Nama domain</span>
                                     <span className="font-medium text-zinc-800">{domain.domain}</span>
                                 </div>
 
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Tenant</span>
+                                    <span className="text-zinc-500">Penyewa (Tenant)</span>
                                     <span className="font-medium text-zinc-800">{domain.tenant?.name || "—"}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Created at</span>
+                                    <span className="text-zinc-500">Dibuat pada</span>
                                     <span className="text-zinc-800">
                                         {domain.created_at
-                                            ? new Date(domain.created_at).toLocaleString("en-US", {
+                                            ? new Date(domain.created_at).toLocaleString("id-ID", {
                                                   month: "short",
                                                   day: "numeric",
                                                   year: "numeric",
@@ -213,10 +222,10 @@ export default function OwnerDomainPage() {
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-zinc-500">Updated at</span>
+                                    <span className="text-zinc-500">Diperbarui pada</span>
                                     <span className="text-zinc-800">
                                         {domain.updated_at
-                                            ? new Date(domain.updated_at).toLocaleString("en-US", {
+                                            ? new Date(domain.updated_at).toLocaleString("id-ID", {
                                                   month: "short",
                                                   day: "numeric",
                                                   year: "numeric",
@@ -233,26 +242,26 @@ export default function OwnerDomainPage() {
                     {/* Domain Change Requests — SELALU RENDER, meskipun kosong */}
                     <div className="md:col-span-8 h-full">
                         <div className="bg-zinc-50 rounded-lg p-5 shadow-sm h-full">
-                            <h3 className="font-semibold text-zinc-800 mb-4">Domain Change Requests History</h3>
+                            <h3 className="font-semibold text-zinc-800 mb-4">Riwayat Permintaan Perubahan Domain</h3>
 
                             {requestsLoading ? (
-                                <div className="text-center py-6 text-zinc-500">Loading requests...</div>
+                                <div className="text-center py-6 text-zinc-500">Memuat permintaan...</div>
                             ) : requestsError ? (
-                                <div className="text-center py-6 text-red-500">Failed to load requests</div>
+                                <div className="text-center py-6 text-red-500">Gagal memuat permintaan</div>
                             ) : domainRequests.length > 0 ? (
                                 <div className="flex flex-col gap-3">
                                     {domainRequests.map((req) => (
                                         <div key={req.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white border rounded-lg px-4 py-3 text-sm gap-3">
                                             <div className="flex flex-col gap-1 flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-zinc-500">Requested:</span>
+                                                    <span className="text-zinc-500">Diajukan:</span>
                                                     <span className="font-medium text-zinc-800">{req.requested_domain}</span>
                                                     <StatusBadge status={req.status} />
                                                 </div>
-                                                {req.rejection_reason && <p className="text-xs text-red-500 mt-1">Reason: {req.rejection_reason}</p>}
+                                                {req.rejection_reason && <p className="text-xs text-red-500 mt-1">Alasan: {req.rejection_reason}</p>}
                                                 <p className="text-xs text-zinc-400 mt-1">
-                                                    Submitted:{" "}
-                                                    {new Date(req.created_at).toLocaleDateString("en-US", {
+                                                    Dikirim:{" "}
+                                                    {new Date(req.created_at).toLocaleDateString("id-ID", {
                                                         month: "short",
                                                         day: "numeric",
                                                         year: "numeric",
@@ -266,7 +275,7 @@ export default function OwnerDomainPage() {
                                                     onClick={() => handleCancelRequest(req.id)}
                                                     disabled={cancelMutation.isPending}
                                                 >
-                                                    Cancel
+                                                    Batal
                                                 </CustomButton>
                                             )}
                                         </div>
@@ -274,10 +283,10 @@ export default function OwnerDomainPage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-6 text-zinc-500">
-                                    No domain change requests yet for this domain.
+                                    Belum ada permintaan perubahan domain untuk domain ini.
                                     <br />
                                     <button className="text-green-600 hover:underline mt-2 text-sm" onClick={() => setIsModalOpen(true)}>
-                                        Request a change now →
+                                        Ajukan perubahan sekarang →
                                     </button>
                                 </div>
                             )}

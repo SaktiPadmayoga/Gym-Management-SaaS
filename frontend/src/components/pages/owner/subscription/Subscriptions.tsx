@@ -15,9 +15,15 @@ function StatusBadge({ status }: { status: string }) {
         cancelled: "text-red-700 bg-red-100 border-red-200",
         expired: "text-gray-700 bg-gray-100 border-gray-200",
     };
+    const labels: Record<string, string> = {
+        active: "Aktif",
+        trial: "Uji Coba (Trial)",
+        cancelled: "Dibatalkan",
+        expired: "Kedaluwarsa",
+    };
     return (
-        <span className={`text-xs px-2 py-0.5 rounded-md border font-medium capitalize ${colors[status] ?? "text-gray-700 bg-gray-100"}`}>
-            {status}
+        <span className={`text-xs px-2 py-0.5 rounded-md border font-medium ${colors[status] ?? "text-gray-700 bg-gray-100"}`}>
+            {labels[status] ?? status}
         </span>
     );
 }
@@ -27,7 +33,7 @@ function StatusBadge({ status }: { status: string }) {
  * ===================================== */
 function formatDate(date?: string | null) {
     if (!date) return "—";
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString("id-ID", {
         month: "short", day: "numeric", year: "numeric",
     });
 }
@@ -50,14 +56,16 @@ export default function Subscription() {
     const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
 
-    const { data: current, isLoading: currentLoading, isError: currentError } = useCurrentSubscription();
-    const { data: history, isLoading: historyLoading } = useSubscriptionHistory();
+    const { data: current, isLoading: currentLoading, isError: currentError, refetch: refetchCurrent } = useCurrentSubscription();
+    const { data: history, isLoading: historyLoading, refetch: refetchHistory } = useSubscriptionHistory();
 
     // Toast handler
         useEffect(() => {
             const success = searchParams.get("success");
             const failed = searchParams.get("failed");
             const pending = searchParams.get("pending");
+            
+            let intervalId: NodeJS.Timeout | null = null;
 
             if (!success && !failed && !pending) {
                 hasShownToast.current = false;
@@ -65,22 +73,39 @@ export default function Subscription() {
             }
     
             if (success === "true" && !hasShownToast.current) {
-                toast.success("Subscription plan upgraded successfully");
+                toast.success("Paket langganan berhasil ditingkatkan");
                 hasShownToast.current = true;
+                
+                // Polling refetch untuk mengantisipasi keterlambatan webhook Midtrans
+                let count = 0;
+                intervalId = setInterval(async () => {
+                    count++;
+                    const { data: updatedCurrent } = await refetchCurrent();
+                    refetchHistory();
+                    
+                    // Jika status sudah berubah ke active (bukan trial), hentikan polling
+                    if (updatedCurrent?.status === "active" || count >= 5) {
+                        if (intervalId) clearInterval(intervalId);
+                    }
+                }, 2000);
             }
     
             if (failed === "true" && !hasShownToast.current) {
-                toast.error("Failed to upgrade subscription plan");
+                toast.error("Gagal meningkatkan paket langganan");
                 hasShownToast.current = true;
             }
             
             if (pending === "true" && !hasShownToast.current) {
-                toast.info("Payment not completed");
+                toast.info("Pembayaran belum diselesaikan");
                 hasShownToast.current = true;
             }
     
             window.history.replaceState({}, "", "/owner/subscription");
-        }, [searchParams]);
+
+            return () => {
+                if (intervalId) clearInterval(intervalId);
+            };
+        }, [searchParams, refetchCurrent, refetchHistory]);
 
     return (
         <div className="font-figtree">
@@ -90,23 +115,23 @@ export default function Subscription() {
                 {/* Breadcrumb */}
                 <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                     <ul>
-                        <li>Tenant & Subscription</li>
-                        <li className="text-aksen-secondary">Subscription</li>
+                        <li>Tenant & Langganan</li>
+                        <li className="text-aksen-secondary">Langganan</li>
                     </ul>
                 </div>
 
                 {/* Header */}
                 <div className="mb-6 flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-semibold text-zinc-800">Subscription</h1>
-                        <p className="text-zinc-500">Your current plan and billing information</p>
+                        <h1 className="text-2xl font-semibold text-zinc-800">Langganan</h1>
+                        <p className="text-zinc-500">Informasi paket langganan dan penagihan Anda saat ini</p>
                     </div>
                     
                     <button
                         className="bg-aksen-secondary text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:opacity-90 transition"
                         onClick={() => router.push("/owner/subscription/plans")}
                     >
-                        Upgrade Plan
+                        Tingkatkan Paket
                     </button>
                 </div>
 
@@ -121,7 +146,7 @@ export default function Subscription() {
                     </div>
                 ) : currentError || !current ? (
                     <div className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-6 text-center text-zinc-400">
-                        No active subscription found.
+                        Tidak ditemukan langganan aktif.
                     </div>
                 ) : (
                     <div className="grid grid-cols-12 gap-4 mb-8">
@@ -131,7 +156,7 @@ export default function Subscription() {
                                 <div className="flex items-start justify-between mb-4">
                                     <div>
                                         <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-1">
-                                            Current Plan
+                                            Paket Saat Ini
                                         </h3>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xl font-bold text-zinc-800">{current.plan_name}</span>
@@ -144,35 +169,35 @@ export default function Subscription() {
                                                 ? formatPrice(current.price_yearly)
                                                 : formatPrice(current.price_monthly)}
                                         </div>
-                                        <div className="text-xs text-zinc-400 capitalize">
-                                            per {current.billing_cycle ?? "month"}
+                                        <div className="text-xs text-zinc-400">
+                                            per {current.billing_cycle === "yearly" ? "tahun" : "bulan"}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                                     <div className="bg-white rounded-lg border border-zinc-100 px-4 py-3">
-                                        <div className="text-xs text-zinc-400 mb-1">Billing Cycle</div>
-                                        <div className="text-sm font-medium text-zinc-800 capitalize">
-                                            {current.billing_cycle ?? "—"}
+                                        <div className="text-xs text-zinc-400 mb-1">Siklus Penagihan</div>
+                                        <div className="text-sm font-medium text-zinc-800">
+                                            {current.billing_cycle === "yearly" ? "Tahunan" : current.billing_cycle === "monthly" ? "Bulanan" : current.billing_cycle ?? "—"}
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-lg border border-zinc-100 px-4 py-3">
-                                        <div className="text-xs text-zinc-400 mb-1">Started</div>
+                                        <div className="text-xs text-zinc-400 mb-1">Dimulai</div>
                                         <div className="text-sm font-medium text-zinc-800">
                                             {formatDate(current.started_at)}
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-lg border border-zinc-100 px-4 py-3">
-                                        <div className="text-xs text-zinc-400 mb-1">Active Until</div>
+                                        <div className="text-xs text-zinc-400 mb-1">Aktif Hingga</div>
                                         <div className="text-sm font-medium text-zinc-800">
                                             {formatDate(current.current_period_ends_at)}
                                         </div>
                                     </div>
                                     <div className="bg-white rounded-lg border border-zinc-100 px-4 py-3">
-                                        <div className="text-xs text-zinc-400 mb-1">Max Branches</div>
+                                        <div className="text-xs text-zinc-400 mb-1">Maks. Cabang</div>
                                         <div className="text-sm font-medium text-zinc-800">
-                                            {current.max_branches ?? "Unlimited"}
+                                            {current.max_branches === 0 || !current.max_branches ? "Tanpa Batas" : `${current.max_branches} Cabang`}
                                         </div>
                                     </div>
                                 </div>
@@ -188,7 +213,7 @@ export default function Subscription() {
                 {/* Subscription History */}
                 <div>
                     <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide my-4">
-                        Subscription History
+                        Riwayat Langganan
                     </h3>
 
                     {historyLoading ? (
@@ -199,7 +224,7 @@ export default function Subscription() {
                         </div>
                     ) : !history || history.length === 0 ? (
                         <div className="rounded-xl border border-zinc-100 bg-zinc-50/50 p-6 text-center text-zinc-400 text-sm">
-                            No subscription history yet.
+                            Belum ada riwayat langganan.
                         </div>
                     ) : (
                         <div className="flex flex-col gap-2">
@@ -216,7 +241,7 @@ export default function Subscription() {
                                         <div className="text-xs text-zinc-400">
                                             {formatDate(item.started_at)} — {formatDate(item.current_period_ends_at)}
                                             {item.billing_cycle && (
-                                                <span className="ml-2 capitalize">· {item.billing_cycle}</span>
+                                                <span className="ml-2">· {item.billing_cycle === "yearly" ? "Tahunan" : item.billing_cycle === "monthly" ? "Bulanan" : item.billing_cycle}</span>
                                             )}
                                         </div>
                                     </div>

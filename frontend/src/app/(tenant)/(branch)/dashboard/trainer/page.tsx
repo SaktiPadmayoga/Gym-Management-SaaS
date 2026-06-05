@@ -3,6 +3,7 @@
 import React, { useMemo } from "react";
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { usePtSessions, usePtSessionRequests } from "@/hooks/tenant/usePtSessions";
+import { useClassSchedules } from "@/hooks/tenant/useClassSchedules";
 import { Clock, CheckCircle2, User, Target, ChevronRight, CalendarDays, ArrowRight, PlayCircle, ClipboardList } from "lucide-react";
 import dayjs from "dayjs";
 import "dayjs/locale/id";
@@ -31,6 +32,12 @@ export default function TrainerDashboardPage() {
         per_page: 50 // get all for today
     });
 
+    const { data: todayClassesData, isLoading: isLoadingClasses } = useClassSchedules({
+        date: today,
+        instructor_id: staff?.id,
+        per_page: 50
+    });
+
     const { data: requestsData, isLoading: isLoadingRequests } = usePtSessionRequests();
 
     const todaySessions = useMemo(() => {
@@ -39,26 +46,68 @@ export default function TrainerDashboardPage() {
         return sessions;
     }, [todaySessionsData]);
 
+    const todayClasses = useMemo(() => {
+        let classes = todayClassesData?.data || [];
+        classes = classes.sort((a: any, b: any) => a.start_at.localeCompare(b.start_at));
+        return classes;
+    }, [todayClassesData]);
+
+    const combinedAgenda = useMemo(() => {
+        const items = [];
+        
+        for (const s of todaySessions) {
+            items.push({
+                id: s.id,
+                type: "pt",
+                title: `Sesi PT: ${s.member?.name || 'Client'}`,
+                subtitle: s.package?.plan?.name || "PT Package",
+                start_at: s.start_at,
+                end_at: s.end_at,
+                status: s.status,
+                url: `/pt-sessions/${s.id}`
+            });
+        }
+        
+        for (const c of todayClasses) {
+            items.push({
+                id: c.id,
+                type: "class",
+                title: `Kelas: ${c.class_plan?.name || 'Group Class'}`,
+                subtitle: `Peserta: ${c.total_booked}/${c.max_capacity ?? '∞'} (${c.class_type === 'membership_only' ? 'Member Only' : 'Publik'})`,
+                start_at: c.start_at,
+                end_at: c.end_at,
+                status: c.status,
+                url: `/class-schedules/${c.id}`
+            });
+        }
+
+        return items.sort((a, b) => a.start_at.localeCompare(b.start_at));
+    }, [todaySessions, todayClasses]);
+
     const pendingRequests = requestsData?.data || [];
 
-    // Hitung Sesi Berikutnya (Next Up)
-    const nowTime = dayjs().format('HH:mm:ss');
-    const nextSession = useMemo(() => {
-        return todaySessions.find((s: any) => s.end_at > nowTime && s.status === 'scheduled');
-    }, [todaySessions, nowTime]);
+    // Hitung Agenda Berikutnya (Next Up)
+    const nextAgendaItem = useMemo(() => {
+        const nowStr = dayjs().format('HH:mm:ss');
+        return combinedAgenda.find((item) => {
+            const endCompare = item.end_at.length === 5 ? `${item.end_at}:00` : item.end_at;
+            return endCompare > nowStr && item.status === 'scheduled';
+        });
+    }, [combinedAgenda]);
 
-    const completedToday = todaySessions.filter((s: any) => s.status === 'completed').length;
+    const completedToday = combinedAgenda.filter((item) => item.status === 'completed').length;
+    const remainingToday = combinedAgenda.length - completedToday;
 
     const stats = [
         {
-            title: "Sesi Selesai (Hari Ini)",
+            title: "Agenda Selesai (Hari Ini)",
             value: completedToday,
             icon: <CheckCircle2 className="w-5 h-5 text-teal-500" />,
             bgColor: "bg-teal-50",
         },
         {
-            title: "Sisa Sesi (Hari Ini)",
-            value: todaySessions.length - completedToday,
+            title: "Sisa Agenda (Hari Ini)",
+            value: remainingToday,
             icon: <CalendarDays className="w-5 h-5 text-blue-500" />,
             bgColor: "bg-blue-50",
         },
@@ -72,35 +121,35 @@ export default function TrainerDashboardPage() {
     ];
 
     return (
-        <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 font-figtree">
+        <div className="space-y-6 font-figtree pb-10 bg-white p-5 rounded-xl border border-gray-500/20">
             {/* Header Greeting */}
             <div>
-                <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Halo, {staff?.name} 👋</h1>
+                <h1 className="text-2xl font-bold text-zinc-900">Halo, {staff?.name} 👋</h1>
                 <p className="text-sm text-zinc-500 mt-1">Berikut adalah ringkasan jadwal dan aktivitas Anda hari ini.</p>
             </div>
 
-            {/* Next Session Highlight */}
-            {nextSession && (
-                <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-3xl p-6 md:p-8 text-white shadow-lg relative overflow-hidden">
+            {/* Next Agenda Item Highlight */}
+            {nextAgendaItem && (
+                <div className="bg-gradient-to-br from-zinc-900 to-zinc-800 rounded-xl p-6 text-white shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <PlayCircle className="w-48 h-48" />
                     </div>
                     <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                         <div>
                             <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-widest backdrop-blur-sm mb-4 inline-block">
-                                Sesi Berikutnya
+                                Agenda Berikutnya ({nextAgendaItem.type === 'pt' ? 'Sesi PT' : 'Kelas'})
                             </span>
-                            <h2 className="text-3xl font-black mb-2">{nextSession.member?.name}</h2>
+                            <h2 className="text-2xl font-bold mb-2">{nextAgendaItem.title}</h2>
                             <div className="flex items-center gap-4 text-zinc-300 font-medium">
-                                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {nextSession.start_at.substring(0,5)} - {nextSession.end_at.substring(0,5)}</span>
-                                <span className="flex items-center gap-1.5"><Target className="w-4 h-4" /> {nextSession.package?.plan?.name || "PT Package"}</span>
+                                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {nextAgendaItem.start_at.substring(0,5)} - {nextAgendaItem.end_at.substring(0,5)}</span>
+                                <span className="flex items-center gap-1.5"><Target className="w-4 h-4" /> {nextAgendaItem.subtitle}</span>
                             </div>
                         </div>
                         <button 
-                            onClick={() => router.push(`/pt-sessions/${nextSession.id}`)}
-                            className="px-8 py-3 bg-white text-zinc-900 rounded-xl font-bold hover:bg-zinc-100 transition-colors shrink-0 flex items-center gap-2"
+                            onClick={() => router.push(nextAgendaItem.url)}
+                            className="px-6 py-3 bg-white text-zinc-900 rounded-xl font-bold hover:bg-zinc-100 transition-colors shrink-0 flex items-center gap-2 text-sm shadow-sm"
                         >
-                            Mulai Sesi <ArrowRight className="w-5 h-5" />
+                            {nextAgendaItem.type === 'pt' ? 'Mulai Sesi' : 'Detail Kelas'} <ArrowRight className="w-5 h-5" />
                         </button>
                     </div>
                 </div>
@@ -112,27 +161,27 @@ export default function TrainerDashboardPage() {
                     <div 
                         key={i} 
                         onClick={stat.onClick}
-                        className={`p-6 rounded-2xl border border-zinc-200 bg-white shadow-sm flex flex-col justify-between ${stat.onClick ? 'cursor-pointer hover:border-zinc-300 hover:shadow-md transition-all' : ''}`}
+                        className={`p-5 rounded-xl border border-gray-500/20 bg-white shadow-sm flex flex-col justify-between ${stat.onClick ? 'cursor-pointer hover:border-zinc-300 hover:shadow-md transition-all' : ''}`}
                     >
                         <div className="flex justify-between items-start mb-4">
-                            <div className={`p-3 rounded-xl ${stat.bgColor}`}>
+                            <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                                 {stat.icon}
                             </div>
                             {stat.onClick && <ChevronRight className="w-5 h-5 text-zinc-400" />}
                         </div>
                         <div>
-                            <p className="text-sm font-semibold text-zinc-500 mb-1">{stat.title}</p>
-                            <h3 className="text-3xl font-black text-zinc-900">{stat.value}</h3>
+                            <p className="text-sm font-medium text-zinc-500 mb-1">{stat.title}</p>
+                            <h3 className="text-2xl font-bold text-zinc-900">{stat.value}</h3>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Agenda Hari Ini */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-500/20 shadow-sm space-y-4">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-zinc-900 flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-zinc-900 flex items-center gap-2">
                             Agenda Hari Ini <span className="text-sm font-medium text-zinc-400">({dayjs().locale('id').format('D MMMM YYYY')})</span>
                         </h2>
                         <Link href="/pt-sessions" className="text-sm font-semibold text-aksen-secondary hover:underline flex items-center gap-1">
@@ -140,44 +189,46 @@ export default function TrainerDashboardPage() {
                         </Link>
                     </div>
 
-                    {isLoadingSessions ? (
+                    {isLoadingSessions || isLoadingClasses ? (
                         <div className="space-y-3">
-                            {[1, 2, 3].map(i => <div key={i} className="h-24 bg-zinc-100 rounded-2xl animate-pulse" />)}
+                            {[1, 2, 3].map(i => <div key={i} className="h-24 bg-zinc-100 rounded-xl animate-pulse" />)}
                         </div>
-                    ) : todaySessions.length === 0 ? (
-                        <div className="py-16 text-center border-2 border-dashed border-zinc-200 rounded-3xl bg-zinc-50">
+                    ) : combinedAgenda.length === 0 ? (
+                        <div className="py-16 text-center border border-dashed border-gray-500/20 rounded-xl bg-zinc-50/50">
                             <CalendarDays className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
-                            <p className="text-zinc-500 font-medium">Anda tidak memiliki sesi hari ini.</p>
+                            <p className="text-zinc-500 font-medium text-sm">Anda tidak memiliki agenda hari ini.</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
-                            {todaySessions.map((session: any) => {
-                                const isCompleted = session.status === 'completed';
-                                const isOngoing = session.status === 'ongoing';
-                                const isScheduled = session.status === 'scheduled';
+                            {combinedAgenda.map((item: any) => {
+                                const isCompleted = item.status === 'completed';
+                                const isOngoing = item.status === 'ongoing';
+                                const isScheduled = item.status === 'scheduled';
+                                const isCancelled = item.status === 'cancelled';
                                 
                                 return (
-                                    <div key={session.id} className={`bg-white border border-zinc-200 rounded-2xl p-4 md:p-5 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow ${isCompleted ? 'opacity-70' : ''}`}>
+                                    <div key={`${item.type}-${item.id}`} className={`bg-white border border-gray-500/20 rounded-xl p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 ${isCompleted || isCancelled ? 'opacity-70' : ''}`}>
                                         <div className="flex flex-col items-center justify-center shrink-0 w-20 border-r border-zinc-100 pr-4">
-                                            <span className="text-lg font-black text-zinc-900">{session.start_at.substring(0,5)}</span>
-                                            <span className="text-xs font-semibold text-zinc-400">{session.end_at.substring(0,5)}</span>
+                                            <span className="text-lg font-bold text-zinc-900">{item.start_at.substring(0,5)}</span>
+                                            <span className="text-xs font-semibold text-zinc-400">{item.end_at.substring(0,5)}</span>
                                         </div>
                                         
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <h3 className={`font-bold ${isCompleted ? 'text-zinc-600 line-through' : 'text-zinc-900'}`}>{session.member?.name}</h3>
+                                                <h3 className={`font-semibold ${isCompleted || isCancelled ? 'text-zinc-500 line-through' : 'text-zinc-900'}`}>{item.title}</h3>
                                                 {isCompleted && <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-[10px] font-black uppercase tracking-widest rounded-md">Selesai</span>}
                                                 {isOngoing && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black uppercase tracking-widest rounded-md">Berlangsung</span>}
                                                 {isScheduled && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black uppercase tracking-widest rounded-md">Terjadwal</span>}
+                                                {isCancelled && <span className="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-md">Dibatalkan</span>}
                                             </div>
                                             <p className="text-sm text-zinc-500 flex items-center gap-1.5">
-                                                <Target className="w-4 h-4" /> {session.package?.plan?.name || "PT Package"}
+                                                <Target className="w-4 h-4" /> {item.subtitle}
                                             </p>
                                         </div>
 
                                         <div className="shrink-0 hidden md:block">
                                             <Link 
-                                                href={`/pt-sessions/${session.id}`}
+                                                href={item.url}
                                                 className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl text-xs font-bold transition-colors"
                                             >
                                                 Detail
@@ -191,30 +242,29 @@ export default function TrainerDashboardPage() {
                 </div>
 
                 {/* Right Sidebar Widgets */}
-                <div className="space-y-8">
-                    
+                <div className="space-y-6">
                     {/* Widget: Pending Requests */}
-                    <div className="space-y-4">
+                    <div className="bg-white p-6 rounded-xl border border-gray-500/20 shadow-sm space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-zinc-900">Request Sesi</h2>
+                            <h2 className="text-lg font-semibold text-zinc-900">Request Sesi</h2>
                         </div>
 
                         {isLoadingRequests ? (
                             <div className="space-y-3">
-                                {[1, 2].map(i => <div key={i} className="h-20 bg-zinc-100 rounded-2xl animate-pulse" />)}
+                                {[1, 2].map(i => <div key={i} className="h-20 bg-zinc-100 rounded-xl animate-pulse" />)}
                             </div>
                         ) : pendingRequests.length === 0 ? (
-                            <div className="py-8 text-center border-2 border-dashed border-zinc-200 rounded-3xl bg-zinc-50">
+                            <div className="py-8 text-center border border-dashed border-gray-500/20 rounded-xl bg-zinc-50/50">
                                 <ClipboardList className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
                                 <p className="text-zinc-400 text-sm font-medium">Tidak ada request baru.</p>
                             </div>
                         ) : (
-                            <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden">
+                            <div className="bg-white rounded-xl border border-gray-500/20 overflow-hidden shadow-sm">
                                 <div className="divide-y divide-zinc-100">
                                     {pendingRequests.slice(0, 3).map((req: any) => (
                                         <div key={req.id} className="p-4 hover:bg-zinc-50 transition-colors flex justify-between items-center gap-4">
                                             <div>
-                                                <span className="font-bold text-sm text-zinc-900 block mb-1">{req.member?.name}</span>
+                                                <span className="font-semibold text-sm text-zinc-900 block mb-1">{req.member?.name}</span>
                                                 <p className="text-xs text-zinc-500 flex items-center gap-1.5">
                                                     <CalendarDays className="w-3 h-3" />
                                                     {dayjs(req.date).locale("id").format("D MMM YYYY")}, {req.start_at.substring(0, 5)}
@@ -241,9 +291,9 @@ export default function TrainerDashboardPage() {
                     </div>
 
                     {/* Widget: Aktivitas Terakhir */}
-                    <div className="space-y-4">
+                    <div className="bg-white p-6 rounded-xl border border-gray-500/20 shadow-sm space-y-4">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-bold text-zinc-900">Aktivitas Terakhir</h2>
+                            <h2 className="text-lg font-semibold text-zinc-900">Aktivitas Terakhir</h2>
                             <Link href="/trainer/members" className="text-xs font-bold text-aksen-secondary hover:underline">
                                 Semua Member →
                             </Link>
@@ -251,7 +301,7 @@ export default function TrainerDashboardPage() {
 
                         {isLoadingSessions ? (
                             <div className="space-y-3">
-                                {[1, 2].map(i => <div key={i} className="h-16 bg-zinc-100 rounded-2xl animate-pulse" />)}
+                                {[1, 2].map(i => <div key={i} className="h-16 bg-zinc-100 rounded-xl animate-pulse" />)}
                             </div>
                         ) : (() => {
                             const recentCompleted = todaySessions
@@ -259,25 +309,25 @@ export default function TrainerDashboardPage() {
                                 .slice(0, 3);
 
                             if (recentCompleted.length === 0) return (
-                                <div className="py-8 text-center border-2 border-dashed border-zinc-200 rounded-3xl bg-zinc-50">
+                                <div className="py-8 text-center border border-dashed border-gray-500/20 rounded-xl bg-zinc-50/50">
                                     <User className="w-8 h-8 text-zinc-300 mx-auto mb-2" />
                                     <p className="text-zinc-400 text-sm font-medium">Belum ada sesi selesai hari ini.</p>
                                 </div>
                             );
 
                             return (
-                                <div className="bg-white rounded-2xl border border-zinc-200 shadow-sm overflow-hidden divide-y divide-zinc-100">
+                                <div className="bg-white rounded-xl border border-gray-500/20 shadow-sm overflow-hidden divide-y divide-zinc-100">
                                     {recentCompleted.map((s: any) => (
                                         <Link
                                             key={s.id}
                                             href={`/trainer/members/${s.member_id}`}
                                             className="flex items-start gap-3 p-4 hover:bg-zinc-50 transition-colors"
                                         >
-                                            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-black text-sm shrink-0 mt-0.5">
+                                            <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 font-bold text-sm shrink-0 mt-0.5">
                                                 {(s.member?.name ?? "?").charAt(0).toUpperCase()}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-sm text-zinc-900 truncate">{s.member?.name}</p>
+                                                <p className="font-semibold text-sm text-zinc-900 truncate">{s.member?.name}</p>
                                                 {s.notes ? (
                                                     <p className="text-xs text-zinc-500 truncate mt-0.5">{s.notes}</p>
                                                 ) : (
@@ -293,7 +343,6 @@ export default function TrainerDashboardPage() {
                             );
                         })()}
                     </div>
-
                 </div>
             </div>
         </div>

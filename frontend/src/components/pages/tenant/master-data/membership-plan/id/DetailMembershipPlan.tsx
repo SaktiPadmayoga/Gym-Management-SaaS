@@ -20,26 +20,26 @@ import { ClassPlanData } from "@/types/tenant/class-plans";
  * ========================= */
 
 const durationUnitOptions: DropdownOption<string>[] = [
-    { key: "day", label: "Day", value: "day" },
-    { key: "week", label: "Week", value: "week" },
-    { key: "month", label: "Month", value: "month" },
-    { key: "year", label: "Year", value: "year" },
+    { key: "day", label: "Hari", value: "day" },
+    { key: "week", label: "Minggu", value: "week" },
+    { key: "month", label: "Bulan", value: "month" },
+    { key: "year", label: "Tahun", value: "year" },
 ];
 
 // PERBAIKAN: Mengganti 'all_branches' menjadi 'cross_branch'
 const accessTypeOptions: DropdownOption<string>[] = [
-    { key: "single_branch", label: "Single Branch", value: "single_branch" },
-    { key: "cross_branch", label: "Cross Branch (Multiple)", value: "cross_branch" },
+    { key: "single_branch", label: "Satu Cabang", value: "single_branch" },
+    { key: "cross_branch", label: "Multi Cabang", value: "cross_branch" },
 ];
 
 const DAYS = [
-    { key: "mon", label: "Monday" },
-    { key: "tue", label: "Tuesday" },
-    { key: "wed", label: "Wednesday" },
-    { key: "thu", label: "Thursday" },
-    { key: "fri", label: "Friday" },
-    { key: "sat", label: "Saturday" },
-    { key: "sun", label: "Sunday" },
+    { key: "mon", label: "Senin" },
+    { key: "tue", label: "Selasa" },
+    { key: "wed", label: "Rabu" },
+    { key: "thu", label: "Kamis" },
+    { key: "fri", label: "Jumat" },
+    { key: "sat", label: "Sabtu" },
+    { key: "sun", label: "Minggu" },
 ] as const;
 
 /* =========================
@@ -99,10 +99,10 @@ function ClassPlanSelector({ membershipPlanId, includedClassPlans }: { membershi
                 id: membershipPlanId,
                 classPlansIds: Array.from(selectedIds),
             });
-            toast.success("Class plans updated");
+            toast.success("Rencana kelas diperbarui");
             setIsDirty(false);
         } catch {
-            toast.error("Failed to update class plans");
+            toast.error("Gagal memperbarui rencana kelas");
         }
     };
 
@@ -110,18 +110,18 @@ function ClassPlanSelector({ membershipPlanId, includedClassPlans }: { membershi
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-semibold text-gray-800">Included Class Plans</h2>
-                    <p className="text-sm text-zinc-500">Select class plans that members with this plan can access</p>
+                    <h2 className="text-xl font-semibold text-gray-800">Paket Kelas yang Termasuk</h2>
+                    <p className="text-sm text-zinc-500">Pilih paket kelas yang dapat diakses oleh anggota dengan paket ini</p>
                 </div>
                 {isDirty && (
                     <CustomButton type="button" className="bg-aksen-secondary text-white px-4 py-2" onClick={handleSync} disabled={syncMutation.isPending}>
-                        {syncMutation.isPending ? "Saving..." : "Save Changes"}
+                        {syncMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                     </CustomButton>
                 )}
             </div>
 
             {allPlans.length === 0 ? (
-                <p className="text-sm text-zinc-400">No class plans available. Create one first.</p>
+                <p className="text-sm text-zinc-400">Tidak ada paket kelas yang tersedia. Buat terlebih dahulu.</p>
             ) : (
                 <div className="grid grid-cols-12 gap-3">
                     {allPlans.map((cp) => {
@@ -141,9 +141,9 @@ function ClassPlanSelector({ membershipPlanId, includedClassPlans }: { membershi
                                 </div>
                                 <div className="mt-2 space-y-0.5 text-xs text-zinc-500">
                                     <p>
-                                        {cp.minutes_per_session} min · {cp.max_capacity} pax
+                                        {cp.minutes_per_session} menit · {cp.max_capacity} pax
                                     </p>
-                                    <p>{cp.unlimited_monthly_session ? "Unlimited / month" : `${cp.monthly_quota ?? "-"}x / month`}</p>
+                                    <p>{cp.unlimited_monthly_session ? "Tak Terbatas / bulan" : `${cp.monthly_quota ?? "-"}x / bulan`}</p>
                                     {cp.category && <span className="inline-block bg-zinc-100 text-zinc-600 rounded px-1.5 py-0.5 mt-1">{cp.category}</span>}
                                 </div>
                             </div>
@@ -207,7 +207,7 @@ export default function MembershipPlanDetail() {
         });
     }, [plan]);
 
-    if (isLoading) return <div className="p-6">Loading...</div>;
+    if (isLoading) return <div className="p-6">Memuat...</div>;
     if (isError) return notFound();
 
     /* =========================
@@ -239,11 +239,11 @@ export default function MembershipPlanDetail() {
             };
 
             await updateMutation.mutateAsync({ id, payload });
-            toast.success("Membership plan updated successfully");
+            toast.success("Paket keanggotaan berhasil diperbarui");
             setIsEditMode(false);
-            router.push("/membership-plan?updated=true");
+            router.push("/membership-plans?updated=true");
         } catch {
-            toast.error("Failed to update membership plan");
+            toast.error("Gagal memperbarui paket keanggotaan");
         }
     };
 
@@ -284,7 +284,7 @@ export default function MembershipPlanDetail() {
                         <ul>
                             <li>Master Data</li>
                             <li>
-                                <Link href="/membership-plan">Membership Plan</Link>
+                                <Link href="/membership-plans">Paket Keanggotaan</Link>
                             </li>
                             <li className="text-aksen-secondary">{plan?.name ?? id}</li>
                         </ul>
@@ -293,17 +293,17 @@ export default function MembershipPlanDetail() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/membership-plan")}>
+                            <button type="button" onClick={() => router.push("/membership-plans")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div className="flex items-center gap-2">
                                 {plan?.color && <div className="w-4 h-4 rounded-full" style={{ backgroundColor: plan.color }} />}
-                                <h1 className="text-2xl font-semibold">Membership Plan Detail</h1>
+                                <h1 className="text-2xl font-semibold">Detail Paket Keanggotaan</h1>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <CustomButton
+                            {/* <CustomButton
                                 type="button"
                                 className="border text-zinc-600 px-3 py-2 text-sm"
                                 onClick={() =>
@@ -315,33 +315,33 @@ export default function MembershipPlanDetail() {
                                 disabled={duplicateMutation.isPending}
                             >
                                 Duplicate
-                            </CustomButton>
+                            </CustomButton> */}
 
                             <CustomButton
                                 type="button"
-                                className={`border px-3 py-2 text-sm ${plan?.is_active ? "text-orange-600 border-orange-200" : "text-green-600 border-green-200"}`}
+                                className={`border px-3 py-2 text-sm ${plan?.is_active ? "text-white bg-red-500 border-red-500" : "text-green-600 border-green-200"}`}
                                 onClick={() =>
                                     toggleMutation.mutate(id, {
-                                        onSuccess: () => toast.success(`Plan ${plan?.is_active ? "deactivated" : "activated"}`),
-                                        onError: () => toast.error("Failed to update status"),
+                                        onSuccess: () => toast.success(`Paket keanggotaan ${plan?.is_active ? "dinonaktifkan" : "diaktifkan"}`),
+                                        onError: () => toast.error("Gagal memperbarui status"),
                                     })
                                 }
                                 disabled={toggleMutation.isPending}
                             >
-                                {plan?.is_active ? "Deactivate" : "Activate"}
+                                {plan?.is_active ? "Nonaktifkan" : "Aktifkan"}
                             </CustomButton>
 
                             {!isEditMode ? (
                                 <CustomButton iconName="edit" className="bg-aksen-secondary text-white px-4 py-2.5" type="button" onClick={() => setIsEditMode(true)}>
-                                    Edit
+                                    Ubah
                                 </CustomButton>
                             ) : (
                                 <div className="flex gap-2">
                                     <CustomButton type="button" className="border py-2.5 px-4" onClick={handleCancel}>
-                                        Cancel
+                                        Batal
                                     </CustomButton>
                                     <CustomButton type="button" className="bg-aksen-secondary text-white py-2.5 px-4" onClick={handleSave} disabled={updateMutation.isPending}>
-                                        {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                                        {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                     </CustomButton>
                                 </div>
                             )}
@@ -354,35 +354,35 @@ export default function MembershipPlanDetail() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <TextInput name="name" label="Plan Name" disabled={!isEditMode} />
+                                <TextInput name="name" label="Nama Paket" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <TextInput name="category" label="Category" disabled={!isEditMode} />
+                                <TextInput name="category" label="Kategori" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <TextInput name="description" label="Description" disabled={!isEditMode} />
+                                <TextInput name="description" label="Deskripsi" disabled={!isEditMode} />
                             </div>
                         </div>
 
                         {/* PRICE & DURATION */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Price (Rp)" disabled={!isEditMode} />
+                                <NumberInput name="price" label="Harga (Rp)" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="duration" label="Duration" disabled={!isEditMode} />
+                                <NumberInput name="duration" label="Durasi" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="duration_unit" label="Duration Unit" options={durationUnitOptions} disabled={!isEditMode} />
+                                <SearchableDropdown name="duration_unit" label="Satuan Durasi" options={durationUnitOptions} disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="loyalty_points_reward" label="Loyalty Points Reward" disabled={!isEditMode} />
+                                <NumberInput name="loyalty_points_reward" label="Hadiah Poin Loyalitas" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="max_sharing_members" label="Max Sharing Members" disabled={!isEditMode} />
+                                <NumberInput name="max_sharing_members" label="Maksimal Anggota Berbagi" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Color</label>
+                                <label className="block text-sm font-medium text-zinc-700 mb-1">Warna</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" {...form.register("color")} disabled={!isEditMode} className="w-10 h-10 rounded cursor-pointer border border-zinc-200 disabled:opacity-50" />
                                     <TextInput name="color" disabled={!isEditMode} />
@@ -393,21 +393,21 @@ export default function MembershipPlanDetail() {
                         <hr />
 
                         {/* CHECKIN SETTING */}
-                        <h2 className="text-xl font-semibold text-gray-800">Check-in Setting</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Pengaturan Check-in</h2>
 
                         <div className="flex flex-col gap-5 text-zinc-800">
                             <div className="flex flex-row gap-5 w-full">
                                 <div className="w-full">
-                                    <SearchableDropdown name="access_type" label="Access Type" options={accessTypeOptions} disabled={!isEditMode} />
+                                    <SearchableDropdown name="access_type" label="Tipe Akses" options={accessTypeOptions} disabled={!isEditMode} />
                                 </div>
                                 <div className="grid grid-cols-12 gap-3 items-center w-full">
                                     <div className="col-span-6 flex items-center gap-3">
                                         <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("unlimited_checkin")} />
-                                        <span className="text-sm font-medium">Unlimited Check-in</span>
+                                        <span className="text-sm font-medium">Check-in Tanpa Batas</span>
                                     </div>
                                     {!unlimitedCheckin && (
                                         <div className="col-span-6">
-                                            <NumberInput name="checkin_quota_per_month" label="Check-in Quota / Month" disabled={!isEditMode} />
+                                            <NumberInput name="checkin_quota_per_month" label="Kuota Check-in / Bulan" disabled={!isEditMode} />
                                         </div>
                                     )}
                                 </div>
@@ -417,17 +417,17 @@ export default function MembershipPlanDetail() {
                         <hr />
 
                         {/* AVAILABILITY */}
-                        <h2 className="text-xl font-semibold text-gray-800">Availability Setting</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Pengaturan Ketersediaan</h2>
 
                         <div className="grid grid-cols-12 gap-6 text-gray-800">
                             <div className="col-span-12 grid grid-cols-12 gap-3 items-center">
                                 <div className="col-span-4 flex items-center gap-3">
                                     <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("unlimited_sold")} />
-                                    <span className="text-sm font-medium">Unlimited Sold / Quota</span>
+                                    <span className="text-sm font-medium">Kuota Penjualan Tanpa Batas</span>
                                 </div>
                                 {!unlimitedSold && (
                                     <div className="col-span-4">
-                                        <NumberInput name="total_quota" label="Max Sold / Quota" disabled={!isEditMode} />
+                                        <NumberInput name="total_quota" label="Maksimal Penjualan / Kuota" disabled={!isEditMode} />
                                     </div>
                                 )}
                             </div>
@@ -435,15 +435,15 @@ export default function MembershipPlanDetail() {
                             <div className="col-span-12 grid grid-cols-12 gap-3 items-center">
                                 <div className="col-span-4 flex items-center gap-3">
                                     <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("always_available")} />
-                                    <span className="text-sm font-medium">Always Available</span>
+                                    <span className="text-sm font-medium">Selalu Tersedia</span>
                                 </div>
                                 {!alwaysAvailable && (
                                     <>
                                         <div className="col-span-4">
-                                            <TextInput type="date" name="available_from" label="Available From" disabled={!isEditMode} />
+                                            <TextInput type="date" name="available_from" label="Tersedia Mulai" disabled={!isEditMode} />
                                         </div>
                                         <div className="col-span-4">
-                                            <TextInput type="date" name="available_until" label="Available Until" disabled={!isEditMode} />
+                                            <TextInput type="date" name="available_until" label="Tersedia Hingga" disabled={!isEditMode} />
                                         </div>
                                     </>
                                 )}
@@ -451,7 +451,7 @@ export default function MembershipPlanDetail() {
 
                             <div className="col-span-12 flex items-center gap-3">
                                 <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("is_active")} />
-                                <span className="text-sm font-medium">Active</span>
+                                <span className="text-sm font-medium">Aktif</span>
                             </div>
                         </div>
 
@@ -460,12 +460,12 @@ export default function MembershipPlanDetail() {
                         {/* CHECKIN SCHEDULE */}
                         <div className="flex items-center gap-3 text-zinc-800">
                             <input type="checkbox" checked={showSchedule} onChange={() => setShowSchedule(!showSchedule)} disabled={!isEditMode} className="checkbox checkbox-sm" />
-                            <span className="text-sm font-medium">Custom Check-in Schedule</span>
+                            <span className="text-sm font-medium">Jadwal Check-in Kustom</span>
                         </div>
 
                         {showSchedule && (
                             <div className="p-4 bg-gray-100 rounded-lg">
-                                <p className="text-sm font-medium mb-4 text-zinc-700">Check-in Schedule</p>
+                                <p className="text-sm font-medium mb-4 text-zinc-700">Jadwal Check-in</p>
                                 <div className="flex flex-col gap-3">
                                     {DAYS.map((day) => {
                                         const isOpen = form.watch(`checkin_schedule.${day.key}.is_open`);

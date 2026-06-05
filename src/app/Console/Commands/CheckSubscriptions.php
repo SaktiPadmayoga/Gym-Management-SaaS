@@ -20,11 +20,9 @@ class CheckSubscriptions extends Command
                 $subscription->syncToTenant();
 
                 if ($subscription->tenant) {
-                    app(NotificationService::class)->createTenantForTenant(
+                    app(NotificationService::class)->notifyTenantDeactivated(
                         $subscription->tenant,
-                        null,
-                        'tenant_deactivated',
-                        'Tenant Dinonaktifkan',
+                        'expired',
                         'Langganan tenant telah berakhir. Silakan perpanjang atau upgrade paket untuk mengaktifkan kembali layanan.'
                     );
                 }

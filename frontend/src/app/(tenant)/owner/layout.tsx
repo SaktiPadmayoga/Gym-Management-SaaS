@@ -6,6 +6,7 @@ import OwnerLayoutWrapper from "@/components/layout/OwnerLayoutWrapper";
 import { ReactNode, useEffect } from "react";
 import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { BranchProvider } from "@/providers/BranchProvider";
+import { BranchThemeInjector } from "@/providers/BranchThemeProvider";
 import { Toaster } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -41,6 +42,7 @@ export default function OwnerLayout({ children }: { children: ReactNode }) {
         <>
             <Toaster />
             <BranchProvider>
+                <BranchThemeInjector />
                 <OwnerGuard>
                     <OwnerLayoutWrapper>{children}</OwnerLayoutWrapper>
                 </OwnerGuard>

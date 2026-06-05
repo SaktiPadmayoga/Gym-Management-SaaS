@@ -18,8 +18,8 @@ import { ClassPlanCreateRequest } from "@/types/tenant/class-plans";
  * ========================= */
 
 const accessTypeOptions: DropdownOption<string>[] = [
-    { key: "single_branch", label: "Single Branch", value: "single_branch" },
-    { key: "all_branches", label: "All Branches", value: "all_branches" },
+    { key: "single_branch", label: "Satu Cabang", value: "single_branch" },
+    { key: "all_branches", label: "Semua Cabang", value: "all_branches" },
 ];
 
 /* =========================
@@ -100,10 +100,10 @@ export default function CreateClassPlan() {
             };
 
             await createMutation.mutateAsync(payload);
-            toast.success("Class plan created successfully");
-            router.push("/class-plan?success=true");
+            toast.success("Paket kelas berhasil dibuat");
+            router.push("/class-plans?success=true");
         } catch (err) {
-            toast.error("Failed to create class plan");
+            toast.error("Gagal membuat paket kelas");
             console.error(err);
         }
     };
@@ -119,22 +119,22 @@ export default function CreateClassPlan() {
                         <ul>
                             <li>Master Data</li>
                             <li>
-                                <Link href="/class-plan">Class Plan</Link>
+                                <Link href="/class-plans">Paket Kelas</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li className="text-aksen-secondary">Buat baru</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/class-plan")}>
+                            <button type="button" onClick={() => router.push("/class-plans")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
-                            <h1 className="text-2xl font-semibold">Create Class Plan</h1>
+                            <h1 className="text-2xl font-semibold">Buat Paket Kelas</h1>
                         </div>
                         <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-4 py-2.5 disabled:opacity-50">
-                            {createMutation.isPending ? "Creating..." : "Create and save"}
+                            {createMutation.isPending ? "Membuat..." : "Buat dan simpan"}
                         </CustomButton>
                     </div>
 
@@ -144,36 +144,36 @@ export default function CreateClassPlan() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Class Name" placeholder="e.g Yoga Morning" />
+                                <TextInput name="name" label="Nama Kelas" placeholder="misal: Yoga Pagi" />
                             </div>
                             <div className="col-span-3">
-                                <TextInput name="category" label="Category" placeholder="e.g Yoga, HIIT, Zumba" />
+                                <TextInput name="category" label="Kategori" placeholder="misal: Yoga, HIIT, Zumba" />
                             </div>
                             <div className="col-span-3">
-                                <SearchableDropdown name="access_type" label="Access Type" options={accessTypeOptions} />
+                                <SearchableDropdown name="access_type" label="Tipe Akses" options={accessTypeOptions} />
                             </div>
                         </div>
 
                         {/* PRICE, DURATION, CAPACITY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Price (Rp)" />
+                                <NumberInput name="price" label="Harga (Rp)" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="minutes_per_session" label="Duration (minutes)" />
+                                <NumberInput name="minutes_per_session" label="Durasi (menit)" />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="max_capacity" label="Max Capacity (pax)" />
+                                <NumberInput name="max_capacity" label="Kapasitas Maksimal (pax)" />
                             </div>
                         </div>
 
                         {/* DESCRIPTION & COLOR */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-8">
-                                <TextInput name="description" label="Description (optional)" placeholder="Enter description" />
+                                <TextInput name="description" label="Deskripsi (opsional)" placeholder="Masukkan deskripsi" />
                             </div>
                             <div className="col-span-4">
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Color (optional)</label>
+                                <label className="block text-sm font-medium text-zinc-700 mb-1">Warna (opsional)</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" {...form.register("color")} className="w-10 h-10 rounded cursor-pointer border border-zinc-200" />
                                     <TextInput name="color" placeholder="#4F46E5" />
@@ -184,16 +184,16 @@ export default function CreateClassPlan() {
                         <hr />
 
                         {/* SESSION SETTINGS */}
-                        <h2 className="text-xl font-semibold text-gray-800">Session Settings</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Pengaturan Sesi</h2>
                         <div className="flex flex-col gap-4 text-gray-800">
                             <div className="flex flex-row gap-8 items-center">
                                 <div className="flex gap-4 w-1/3 items-center">
                                     <input type="checkbox" {...form.register("unlimited_daily_session")} className="rounded" />
-                                    <span>Unlimited Daily Sessions</span>
+                                    <span>Sesi Harian Tanpa Batas</span>
                                 </div>
                                 {!unlimitedDaily && (
                                     <div className="w-48">
-                                        <NumberInput name="daily_quota" label="Daily Quota" />
+                                        <NumberInput name="daily_quota" label="Kuota Harian" />
                                     </div>
                                 )}
                             </div>
@@ -201,11 +201,11 @@ export default function CreateClassPlan() {
                             <div className="flex flex-row gap-8 items-center">
                                 <div className="flex gap-4 w-1/3 items-center">
                                     <input type="checkbox" {...form.register("unlimited_monthly_session")} className="rounded" />
-                                    <span>Unlimited Monthly Sessions</span>
+                                    <span>Sesi Bulanan Tanpa Batas</span>
                                 </div>
                                 {!unlimitedMonthly && (
                                     <div className="w-48">
-                                        <NumberInput name="monthly_quota" label="Monthly Quota" />
+                                        <NumberInput name="monthly_quota" label="Kuota Bulanan" />
                                     </div>
                                 )}
                             </div>
@@ -214,27 +214,27 @@ export default function CreateClassPlan() {
                         <hr />
 
                         {/* AVAILABILITY */}
-                        <h2 className="text-xl font-semibold text-gray-800">Availability</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Ketersediaan</h2>
                         <div className="flex flex-col gap-4 text-gray-800">
                             <label className="flex items-center gap-3 text-sm">
                                 <input type="checkbox" {...form.register("always_available")} className="rounded" />
-                                <span>Always Available</span>
+                                <span>Selalu Tersedia</span>
                             </label>
 
                             {!alwaysAvailable && (
                                 <div className="grid grid-cols-12 gap-3">
                                     <div className="col-span-4">
-                                        <TextInput name="available_from" label="Available From" type="date" />
+                                        <TextInput name="available_from" label="Tersedia Mulai" type="date" />
                                     </div>
                                     <div className="col-span-4">
-                                        <TextInput name="available_until" label="Available Until" type="date" />
+                                        <TextInput name="available_until" label="Tersedia Hingga" type="date" />
                                     </div>
                                 </div>
                             )}
 
                             <label className="flex items-center gap-3 text-sm">
                                 <input type="checkbox" {...form.register("is_active")} className="rounded" />
-                                <span>Active</span>
+                                <span>Aktif</span>
                             </label>
                         </div>
                     </div>

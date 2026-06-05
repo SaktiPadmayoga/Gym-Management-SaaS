@@ -4,7 +4,6 @@
 import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
-import { GripVertical } from "lucide-react";
 import MemberSidebar from "./MemberSidebar";
 import MemberHeader from "./MemberHeader";
 import { useTenantHeader } from "@/hooks/useTenantHeader";
@@ -17,6 +16,7 @@ interface MemberLayoutWrapperProps {
 
 const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) => {
     const [isOpen, setIsOpen] = useState(true);
+    const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
 
@@ -24,6 +24,11 @@ const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) =
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Close mobile sidebar on route change
+    useEffect(() => {
+        setIsMobileSidebarOpen(false);
+    }, [pathname]);
 
     // Handle responsive behavior
     useEffect(() => {
@@ -67,10 +72,10 @@ const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) =
 
     return (
         <div className="bg-white">
-            <div className="flex flex-col h-full bg-zinc-100 py-4">
+            <div className="flex flex-col min-h-screen bg-zinc-100 py-4">
                 {/* Header */}
 
-                <MemberHeader />
+                <MemberHeader onMenuClick={() => setIsMobileSidebarOpen(true)} />
 
                 {/* Main Container */}
                 <div className="flex flex-1 overflow-visible relative">
@@ -92,56 +97,18 @@ const MemberLayoutWrapper: React.FC<MemberLayoutWrapperProps> = ({ children }) =
                             </div>
                         </div>
                     )}
-                    <div className="relative">
-                        {/* SIDEBAR */}
-                        <MemberSidebar isOpen={isOpen} pathname={pathname} />
 
-                        {/* TOGGLE FLOATING */}
-                        <button
-                            onClick={toggleSidebar}
-                            title={isOpen ? "Collapse sidebar" : "Expand sidebar"}
-                            className="
-                                absolute
-                                top-9
-                                right-1
-                                z-30
-                                flex
-                                items-center
-                                justify-center
-                                
-                            "
-                        >
-                            {isOpen ? (
-                                <div
-                                    className="
-                                
-                                rounded-md
-                                
-                                transition-all
-                                duration-200 
-                                 w-6 h-8 flex items-center justify-center mr-5 hover:cursor-pointer "
-                                >
-                                    <GripVertical className="h-6 w-6 hover:text-gray-500  text-gray-400" />
-                                </div>
-                            ) : (
-                                <div
-                                    className="rounded-md
-                                bg-white
-                                border
-                                border-gray-200
-                                shadow
-                                hover:bg-gray-100
-                                transition-all
-                                duration-200 py-0.5 hover:cursor-pointer"
-                                >
-                                    <GripVertical className="h-6 w-6 hover:text-gray-500  text-gray-400" />
-                                </div>
-                            )}
-                        </button>
-                    </div>
+                    {/* SIDEBAR */}
+                    <MemberSidebar 
+                        isOpen={isOpen} 
+                        onToggle={toggleSidebar}
+                        pathname={pathname} 
+                        isMobileOpen={isMobileSidebarOpen}
+                        onMobileClose={() => setIsMobileSidebarOpen(false)}
+                    />
 
                     {/* Main Content */}
-                    <main className="flex-1 overflow-y-auto pr-4 py-4">
+                    <main className="flex-1 overflow-y-auto px-4 md:pl-0 md:pr-4 py-4">
                         <div className="w-full mx-auto">{children}</div>
                     </main>
                 </div>

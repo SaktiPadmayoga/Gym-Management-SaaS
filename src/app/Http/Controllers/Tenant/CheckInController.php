@@ -47,7 +47,6 @@ class CheckInController extends Controller
         $qrToken = $request->validated('qr_token');
         $branchId = $request->validated('branch_id');
 
-        // 1. Cari Member berdasarkan QR
         $member = Member::where('qr_token', $qrToken)->first();
 
         if (!$member) {
@@ -60,7 +59,6 @@ class CheckInController extends Controller
             return ApiResponse::error('Akun member Anda sedang tidak aktif. Hubungi resepsionis.', null, 403);
         }
 
-        // 2. Cek Paket Aktif
         $membership = $member->activeMembership;
 
         if (!$membership) {
@@ -78,7 +76,6 @@ class CheckInController extends Controller
             return ApiResponse::error('Paket Anda sedang dalam masa pembekuan (Freeze).', null, 403);
         }
 
-        // 3. Validasi Akses Cabang (Branch Access Logic)
         $plan = $membership->plan;
         $hasBranchAccess = false;
 
@@ -101,31 +98,24 @@ class CheckInController extends Controller
             return ApiResponse::error('Maaf, paket Anda tidak mengizinkan akses ke cabang ini.', null, 403);
         }
 
-        // 4. Cek Kuota
         if (!$membership->hasCheckinQuota()) {
             $this->recordFailedCheckIn($member, $branchId, "Kuota habis.", $membership->id);
             return ApiResponse::error('Kuota kunjungan Anda sudah habis. Silakan beli paket baru.', null, 403);
         }
 
-        // ==========================================
-        // 5. EKSEKUSI CHECK-IN (DB TRANSACTION)
-        // ==========================================
         try {
             DB::beginTransaction();
 
-            // A. Update Kuota & Total Kedatangan di tabel Membership
             if (!$membership->unlimited_checkin) {
                 $membership->decrement('remaining_checkin_quota');
             }
             $membership->increment('total_checkins');
 
-            // B. Update Data Member & Reset QR Token
             $member->update([
                 'last_checkin_at' => now(),
-                'qr_token'        => (string) Str::uuid(), // REGENERATE QR TOKEN BARU!
+                'qr_token'        => (string) Str::uuid(), 
             ]);
 
-            // C. Catat Log Check-in
             $checkIn = CheckIn::create([
                 'member_id'     => $member->id,
                 'branch_id'     => $branchId,
@@ -137,7 +127,6 @@ class CheckInController extends Controller
 
             DB::commit();
 
-            // Mengembalikan Data Resource agar UI Kasir bisa memberikan Feedback Ramah
             $message = 'Selamat latihan, ' . $member->name . '!';
             if (!$membership->unlimited_checkin) {
                 $message .= ' (Sisa kuota: ' . $membership->remaining_checkin_quota . ')';

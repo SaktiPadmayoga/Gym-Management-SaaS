@@ -93,11 +93,42 @@ class ClassPlanController extends Controller
     {
         $plan = ClassPlan::findOrFail($id);
 
+        // 1. Perlindungan Ketat: Blokir jika paket kelas memiliki jadwal kelas aktif (status pending) atau memiliki pemesanan aktif
+        $hasActiveSchedules = \App\Models\Tenant\ClassSchedule::where('class_plan_id', $id)
+            ->where(function ($q) {
+                $q->where('status', 'pending')
+                  ->orWhere('total_booked', '>', 0);
+            })
+            ->exists();
+
+        if ($hasActiveSchedules) {
+            return ApiResponse::error(
+                'Tidak dapat menghapus paket kelas yang masih terkait dengan jadwal kelas aktif atau memiliki pemesanan aktif!',
+                null,
+                422
+            );
+        }
+
+        // 2. Perlindungan Ketat: Blokir jika paket kelas di-include dalam paket keanggotaan (MembershipPlan) yang saat ini aktif digunakan oleh member
+        $hasActiveMemberships = \App\Models\Tenant\Membership::where('status', 'active')
+            ->whereHas('plan.classPlans', function ($q) use ($id) {
+                $q->where('class_plans.id', $id);
+            })
+            ->exists();
+
+        if ($hasActiveMemberships) {
+            return ApiResponse::error(
+                'Tidak dapat menghapus paket kelas yang masih terkait dengan paket keanggotaan aktif member gym!',
+                null,
+                422
+            );
+        }
+
         // Detach dari semua membership plans sebelum delete
         $plan->membershipPlans()->detach();
         $plan->delete();
 
-        return ApiResponse::success(null, 'Class plan deleted successfully');
+        return ApiResponse::success(null, 'Paket kelas berhasil dihapus');
     }
 
     public function toggleActive(string $id)

@@ -149,7 +149,7 @@ class PaymentController extends Controller
                         'email'      => $customerEmail,
                     ],
                     'callbacks' => [
-                        'finish' => env('FRONTEND_URL', 'http://localhost:3000')
+                        'finish' => config('app.frontend_url', 'http://localhost:3000')
                             . '/owner/subscription/success?order_id=' . $orderId,
                     ],
                 ]);

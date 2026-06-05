@@ -25,6 +25,7 @@ class MidtransWebhookController extends Controller
         'PTP' => 'pt_package',
         'FCL' => 'facility', 
         'POS' => 'pos', 
+        'CLS' => 'class',
     ];
 
     public function __construct(

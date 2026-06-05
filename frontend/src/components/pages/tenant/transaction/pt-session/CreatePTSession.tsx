@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useCreatePtSession } from "@/hooks/tenant/usePtSessions";
 import { usePtPackages } from "@/hooks/tenant/usePtPackages";
 import { useTrainers } from "@/hooks/tenant/useStaffs";
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import { PtSessionCreateRequest } from "@/types/tenant/pt";
 
 export default function CreatePtSession() {
@@ -46,12 +47,15 @@ export default function CreatePtSession() {
         }));
     }, [trainersResponse]);
 
+    const { staff, selectedBranch } = useStaffAuth();
+    const isTrainer = selectedBranch?.role === "trainer";
+
     // 3. Inisialisasi Form
     const form = useForm<PtSessionCreateRequest>({
         mode: "onChange",
         defaultValues: {
             pt_package_id: "",
-            trainer_id: "",
+            trainer_id: isTrainer && staff?.id ? staff.id : "",
             date: "",
             start_at: "",
             end_at: "",
@@ -133,6 +137,7 @@ export default function CreatePtSession() {
                                     label="Pelatih (Trainer) *" 
                                     options={trainerOptions} 
                                     placeholder={loadingTrainers ? "Memuat pelatih..." : "Pilih pelatih..."}
+                                    disabled={isTrainer}
                                 />
                             </div>
                         </div>

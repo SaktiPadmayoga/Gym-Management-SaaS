@@ -8,6 +8,7 @@ use App\Http\Resources\TenantResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Http\Requests\StoreTenantRequest;
@@ -154,12 +155,9 @@ class TenantController extends Controller
             && $validated['status'] !== $oldStatus
             && in_array($validated['status'], ['suspended', 'expired'])
         ) {
-            app(NotificationService::class)->createTenantForTenant(
+            app(NotificationService::class)->notifyTenantDeactivated(
                 $tenant->fresh(),
-                null,
-                'tenant_deactivated',
-                'Tenant Dinonaktifkan',
-                "Tenant {$tenant->name} telah dinonaktifkan dengan status {$validated['status']}."
+                $validated['status']
             );
         }
 
@@ -218,10 +216,7 @@ public function current(Request $request)
             return ApiResponse::error('Tenant not found', null, 404);
         }
 
-        $tenantData = DB::connection('central')
-            ->table('tenants')
-            ->where('id', $tenant->id)
-            ->first();
+        $tenantData = \App\Models\Tenant::find($tenant->id);
 
         if (!$tenantData) {
             return ApiResponse::error('Tenant data not found', null, 404);
@@ -305,4 +300,75 @@ public function current(Request $request)
         );
     }
 }
+
+    /**
+     * POST /api/tenant/logo
+     * Upload logo gym ke R2. Hanya bisa diakses oleh owner tenant itu sendiri.
+     */
+    public function uploadLogo(Request $request)
+    {
+        try {
+            $request->validate([
+                'logo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            ]);
+
+            $tenantModel = tenant();
+            if (!$tenantModel) {
+                return ApiResponse::error('Tenant context not found', null, 404);
+            }
+
+            // Ambil data tenant dari central DB
+            $tenantData = DB::connection('central')
+                ->table('tenants')
+                ->where('id', $tenantModel->id)
+                ->first();
+
+            if (!$tenantData) {
+                return ApiResponse::error('Tenant not found', null, 404);
+            }
+
+            // Disk yang dipakai: R2 jika ada key (production), public disk jika tidak (local dev)
+            $disk = env('CLOUDFLARE_R2_ACCESS_KEY_ID') ? 'r2' : 'public';
+
+            // Hapus logo lama jika ada dan bukan URL eksternal
+            $oldLogo = $tenantData->logo_url;
+            if ($oldLogo && !str_starts_with($oldLogo, 'http')) {
+                Storage::disk($disk)->delete($oldLogo);
+            }
+
+            // Upload logo baru — isolasi per-tenant
+            $path = $request->file('logo')->store(
+                "tenant_{$tenantModel->id}/logos",
+                $disk
+            );
+
+            // Update kolom logo_url di central DB
+            DB::connection('central')
+                ->table('tenants')
+                ->where('id', $tenantModel->id)
+                ->update(['logo_url' => $path, 'updated_at' => now()]);
+
+            $logoUrl = $disk === 'r2'
+                ? Storage::disk('r2')->url($path)
+                : '/storage/' . $path;
+
+            Log::info('Logo uploaded', ['tenant_id' => $tenantModel->id, 'path' => $path]);
+
+            return ApiResponse::success([
+                'logo_url' => $logoUrl,
+                'path'     => $path,
+            ], 'Logo berhasil diupload');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponse::error('Validasi gagal', $e->errors(), 422);
+        } catch (\Exception $e) {
+            Log::error('uploadLogo error', ['message' => $e->getMessage()]);
+            return ApiResponse::error(
+                'Gagal upload logo',
+                config('app.debug') ? $e->getMessage() : null,
+                500
+            );
+        }
+    }
 }
+

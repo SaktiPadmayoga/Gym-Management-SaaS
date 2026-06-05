@@ -367,21 +367,17 @@ class DomainRequestController extends Controller
             $notificationService = app(NotificationService::class);
 
             if ($action === 'approve') {
-                $notificationService->createTenantForTenant(
+                $notificationService->notifyDomainRequestApproved(
                     $tenant,
                     $updated->branch_id,
-                    'domain_request_approved',
-                    'Perubahan Domain Disetujui',
-                    "Permintaan perubahan domain ke {$updated->requested_domain} telah disetujui."
+                    $updated->requested_domain
                 );
             } else {
-                $reason = $updated->rejection_reason ? " Alasan: {$updated->rejection_reason}" : '';
-                $notificationService->createTenantForTenant(
+                $notificationService->notifyDomainRequestRejected(
                     $tenant,
                     $updated->branch_id,
-                    'domain_request_rejected',
-                    'Perubahan Domain Ditolak',
-                    "Permintaan perubahan domain ke {$updated->requested_domain} ditolak.{$reason}"
+                    $updated->requested_domain,
+                    $updated->rejection_reason
                 );
             }
         }

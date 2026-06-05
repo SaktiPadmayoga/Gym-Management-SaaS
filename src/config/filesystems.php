@@ -60,6 +60,22 @@ return [
             'report' => false,
         ],
 
+        // Cloudflare R2 — object storage untuk gambar produk & aset tenant
+        // CDN URL: https://cdn.gymfit.id (custom domain di R2 bucket)
+        'r2' => [
+            'driver'                  => 's3',
+            'key'                     => env('CLOUDFLARE_R2_ACCESS_KEY_ID'),
+            'secret'                  => env('CLOUDFLARE_R2_SECRET_ACCESS_KEY'),
+            'region'                  => 'auto',
+            'bucket'                  => env('CLOUDFLARE_R2_BUCKET', 'gymfit-assets'),
+            'url'                     => env('CLOUDFLARE_R2_URL', 'https://cdn.gymfit.id'), // CDN custom domain
+            'endpoint'                => env('CLOUDFLARE_R2_ENDPOINT'),                     // https://<account-id>.r2.cloudflarestorage.com
+            'use_path_style_endpoint' => true,
+            'visibility'              => 'public',
+            'throw'                   => false,
+            'report'                  => false,
+        ],
+
     ],
 
     /*

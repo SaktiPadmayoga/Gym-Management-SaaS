@@ -84,13 +84,7 @@ export default function SubscriptionHistory() {
         },
         {
             header: "Amount",
-            render: (item) => (
-                <span className="text-sm font-medium text-zinc-800">
-                    {item.amount === 0
-                        ? "Custom"
-                        : `Rp ${item.amount.toLocaleString("id-ID")}`}
-                </span>
-            ),
+            render: (item) => <span className="text-sm font-medium text-zinc-800">{item.amount === 0 ? "Custom" : `Rp ${item.amount.toLocaleString("id-ID")}`}</span>,
             width: "w-36",
         },
         {
@@ -104,7 +98,9 @@ export default function SubscriptionHistory() {
                 <div className="text-sm text-zinc-600">
                     {item.startedAt
                         ? new Date(item.startedAt).toLocaleDateString("en-US", {
-                              month: "short", day: "numeric", year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
                           })
                         : "—"}
                 </div>
@@ -117,7 +113,9 @@ export default function SubscriptionHistory() {
                 <div className="text-sm text-zinc-600">
                     {item.currentPeriodEndsAt
                         ? new Date(item.currentPeriodEndsAt).toLocaleDateString("en-US", {
-                              month: "short", day: "numeric", year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
                           })
                         : "—"}
                 </div>
@@ -130,7 +128,9 @@ export default function SubscriptionHistory() {
                 <div className="text-sm text-zinc-500">
                     {item.canceledAt
                         ? new Date(item.canceledAt).toLocaleDateString("en-US", {
-                              month: "short", day: "numeric", year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
                           })
                         : "—"}
                 </div>
@@ -149,10 +149,7 @@ export default function SubscriptionHistory() {
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
                             <li>Tenant & Subscription</li>
-                            <li
-                                className="cursor-pointer hover:text-zinc-600"
-                                onClick={() => router.push("/admin/subscriptions")}
-                            >
+                            <li className="cursor-pointer hover:text-zinc-600" onClick={() => router.push("/admin/subscriptions")}>
                                 Subscriptions
                             </li>
                             <li className="text-aksen-secondary">History</li>
@@ -182,9 +179,7 @@ export default function SubscriptionHistory() {
                             const count = entries.filter((e) => e.status === item.status).length;
                             return (
                                 <div key={item.status} className={`rounded-xl border px-4 py-3 ${item.color}`}>
-                                    <div className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">
-                                        {item.label}
-                                    </div>
+                                    <div className="text-xs font-semibold uppercase tracking-wide mb-1 opacity-70">{item.label}</div>
                                     <div className="text-2xl font-bold">{count}</div>
                                 </div>
                             );
@@ -200,9 +195,7 @@ export default function SubscriptionHistory() {
                                 ))}
                             </div>
                         ) : entries.length === 0 ? (
-                            <div className="py-12 text-center text-zinc-400">
-                                No subscription history found.
-                            </div>
+                            <div className="py-12 text-center text-zinc-400">No subscription history found.</div>
                         ) : (
                             <CustomTable
                                 columns={columns}
@@ -225,21 +218,25 @@ export default function SubscriptionHistory() {
                             Showing {entries.length} of {totalData} records
                         </div>
                     )}
-                </div>
 
-                <div className="mt-4">
                     <div className="mt-4">
-                        <PaginationWithRows
-                            hasNextPage={page < (data?.meta?.last_page || 0)}
-                            hasPrevPage={page > 1}
-                            totalItems={data?.meta?.total || 0}
-                            currentPage={data?.meta?.current_page || 1}
-                            currentPerPage={data?.meta?.per_page || 10}
-                            onPageChange={setPage}
-                            onRowsPerPageChange={(val) => { setPerPage(val); setPage(1); }}
-                            rowOptions={[5, 10, 20, 50]}
-                            defaultRowsPerPage={perPage} />
-                                    </div>
+                        <div className="mt-4">
+                            <PaginationWithRows
+                                hasNextPage={page < (data?.meta?.last_page || 0)}
+                                hasPrevPage={page > 1}
+                                totalItems={data?.meta?.total || 0}
+                                currentPage={data?.meta?.current_page || 1}
+                                currentPerPage={data?.meta?.per_page || 10}
+                                onPageChange={setPage}
+                                onRowsPerPageChange={(val) => {
+                                    setPerPage(val);
+                                    setPage(1);
+                                }}
+                                rowOptions={[5, 10, 15, 20, 50]}
+                                defaultRowsPerPage={perPage}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         </FormProvider>

@@ -19,23 +19,23 @@ import AssignMembershipModal from "@/components/pages/tenant/master-data/member/
  * ========================= */
 
 const genderOptions: DropdownOption<string>[] = [
-    { key: "male", label: "Male", value: "male" },
-    { key: "female", label: "Female", value: "female" },
-    { key: "other", label: "Other", value: "other" },
+    { key: "male", label: "Laki-laki", value: "male" },
+    { key: "female", label: "Perempuan", value: "female" },
+    { key: "other", label: "Lainnya", value: "other" },
 ];
 
 const memberStatusOptions: DropdownOption<string>[] = [
-    { key: "active", label: "Active", value: "active" },
-    { key: "inactive", label: "Inactive", value: "inactive" },
-    { key: "frozen", label: "Frozen", value: "frozen" },
-    { key: "banned", label: "Banned", value: "banned" },
+    { key: "active", label: "Aktif", value: "active" },
+    { key: "inactive", label: "Tidak Aktif", value: "inactive" },
+    { key: "frozen", label: "Ditangguhkan", value: "frozen" },
+    { key: "banned", label: "Diblokir", value: "banned" },
 ];
 
 const membershipStatusOptions: DropdownOption<string>[] = [
-    { key: "active", label: "Active", value: "active" },
-    { key: "expired", label: "Expired", value: "expired" },
-    { key: "frozen", label: "Frozen", value: "frozen" },
-    { key: "cancelled", label: "Cancelled", value: "cancelled" },
+    { key: "active", label: "Aktif", value: "active" },
+    { key: "expired", label: "Kedaluwarsa", value: "expired" },
+    { key: "frozen", label: "Ditangguhkan", value: "frozen" },
+    { key: "cancelled", label: "Dibatalkan", value: "cancelled" },
 ];
 
 const memberStatusColor: Record<string, string> = {
@@ -44,6 +44,15 @@ const memberStatusColor: Record<string, string> = {
     expired: "bg-orange-100 text-orange-700",
     frozen: "bg-blue-100 text-blue-700",
     banned: "bg-red-100 text-red-700",
+};
+
+const statusLabels: Record<string, string> = {
+    active: "Aktif",
+    inactive: "Tidak Aktif",
+    expired: "Kedaluwarsa",
+    frozen: "Ditangguhkan",
+    banned: "Diblokir",
+    cancelled: "Dibatalkan",
 };
 
 /* =========================
@@ -132,7 +141,7 @@ export default function MemberDetail() {
         }
     }, [member]);
 
-    if (isLoading) return <div className="p-6">Loading...</div>;
+    if (isLoading) return <div className="p-6">Memuat...</div>;
     if (isError) return notFound();
 
     const currentMembership: MembershipData | null =
@@ -171,11 +180,11 @@ export default function MemberDetail() {
             if (avatarFile) payload.append("avatar", avatarFile);
 
             await updateMutation.mutateAsync({ id, payload });
-            toast.success("Member profile updated successfully");
+            toast.success("Profil anggota berhasil diperbarui");
             setIsEditMode(false);
             setAvatarFile(null);
         } catch {
-            toast.error("Failed to update member profile");
+            toast.error("Gagal memperbarui profil anggota");
         }
     };
 
@@ -198,10 +207,10 @@ export default function MemberDetail() {
                 membershipId: currentMembership.id,
                 payload,
             });
-            toast.success("Membership updated");
+            toast.success("Keanggotaan diperbarui");
             setIsMembershipEdit(false);
         } catch {
-            toast.error("Failed to update membership");
+            toast.error("Gagal memperbarui keanggotaan");
         }
     };
 
@@ -210,13 +219,13 @@ export default function MemberDetail() {
      * ========================= */
     const handleCancelMembership = () => {
         if (!currentMembership) return;
-        if (!confirm("Are you sure you want to cancel and delete this membership record?")) return;
+        if (!confirm("Apakah Anda yakin ingin membatalkan dan menghapus catatan keanggotaan ini?")) return;
 
         cancelMutation.mutate(
             { memberId: id, membershipId: currentMembership.id },
             {
-                onSuccess: () => toast.success("Membership cancelled successfully"),
-                onError: () => toast.error("Failed to cancel membership"),
+                onSuccess: () => toast.success("Keanggotaan berhasil dibatalkan"),
+                onError: () => toast.error("Gagal membatalkan keanggotaan"),
             },
         );
     };
@@ -246,9 +255,9 @@ export default function MemberDetail() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Manajemen</li>
                             <li>
-                                <Link href="/members">Members</Link>
+                                <Link href="/members">Anggota</Link>
                             </li>
                             <li className="text-aksen-secondary">{member?.name ?? id}</li>
                         </ul>
@@ -279,23 +288,23 @@ export default function MemberDetail() {
                             <div>
                                 <h1 className="text-2xl font-semibold">{member?.name}</h1>
                                 <div className="flex items-center gap-2 mt-0.5">
-                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${memberStatusColor[member?.status ?? "inactive"]}`}>{member?.status}</span>
-                                    {member?.home_branch && <span className="text-xs text-zinc-500 font-medium bg-zinc-100 px-2 py-0.5 rounded-full">Home: {member.home_branch.name}</span>}
+                                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${memberStatusColor[member?.status ?? "inactive"]}`}>{statusLabels[member?.status ?? "inactive"]}</span>
+                                    {member?.home_branch && <span className="text-xs text-zinc-500 font-medium bg-zinc-100 px-2 py-0.5 rounded-full">Cabang: {member.home_branch.name}</span>}
                                 </div>
                             </div>
                         </div>
 
                         {!isEditMode ? (
                             <CustomButton type="button" iconName="edit" className="bg-aksen-secondary text-white px-5 py-2.5" onClick={() => setIsEditMode(true)}>
-                                Edit Profile
+                                Ubah Profil
                             </CustomButton>
                         ) : (
                             <div className="flex gap-2">
                                 <CustomButton type="button" className="border px-4 py-2.5" onClick={() => { setIsEditMode(false); setAvatarFile(null); setPreviewUrl(member?.avatar_url ?? null); }}>
-                                    Cancel
+                                    Batal
                                 </CustomButton>
                                 <CustomButton type="button" className="bg-aksen-secondary text-white px-5 py-2.5" onClick={handleSave} disabled={updateMutation.isPending}>
-                                    {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                                    {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                 </CustomButton>
                             </div>
                         )}
@@ -306,31 +315,31 @@ export default function MemberDetail() {
                     <div className="flex flex-col gap-6 mt-6">
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 md:col-span-6"><TextInput name="name" label="Full Name" disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-6"><TextInput name="name" label="Nama Lengkap" disabled={!isEditMode} /></div>
                             <div className="col-span-12 md:col-span-6"><TextInput name="email" label="Email" disabled={!isEditMode} /></div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 md:col-span-4"><TextInput name="phone" label="Phone" disabled={!isEditMode} /></div>
-                            <div className="col-span-12 md:col-span-4"><TextInput name="emergency_contact" label="Emergency Contact" disabled={!isEditMode} /></div>
-                            <div className="col-span-12 md:col-span-4"><SearchableDropdown name="gender" label="Gender" options={genderOptions} disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-4"><TextInput name="phone" label="Nomor Telepon" disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-4"><TextInput name="emergency_contact" label="Kontak Darurat" disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-4"><SearchableDropdown name="gender" label="Jenis Kelamin" options={genderOptions} disabled={!isEditMode} /></div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 md:col-span-4"><TextInput name="date_of_birth" label="Date of Birth" type="date" disabled={!isEditMode} /></div>
-                            <div className="col-span-12 md:col-span-4"><TextInput name="id_card_number" label="ID Card (KTP)" disabled={!isEditMode} /></div>
-                            <div className="col-span-12 md:col-span-4"><SearchableDropdown name="status" label="Member Status" options={memberStatusOptions} disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-4"><TextInput name="date_of_birth" label="Tanggal Lahir" type="date" disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-4"><TextInput name="id_card_number" label="Nomor KTP" disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-4"><SearchableDropdown name="status" label="Status Anggota" options={memberStatusOptions} disabled={!isEditMode} /></div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12"><TextInput name="address" label="Address" disabled={!isEditMode} /></div>
+                            <div className="col-span-12"><TextInput name="address" label="Alamat" disabled={!isEditMode} /></div>
                         </div>
 
                         <hr className="border-gray-100" />
 
                         {/* ACCOUNT SETTINGS */}
-                        <h2 className="text-lg font-semibold text-gray-800">Account Access</h2>
+                        <h2 className="text-lg font-semibold text-gray-800">Akses Akun</h2>
                         <div className="flex gap-10 text-gray-800">
                             <label className="flex items-center gap-2 text-sm">
                                 <input type="checkbox" {...form.register("is_active")} disabled={!isEditMode} className="w-4 h-4 rounded text-aksen-secondary" />
-                                <span className={!form.watch("is_active") ? "text-red-500 font-medium" : ""}>{form.watch("is_active") ? "Account is Active (Can Login)" : "Account Banned/Suspended"}</span>
+                                <span className={!form.watch("is_active") ? "text-red-500 font-medium" : ""}>{form.watch("is_active") ? "Akun Aktif (Dapat Login)" : "Akun Diblokir/Ditangguhkan"}</span>
                             </label>
                         </div>
 
@@ -339,12 +348,12 @@ export default function MemberDetail() {
                         {/* MEMBERSHIP SECTION */}
                         <div className="flex items-center justify-between">
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-800">Active Membership</h2>
-                                <p className="text-sm text-zinc-500">Manage plan subscription and validity</p>
+                                <h2 className="text-lg font-semibold text-gray-800">Keanggotaan Aktif</h2>
+                                <p className="text-sm text-zinc-500">Kelola langganan paket dan masa berlakunya</p>
                             </div>
                             {!currentMembership && (
                                 <CustomButton type="button" iconName="plus" className="bg-zinc-800 text-white px-4 py-2 text-sm" onClick={() => setIsAssignModalOpen(true)}>
-                                    Assign Plan
+                                    Tugaskan Paket
                                 </CustomButton>
                             )}
                         </div>
@@ -365,15 +374,15 @@ export default function MemberDetail() {
                                                 <p className="text-xs text-blue-500 mt-0.5">Total freeze digunakan: {currentMembership.freeze_days_used ?? 0} hari</p>
                                             </div>
                                             <button type="button" onClick={handleUnfreeze} disabled={unfreezeMutation.isPending} className="px-4 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50">
-                                                {unfreezeMutation.isPending ? "Processing..." : "Unfreeze Now"}
+                                                {unfreezeMutation.isPending ? "Memproses..." : "Unfreeze Sekarang"}
                                             </button>
                                         </div>
                                     )}
 
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h3 className="font-semibold text-zinc-800 text-lg">{currentMembership.plan?.name ?? "Unknown Plan"}</h3>
-                                            <p className="text-sm text-zinc-500">Valid from: {new Date(currentMembership.start_date).toLocaleDateString()}</p>
+                                            <h3 className="font-semibold text-zinc-800 text-lg">{currentMembership.plan?.name ?? "Paket Tidak Diketahui"}</h3>
+                                            <p className="text-sm text-zinc-500">Mulai berlaku: {new Date(currentMembership.start_date).toLocaleDateString("id-ID")}</p>
                                         </div>
                                         <div className="flex gap-2 items-center">
                                             {currentMembership.status === "active" && (
@@ -382,49 +391,49 @@ export default function MemberDetail() {
                                                 </button>
                                             )}
                                             {!isMembershipEdit ? (
-                                                <CustomButton type="button" className="border bg-white text-zinc-700 px-3 py-2 text-sm shadow-sm" onClick={() => setIsMembershipEdit(true)}>Edit Plan Detail</CustomButton>
+                                                <CustomButton type="button" className="border bg-white text-zinc-700 px-3 py-2 text-sm shadow-sm" onClick={() => setIsMembershipEdit(true)}>Ubah Detail Paket</CustomButton>
                                             ) : (
                                                 <>
-                                                    <CustomButton type="button" className="border bg-white px-3 py-2 text-sm" onClick={() => setIsMembershipEdit(false)}>Cancel</CustomButton>
+                                                    <CustomButton type="button" className="border bg-white px-3 py-2 text-sm" onClick={() => setIsMembershipEdit(false)}>Batal</CustomButton>
                                                     <CustomButton type="button" className="bg-zinc-800 text-white px-4 py-2 text-sm" onClick={handleSaveMembership} disabled={membershipMutation.isPending}>
-                                                        {membershipMutation.isPending ? "Saving..." : "Save Plan"}
+                                                        {membershipMutation.isPending ? "Menyimpan..." : "Simpan Paket"}
                                                     </CustomButton>
                                                 </>
                                             )}
-                                            <button type="button" onClick={handleCancelMembership} className="text-sm text-red-500 font-medium hover:text-red-700 hover:underline px-2 ml-2">Cancel Plan</button>
+                                            <button type="button" onClick={handleCancelMembership} className="text-sm text-red-500 font-medium hover:text-red-700 hover:underline px-2 ml-2">Batalkan Paket</button>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-12 gap-4 pt-2">
-                                        <div className="col-span-12 md:col-span-4"><SearchableDropdown name="status" label="Plan Status" options={membershipStatusOptions} disabled={!isMembershipEdit} /></div>
-                                        <div className="col-span-12 md:col-span-4"><TextInput name="end_date" label="End Date" type="date" disabled={!isMembershipEdit} /></div>
-                                        <div className="col-span-12 md:col-span-4"><TextInput name="frozen_until" label="Frozen Until" type="date" disabled={!isMembershipEdit} /></div>
+                                        <div className="col-span-12 md:col-span-4"><SearchableDropdown name="status" label="Status Paket" options={membershipStatusOptions} disabled={!isMembershipEdit} /></div>
+                                        <div className="col-span-12 md:col-span-4"><TextInput name="end_date" label="Tanggal Berakhir" type="date" disabled={!isMembershipEdit} /></div>
+                                        <div className="col-span-12 md:col-span-4"><TextInput name="frozen_until" label="Dibekukan Hingga" type="date" disabled={!isMembershipEdit} /></div>
                                     </div>
                                     <div className="grid grid-cols-12 gap-4">
-                                        <div className="col-span-12"><TextInput name="notes" label="Notes (optional)" disabled={!isMembershipEdit} /></div>
+                                        <div className="col-span-12"><TextInput name="notes" label="Catatan (opsional)" disabled={!isMembershipEdit} /></div>
                                     </div>
 
                                     {/* Read-only Statistics */}
                                     <div className="flex gap-8 pt-4 text-sm border-t border-zinc-200">
                                         <div className="flex flex-col">
-                                            <span className="text-zinc-500 mb-0.5">Total Check-ins</span>
-                                            <span className="font-semibold text-zinc-800">{currentMembership.total_checkins} times</span>
+                                            <span className="text-zinc-500 mb-0.5">Total Check-in</span>
+                                            <span className="font-semibold text-zinc-800">{currentMembership.total_checkins} kali</span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-zinc-500 mb-0.5">Remaining Quota</span>
-                                            <span className="font-semibold text-zinc-800">{currentMembership.unlimited_checkin ? "Unlimited" : `${currentMembership.remaining_checkin_quota ?? 0} visits`}</span>
+                                            <span className="text-zinc-500 mb-0.5">Sisa Kuota</span>
+                                            <span className="font-semibold text-zinc-800">{currentMembership.unlimited_checkin ? "Tak Terbatas" : `${currentMembership.remaining_checkin_quota ?? 0} kunjungan`}</span>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-zinc-500 mb-0.5">Freeze Days Used</span>
-                                            <span className="font-semibold text-zinc-800">{currentMembership.freeze_days_used ?? 0} days</span>
+                                            <span className="text-zinc-500 mb-0.5">Hari Freeze Digunakan</span>
+                                            <span className="font-semibold text-zinc-800">{currentMembership.freeze_days_used ?? 0} hari</span>
                                         </div>
                                     </div>
                                 </div>
                             </FormProvider>
                         ) : (
                             <div className="text-center py-8 border-2 border-dashed border-zinc-200 rounded-lg">
-                                <p className="text-zinc-500 mb-1">No active membership found.</p>
-                                <p className="text-sm text-zinc-400">Click the Assign Plan button to add a new subscription for this member.</p>
+                                <p className="text-zinc-500 mb-1">Tidak ada keanggotaan aktif yang ditemukan.</p>
+                                <p className="text-sm text-zinc-400">Klik tombol Tugaskan Paket untuk menambahkan langganan baru bagi anggota ini.</p>
                             </div>
                         )}
                     </div>
@@ -463,7 +472,7 @@ function FreezeModal({ memberId, membershipId, freezeDaysUsed, onClose }: { memb
                 <div className="flex items-center gap-3">
                     <span className="text-3xl">❄️</span>
                     <div>
-                        <h3 className="text-lg font-semibold text-zinc-800">Freeze Membership</h3>
+                        <h3 className="text-lg font-semibold text-zinc-800">Freeze Keanggotaan</h3>
                         <p className="text-sm text-zinc-500">Membership akan dibekukan sementara</p>
                     </div>
                 </div>
@@ -485,7 +494,7 @@ function FreezeModal({ memberId, membershipId, freezeDaysUsed, onClose }: { memb
                 <div className="flex justify-end gap-2 pt-2">
                     <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-zinc-600 border border-zinc-300 rounded-lg hover:bg-zinc-50 transition">Batal</button>
                     <button type="button" onClick={handleFreeze} disabled={freezeMutation.isPending || days < 1} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition disabled:opacity-50">
-                        {freezeMutation.isPending ? "Processing..." : `Freeze ${days} Hari`}
+                        {freezeMutation.isPending ? "Memproses..." : `Freeze ${days} Hari`}
                     </button>
                 </div>
             </div>

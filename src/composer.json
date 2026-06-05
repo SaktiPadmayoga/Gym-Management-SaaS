@@ -11,6 +11,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/socialite": "^5.25",
         "laravel/tinker": "^2.10.1",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "midtrans/midtrans-php": "^2.6",
         "stancl/tenancy": "^3.9",
         "stancl/virtualcolumn": "^1.5"

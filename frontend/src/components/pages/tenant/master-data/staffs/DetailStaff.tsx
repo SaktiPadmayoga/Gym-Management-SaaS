@@ -38,15 +38,25 @@ export default function BranchDetailStaff() {
  
     // Map dynamic roles except owner role
     const branchRoleOptions: DropdownOption<string>[] = useMemo(() => {
+        const roleLabelMap: Record<string, string> = {
+            "Branch Manager": "Manajer Cabang",
+            "Trainer": "Trainer",
+            "Receptionist": "Resepsionis",
+            "Cashier": "Kasir",
+            "branch_manager": "Manajer Cabang",
+            "trainer": "Trainer",
+            "receptionist": "Resepsionis",
+            "cashier": "Kasir",
+        };
         return (rolesData ?? [])
             .filter((r) => r.name !== "owner")
             .map((r) => ({
                 key: r.id,
-                label: r.display_name,
+                label: roleLabelMap[r.display_name] ?? roleLabelMap[r.name] ?? r.display_name,
                 value: r.name,
             }));
     }, [rolesData]);
- 
+
     const form = useForm<EditStaffFormData>({
         mode: "onChange",
         defaultValues: {
@@ -57,13 +67,13 @@ export default function BranchDetailStaff() {
             branch_role: "receptionist",
         },
     });
- 
+
     // Get the staff's current role in THIS active branch
     const currentAssignment = useMemo(() => {
         if (!staff?.branches || !branchId) return null;
         return staff.branches.find((b: any) => b.branch_id === branchId);
     }, [staff, branchId]);
- 
+
     // Populate form with staff data
     useEffect(() => {
         if (staff) {
@@ -76,13 +86,13 @@ export default function BranchDetailStaff() {
             });
         }
     }, [staff, currentAssignment, form]);
- 
+
     const onSubmit = async (data: EditStaffFormData) => {
         if (!branchId) {
             toast.error("Cabang aktif tidak terdeteksi");
             return;
         }
- 
+
         try {
             // 1. Update basic info
             const payload: StaffUpdateRequest = {
@@ -91,20 +101,20 @@ export default function BranchDetailStaff() {
                 phone: data.phone || undefined,
                 role: "staff", // Hardcode role global ke staff di portal branch
             };
- 
+
             if (data.newPassword?.trim()) {
                 payload.password = data.newPassword;
             }
- 
+
             await updateMutation.mutateAsync({ id: staffId, payload });
- 
+
             // 2. Update branch role assignment
             await assignBranchMutation.mutateAsync({
                 staffId,
                 payload: { branch_id: branchId, role: data.branch_role },
             });
- 
-            toast.success("Staff details updated successfully");
+
+            toast.success("Detail staf berhasil diperbarui");
             setIsEditMode(false);
             router.push(`/staffs?updated=true`);
         } catch (error: any) {
@@ -112,12 +122,12 @@ export default function BranchDetailStaff() {
                 error?.response?.data?.error || 
                 error?.response?.data?.message || 
                 error?.message ||                 
-                "Failed to update staff";
- 
+                "Gagal memperbarui detail staf";
+
             toast.error(message);
         }
     };
- 
+
     if (isLoading || !staff) {
         return (
             <div className="font-figtree rounded-xl bg-white border px-6 py-4">
@@ -129,98 +139,98 @@ export default function BranchDetailStaff() {
             </div>
         );
     }
- 
+
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
                     <Toaster position="top-center" />
- 
+
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Master Data</li>
                             <li>
-                                <Link href="/staffs">Staff</Link>
+                                <Link href="/staffs">Staf</Link>
                             </li>
                             <li>
                                 <Link href={`/staffs/${staffId}`}>{staff.name}</Link>
                             </li>
-                            <li className="text-aksen-secondary">Detail & Edit</li>
+                            <li className="text-aksen-secondary">Detail & Ubah</li>
                         </ul>
                     </div>
- 
+
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-zinc-900">
+                        <div className="flex items-center gap-2 text-gray-800">
                             <button type="button" onClick={() => router.push(`/staffs`)}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div>
-                                <h1 className="text-2xl font-semibold">Staff Details</h1>
+                                <h1 className="text-2xl font-semibold">Detail Staf</h1>
                                 {currentBranch && (
                                     <p className="text-sm text-zinc-500">
-                                        Branch: <span className="font-medium text-zinc-700">{currentBranch.name}</span>
+                                        Cabang: <span className="font-medium text-zinc-700">{currentBranch.name}</span>
                                     </p>
                                 )}
                             </div>
                         </div>
- 
+
                         <div className="flex gap-2">
                             {!isEditMode ? (
                                 <CustomButton type="button" className="text-white px-4 py-2.5 cursor-pointer animate-fade-in" onClick={() => setIsEditMode(true)}>
                                     <Icon name="edit" className="h-5 w-5 mr-1" />
-                                    Edit
+                                    Ubah
                                 </CustomButton>
                             ) : (
                                 <>
                                     <CustomButton type="button" className="px-4 py-2.5 text-white cursor-pointer" onClick={() => setIsEditMode(false)}>
-                                        Cancel
+                                        Batal
                                     </CustomButton>
                                     <CustomButton type="submit" className="px-4 py-2.5 cursor-pointer" disabled={updateMutation.isPending || assignBranchMutation.isPending}>
-                                        {updateMutation.isPending || assignBranchMutation.isPending ? "Saving..." : "Save Changes"}
+                                        {updateMutation.isPending || assignBranchMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                     </CustomButton>
                                 </>
                             )}
                         </div>
                     </div>
- 
+
                     <hr />
- 
+
                     <div className="flex flex-col gap-5 mt-6">
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" disabled={!isEditMode} rules={{ required: "Name is required" }} />
+                                <TextInput name="name" label="Nama Lengkap" placeholder="Misal: John Doe" disabled={!isEditMode} rules={{ required: "Nama wajib diisi" }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email Address" type="email" disabled={!isEditMode} rules={{ required: "Email is required" }} />
+                                <TextInput name="email" label="Alamat Email" type="email" disabled={!isEditMode} rules={{ required: "Email wajib diisi" }} />
                             </div>
                         </div>
- 
+
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Phone Number" placeholder="e.g +6281234567890" disabled={!isEditMode} />
+                                <TextInput name="phone" label="Nomor Telepon" placeholder="Misal: +6281234567890" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="newPassword" label="New Password (optional)" type="password" placeholder="Leave blank to keep current" disabled={!isEditMode} />
+                                <TextInput name="newPassword" label="Kata Sandi Baru (opsional)" type="password" placeholder="Kosongkan jika tidak ingin mengubah" disabled={!isEditMode} />
                             </div>
                         </div>
- 
+
                         {/* BRANCH ROLE SPECIFIC TO THIS BRANCH */}
                         <hr className="mt-2" />
                         <div>
-                            <h2 className="text-lg font-semibold text-zinc-800 mb-1">Branch Role</h2>
+                            <h2 className="text-lg font-semibold text-zinc-800 mb-1">Peran Cabang</h2>
                             <p className="text-sm text-zinc-500 mb-4">Peran staff ini khusus pada cabang aktif saat ini.</p>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
                                 <SearchableDropdown
                                     name="branch_role"
-                                    label="Role in Branch"
+                                    label="Peran di Cabang"
                                     options={branchRoleOptions}
                                     disabled={!isEditMode}
-                                    rules={{ required: "Branch role is required" }}
+                                    rules={{ required: "Peran di cabang wajib diisi" }}
                                 />
                             </div>
                         </div>

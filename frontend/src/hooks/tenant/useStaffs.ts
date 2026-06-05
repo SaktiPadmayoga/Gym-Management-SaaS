@@ -120,6 +120,7 @@ export function useUpdateStaff() {
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: staffKeys.detail(id) });
             queryClient.invalidateQueries({ queryKey: staffKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: ["staff", "auth", "me"] });
         },
 
         onError: (error) => {
@@ -193,6 +194,7 @@ export function useUpdateStaffPassword() {
         mutationFn: (payload: ChangePasswordRequest) => staffAuthAPI.changePassword(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: staffKeys.detail("me") });
+            queryClient.invalidateQueries({ queryKey: ["staff", "auth", "me"] });
         },
         onError: (error) => {
             console.error("Update profile error:", error);

@@ -171,7 +171,7 @@ export default function Membership() {
                         {/* Header */}
                         <div className="mb-6 flex items-center justify-between">
                             <div>
-                                <h1 className="text-2xl font-semibold text-zinc-800">Membership</h1>
+                                <h1 className="text-2xl font-semibold text-zinc-800">Keanggotaan</h1>
                                 <p className="text-zinc-500">Manage member memberships</p>
                             </div>
 

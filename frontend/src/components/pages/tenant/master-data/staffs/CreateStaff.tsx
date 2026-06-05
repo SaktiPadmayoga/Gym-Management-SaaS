@@ -18,15 +18,15 @@ import { useBranch } from "@/providers/BranchProvider";
  * OPTIONS
  * ========================= */
 const globalRoleOptions: DropdownOption<string>[] = [
-    { key: "staff", label: "Staff", value: "staff" },
-    { key: "owner", label: "Owner", value: "owner" },
+    { key: "staff", label: "Staf", value: "staff" },
+    { key: "owner", label: "Pemilik", value: "owner" },
 ];
 
 const branchRoleOptions: DropdownOption<string>[] = [
-    { key: "branch_manager", label: "Branch Manager", value: "branch_manager" },
+    { key: "branch_manager", label: "Manajer Cabang", value: "branch_manager" },
     { key: "trainer", label: "Trainer", value: "trainer" },
-    { key: "receptionist", label: "Receptionist", value: "receptionist" },
-    { key: "cashier", label: "Cashier", value: "cashier" },
+    { key: "receptionist", label: "Resepsionis", value: "receptionist" },
+    { key: "cashier", label: "Kasir", value: "cashier" },
 ];
 
 /* =========================
@@ -58,8 +58,6 @@ export default function BranchCreateStaff() {
         },
     });
 
-
-
     const onSubmit = async (formData: CreateStaffFormData) => {
         try {
             const payload: StaffCreateRequest = {
@@ -81,14 +79,14 @@ export default function BranchCreateStaff() {
 
             await createMutation.mutateAsync(payload);
 
-            toast.success("Staff created successfully");
+            toast.success("Staf berhasil ditambahkan");
             router.push("/staffs?success=true");
         } catch (error: any) {
             const message =
                 error?.response?.data?.error ||
                 error?.response?.data?.message ||
                 error?.message ||
-                "Failed to create staff";
+                "Gagal menambahkan staf";
 
             toast.error(message);
         }
@@ -103,11 +101,11 @@ export default function BranchCreateStaff() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Master Data</li>
                             <li>
-                                <Link href="/staffs">Staff</Link>
+                                <Link href="/staffs">Staf</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li className="text-aksen-secondary">Tambah baru</li>
                         </ul>
                     </div>
 
@@ -118,18 +116,18 @@ export default function BranchCreateStaff() {
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div>
-                                <h1 className="text-2xl font-semibold">Create Staff</h1>
+                                <h1 className="text-2xl font-semibold">Tambah Staf</h1>
                                 {/* Tampilkan branch aktif sebagai info */}
                                 {currentBranch && (
                                     <p className="text-sm text-zinc-500">
-                                        Branch: <span className="font-medium text-zinc-700">{currentBranch.name}</span>
+                                        Cabang: <span className="font-medium text-zinc-700">{currentBranch.name}</span>
                                     </p>
                                 )}
                             </div>
                         </div>
 
                         <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-4 py-2.5 disabled:opacity-50">
-                            {createMutation.isPending ? "Creating..." : "Create and save"}
+                            {createMutation.isPending ? "Menyimpan..." : "Tambah dan Simpan"}
                         </CustomButton>
                     </div>
 
@@ -139,34 +137,34 @@ export default function BranchCreateStaff() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Full Name" placeholder="e.g John Doe" rules={{ required: "Name is required" }} />
+                                <TextInput name="name" label="Nama Lengkap" placeholder="Misal: John Doe" rules={{ required: "Nama wajib diisi" }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="email" label="Email Address" type="email" placeholder="e.g staff@gym.com" rules={{ required: "Email is required" }} />
+                                <TextInput name="email" label="Alamat Email" type="email" placeholder="Misal: staff@gym.com" rules={{ required: "Email wajib diisi" }} />
                             </div>
                         </div>
 
                         {/* SECURITY & PHONE */}
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="password" label="Password" type="password" placeholder="Minimum 8 characters" rules={{ required: "Password is required", minLength: { value: 8, message: "Password must be at least 8 characters" } }} />
+                                <TextInput name="password" label="Kata Sandi" type="password" placeholder="Minimal 8 karakter" rules={{ required: "Kata Sandi wajib diisi", minLength: { value: 8, message: "Kata sandi harus minimal 8 karakter" } }} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Phone (optional)" placeholder="e.g +62812345678" />
+                                <TextInput name="phone" label="Telepon (opsional)" placeholder="Misal: +62812345678" />
                             </div>
                         </div>
 
                         {/* BRANCH ASSIGNMENT */}
                         <hr />
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-800 mb-1">Branch Assignment</h2>
+                            <h2 className="text-lg font-semibold text-gray-800 mb-1">Penugasan Cabang</h2>
                             <p className="text-sm text-zinc-500 mb-4">
-                                Staff will be assigned to <span className="font-medium text-zinc-700">{currentBranch?.name}</span> automatically.
+                                Staf akan ditugaskan ke cabang <span className="font-medium text-zinc-700">{currentBranch?.name}</span> secara otomatis.
                             </p>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <SearchableDropdown name="branch_role" label="Role in Branch" options={branchRoleOptions} rules={{ required: "Branch role is required" }} />
+                                <SearchableDropdown name="branch_role" label="Peran di Cabang" options={branchRoleOptions} rules={{ required: "Peran di cabang wajib diisi" }} />
                             </div>
                         </div>
                     </div>

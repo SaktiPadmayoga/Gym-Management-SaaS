@@ -84,10 +84,25 @@ class PtSessionPlanController extends Controller
     {
         $plan = PtSessionPlan::findOrFail($id);
 
-        // TODO: tambahkan guard jika sudah ada transaksi PT aktif
+        // 1. Perlindungan Ketat: Blokir jika paket Personal Training masih memiliki sisa kuota pertemuan aktif milik member
+        $hasRemainingQuota = \App\Models\Tenant\PtPackage::where('pt_session_plan_id', $id)
+            ->where(function ($q) {
+                $q->whereColumn('total_sessions', '>', 'used_sessions')
+                  ->orWhere('status', 'active');
+            })
+            ->exists();
+
+        if ($hasRemainingQuota) {
+            return ApiResponse::error(
+                'Tidak dapat menghapus paket Personal Training yang masih memiliki sisa kuota pertemuan aktif milik member!',
+                null,
+                422
+            );
+        }
+
         $plan->delete();
 
-        return ApiResponse::success(null, 'PT session plan deleted successfully');
+        return ApiResponse::success(null, 'Paket Personal Training berhasil dihapus');
     }
 
     public function toggleActive(string $id)

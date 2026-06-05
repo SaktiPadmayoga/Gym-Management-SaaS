@@ -58,7 +58,7 @@ export default function AssignMembershipModal({ isOpen, onClose, memberId }: Ass
             }));
             setPlanOptions(options);
         } catch (error) {
-            toast.error("Failed to load membership plans");
+            toast.error("Gagal memuat paket keanggotaan");
         } finally {
             setIsLoadingPlans(false);
         }
@@ -75,11 +75,11 @@ export default function AssignMembershipModal({ isOpen, onClose, memberId }: Ass
             };
 
             await assignMutation.mutateAsync({ memberId, payload });
-            toast.success("Membership successfully assigned!");
+            toast.success("Paket keanggotaan berhasil ditugaskan!");
             onClose();
         } catch (error) {
             console.error(error);
-            toast.error("Failed to assign membership");
+            toast.error("Gagal menugaskan keanggotaan");
         }
     };
 
@@ -90,8 +90,8 @@ export default function AssignMembershipModal({ isOpen, onClose, memberId }: Ass
             <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                     <div>
-                        <h2 className="text-lg font-semibold text-gray-800">Assign New Plan</h2>
-                        <p className="text-sm text-gray-500">Select a membership package for this member</p>
+                        <h2 className="text-lg font-semibold text-gray-800">Tugaskan Paket Baru</h2>
+                        <p className="text-sm text-gray-500">Pilih paket keanggotaan untuk anggota ini</p>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
                         ✕
@@ -101,22 +101,22 @@ export default function AssignMembershipModal({ isOpen, onClose, memberId }: Ass
                 <FormProvider {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-4">
                         <div className="space-y-4">
-                            <SearchableDropdown name="plan_id" label={isLoadingPlans ? "Loading plans..." : "Select Package *"} options={planOptions} disabled={isLoadingPlans} />
+                            <SearchableDropdown name="plan_id" label={isLoadingPlans ? "Memuat paket..." : "Pilih Paket Keanggotaan *"} options={planOptions} disabled={isLoadingPlans} />
 
                             <div className="grid grid-cols-2 gap-4">
-                                <TextInput name="start_date" label="Start Date *" type="date" />
-                                <TextInput name="end_date" label="End Date (Optional)" type="date" placeholder="Auto-calculated if empty" />
+                                <TextInput name="start_date" label="Tanggal Mulai *" type="date" />
+                                <TextInput name="end_date" label="Tanggal Berakhir (Opsional)" type="date" placeholder="Dihitung otomatis jika kosong" />
                             </div>
 
-                            <TextInput name="notes" label="Additional Notes" placeholder="e.g. Promo diskon pendaftaran" />
+                            <TextInput name="notes" label="Catatan Tambahan" placeholder="misal: Promo diskon pendaftaran" />
                         </div>
 
                         <div className="pt-4 mt-6 flex justify-end gap-2 border-t border-gray-100">
                             <CustomButton type="button" className="border bg-white text-gray-700 px-4 py-2" onClick={onClose}>
-                                Cancel
+                                Batal
                             </CustomButton>
                             <CustomButton type="submit" className="bg-aksen-secondary text-white px-5 py-2" disabled={assignMutation.isPending || isLoadingPlans}>
-                                {assignMutation.isPending ? "Assigning..." : "Assign Plan"}
+                                {assignMutation.isPending ? "Menugaskan..." : "Tugaskan Paket"}
                             </CustomButton>
                         </div>
                     </form>

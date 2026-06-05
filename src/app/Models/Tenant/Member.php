@@ -74,12 +74,33 @@ class Member extends Authenticatable
         return $this->hasMany(Membership::class);
     }
 
-    // Helper untuk mengambil membership yang sedang aktif saat ini
+    // Helper untuk mengambil membership yang sedang aktif saat ini (tidak kedaluwarsa)
     public function activeMembership()
     {
         return $this->hasOne(Membership::class)
             ->where('status', 'active')
+            ->where(function ($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now()->toDateString());
+            })
             ->orderByDesc('created_at');
+    }
+
+    /**
+     * Memeriksa dan mengubah status keanggotaan yang telah melewati masa aktif menjadi expired.
+     */
+    public function checkAndExpireMembership(): void
+    {
+        $expiredCount = $this->memberships()
+            ->where('status', 'active')
+            ->whereNotNull('end_date')
+            ->where('end_date', '<', now()->toDateString())
+            ->update(['status' => 'expired']);
+
+        if ($expiredCount > 0 || ($this->status === 'active' && !$this->activeMembership()->exists())) {
+            $hasExpired = $this->memberships()->where('status', 'expired')->exists();
+            $this->update(['status' => $hasExpired ? 'expired' : 'inactive']);
+        }
     }
 
     public function ptPackages(): HasMany

@@ -11,6 +11,7 @@ import { SearchableDropdown, DropdownOption } from "@/components/ui/input/Custom
 import { useCreateClassSchedule } from "@/hooks/tenant/useClassSchedules";
 import { useClassPlans } from "@/hooks/tenant/useClassPlans";
 import { useStaff } from "@/hooks/tenant/useStaffs";
+import { useStaffAuth } from "@/providers/StaffAuthProvider";
 import {
     ClassScheduleCreateRequest,
     ClassScheduleCreateRequestSchema,
@@ -46,9 +47,13 @@ export default function CreateClassSchedule() {
         subtitle: s.role ?? undefined,
     }));
 
+    const { staff, selectedBranch } = useStaffAuth();
+    const isTrainer = selectedBranch?.role === "trainer";
+
     const form = useForm<ClassScheduleCreateRequest>({
         defaultValues: {
             class_type: "membership_only",
+            instructor_id: isTrainer && staff?.id ? staff.id : "",
         },
     });
 
@@ -113,6 +118,7 @@ export default function CreateClassSchedule() {
                                     label="Instruktur *"
                                     options={instructorOptions}
                                     placeholder="Pilih instruktur..."
+                                    disabled={isTrainer}
                                 />
                             </div>
                         </div>

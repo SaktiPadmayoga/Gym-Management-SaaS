@@ -18,10 +18,10 @@ import { PtSessionPlanUpdateRequest } from "@/types/tenant/pt-session-plans";
  * ========================= */
 
 const durationUnitOptions: DropdownOption<string>[] = [
-    { key: "day", label: "Day", value: "day" },
-    { key: "week", label: "Week", value: "week" },
-    { key: "month", label: "Month", value: "month" },
-    { key: "year", label: "Year", value: "year" },
+    { key: "day", label: "Hari", value: "day" },
+    { key: "week", label: "Minggu", value: "week" },
+    { key: "month", label: "Bulan", value: "month" },
+    { key: "year", label: "Tahun", value: "year" },
 ];
 
 /* =========================
@@ -89,7 +89,7 @@ export default function PtSessionPlanDetail() {
         });
     }, [plan]);
 
-    if (isLoading) return <div className="p-6">Loading...</div>;
+    if (isLoading) return <div className="p-6">Memuat...</div>;
     if (isError) return notFound();
 
     /* =========================
@@ -118,11 +118,11 @@ export default function PtSessionPlanDetail() {
             };
 
             await updateMutation.mutateAsync({ id, payload });
-            toast.success("PT session plan updated successfully");
+            toast.success("Paket sesi PT berhasil diperbarui");
             setIsEditMode(false);
-            router.push("/pt-sessions-plan?updated=true");
+            router.push("/pt-sessions-plans?updated=true");
         } catch {
-            toast.error("Failed to update PT session plan");
+            toast.error("Gagal memperbarui paket sesi PT");
         }
     };
 
@@ -159,7 +159,7 @@ export default function PtSessionPlanDetail() {
                         <ul>
                             <li>Master Data</li>
                             <li>
-                                <Link href="/pt-sessions-plan">PT Session Plan</Link>
+                                <Link href="/pt-sessions-plans">Paket Sesi PT</Link>
                             </li>
                             <li className="text-aksen-secondary">{plan?.name ?? id}</li>
                         </ul>
@@ -168,55 +168,55 @@ export default function PtSessionPlanDetail() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <button type="button" onClick={() => router.push("/pt-sessions-plan")}>
+                            <button type="button" onClick={() => router.push("/pt-sessions-plans")}>
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div className="flex items-center gap-2">
                                 {plan?.color && <div className="w-4 h-4 rounded-full" style={{ backgroundColor: plan.color }} />}
-                                <h1 className="text-2xl font-semibold">PT Session Plan Detail</h1>
+                                <h1 className="text-2xl font-semibold">Detail Paket Sesi PT</h1>
                             </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <CustomButton
+                            {/* <CustomButton
                                 type="button"
                                 className="border text-zinc-600 px-3 py-2 text-sm"
                                 onClick={() =>
                                     duplicateMutation.mutate(id, {
-                                        onSuccess: () => toast.success("Plan duplicated"),
-                                        onError: () => toast.error("Failed to duplicate"),
+                                        onSuccess: () => toast.success("Paket sesi PT berhasil diduplikat"),
+                                        onError: () => toast.error("Gagal menduplikat paket"),
                                     })
                                 }
                                 disabled={duplicateMutation.isPending}
                             >
-                                Duplicate
-                            </CustomButton>
+                                Duplikat
+                            </CustomButton> */}
 
                             <CustomButton
                                 type="button"
-                                className={`border px-3 py-2 text-sm ${plan?.is_active ? "text-orange-600 border-orange-200" : "text-green-600 border-green-200"}`}
+                                className={`border px-3 py-2 text-sm ${plan?.is_active ? "text-white bg-red-500 border-red-500" : "text-green-600 border-green-200"}`}
                                 onClick={() =>
                                     toggleMutation.mutate(id, {
-                                        onSuccess: () => toast.success(`Plan ${plan?.is_active ? "deactivated" : "activated"}`),
-                                        onError: () => toast.error("Failed to update status"),
+                                        onSuccess: () => toast.success(`Paket sesi PT berhasil ${plan?.is_active ? "dinonaktifkan" : "diaktifkan"}`),
+                                        onError: () => toast.error("Gagal memperbarui status"),
                                     })
                                 }
                                 disabled={toggleMutation.isPending}
                             >
-                                {plan?.is_active ? "Deactivate" : "Activate"}
+                                {plan?.is_active ? "Nonaktifkan" : "Aktifkan"}
                             </CustomButton>
 
                             {!isEditMode ? (
                                 <CustomButton iconName="edit" className="bg-aksen-secondary text-white px-4 py-2.5" type="button" onClick={() => setIsEditMode(true)}>
-                                    Edit
+                                    Ubah
                                 </CustomButton>
                             ) : (
                                 <div className="flex gap-3">
                                     <CustomButton type="button" className="border py-2.5 px-4" onClick={handleCancel}>
-                                        Cancel
+                                        Batal
                                     </CustomButton>
                                     <CustomButton type="button" className="bg-aksen-secondary text-white py-2.5 px-4" onClick={handleSave} disabled={updateMutation.isPending}>
-                                        {updateMutation.isPending ? "Saving..." : "Save Changes"}
+                                        {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                     </CustomButton>
                                 </div>
                             )}
@@ -229,42 +229,42 @@ export default function PtSessionPlanDetail() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Session Name" disabled={!isEditMode} />
+                                <TextInput name="name" label="Nama Paket" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="duration" label="Duration" disabled={!isEditMode} />
+                                <NumberInput name="duration" label="Durasi" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <SearchableDropdown name="duration_unit" label="Duration Unit" options={durationUnitOptions} disabled={!isEditMode} />
+                                <SearchableDropdown name="duration_unit" label="Satuan Durasi" options={durationUnitOptions} disabled={!isEditMode} />
                             </div>
                         </div>
 
                         {/* PRICE, SESSIONS, MINUTES */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-3">
-                                <NumberInput name="price" label="Price (Rp)" disabled={!isEditMode} />
+                                <NumberInput name="price" label="Harga (Rp)" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="total_sessions" label="Total Sessions" disabled={!isEditMode} />
+                                <NumberInput name="total_sessions" label="Total Sesi" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="minutes_per_session" label="Minutes per Session" disabled={!isEditMode} />
+                                <NumberInput name="minutes_per_session" label="Menit per Sesi" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="loyalty_points_reward" label="Loyalty Points" disabled={!isEditMode} />
+                                <NumberInput name="loyalty_points_reward" label="Poin Loyalitas" disabled={!isEditMode} />
                             </div>
                         </div>
 
                         {/* CATEGORY, DESCRIPTION, COLOR */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-3">
-                                <TextInput name="category" label="Category" disabled={!isEditMode} />
+                                <TextInput name="category" label="Kategori" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-5">
-                                <TextInput name="description" label="Description" disabled={!isEditMode} />
+                                <TextInput name="description" label="Deskripsi" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-4">
-                                <label className="block text-sm font-medium text-zinc-700 mb-1">Color</label>
+                                <label className="block text-sm font-medium text-zinc-700 mb-1">Warna</label>
                                 <div className="flex items-center gap-2">
                                     <input type="color" {...form.register("color")} disabled={!isEditMode} className="w-10 h-10 rounded cursor-pointer border border-zinc-200 disabled:opacity-50" />
                                     <TextInput name="color" disabled={!isEditMode} />
@@ -275,17 +275,17 @@ export default function PtSessionPlanDetail() {
                         <hr />
 
                         {/* AVAILABILITY */}
-                        <h2 className="text-xl font-semibold text-gray-800">Availability Setting</h2>
+                        <h2 className="text-xl font-semibold text-gray-800">Pengaturan Ketersediaan</h2>
 
                         <div className="flex gap-6 items-start flex-col text-gray-800">
                             <div className="flex flex-row gap-8 items-center w-full">
                                 <div className="flex flex-row gap-3">
                                     <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("unlimited_sold")} />
-                                    <span className="text-sm font-medium">Unlimited Sold / Quota</span>
+                                    <span className="text-sm font-medium">Penjualan / Kuota Tak Terbatas</span>
                                 </div>
                                 {!unlimitedSold && (
                                     <div className="w-48">
-                                        <NumberInput name="total_quota" label="Max Sold / Quota" disabled={!isEditMode} />
+                                        <NumberInput name="total_quota" label="Maks. Penjualan / Kuota" disabled={!isEditMode} />
                                     </div>
                                 )}
                             </div>
@@ -293,15 +293,15 @@ export default function PtSessionPlanDetail() {
                             <div className="flex flex-row gap-8 items-center w-full">
                                 <div className="flex items-center gap-3">
                                     <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("always_available")} />
-                                    <span className="text-sm font-medium">Always Available</span>
+                                    <span className="text-sm font-medium">Selalu Tersedia</span>
                                 </div>
                                 {!alwaysAvailable && (
                                     <>
                                         <div className="w-48">
-                                            <TextInput type="date" name="available_from" label="Available From" disabled={!isEditMode} />
+                                            <TextInput type="date" name="available_from" label="Tersedia Mulai" disabled={!isEditMode} />
                                         </div>
                                         <div className="w-48">
-                                            <TextInput type="date" name="available_until" label="Available Until" disabled={!isEditMode} />
+                                            <TextInput type="date" name="available_until" label="Tersedia Sampai" disabled={!isEditMode} />
                                         </div>
                                     </>
                                 )}
@@ -309,7 +309,7 @@ export default function PtSessionPlanDetail() {
 
                             <div className="flex items-center gap-3">
                                 <input type="checkbox" className="checkbox checkbox-sm" disabled={!isEditMode} {...form.register("is_active")} />
-                                <span className="text-sm font-medium">Active</span>
+                                <span className="text-sm font-medium">Aktif</span>
                             </div>
                         </div>
                     </div>

@@ -58,37 +58,37 @@ export default function PtRequestsPage() {
     };
 
     return (
-        <div className="p-6 md:p-8 space-y-6">
+        <div className="space-y-6 font-figtree pb-10 bg-white p-5 rounded-xl border border-gray-500/20">
             <Toaster position="top-right" richColors />
             
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-black text-zinc-900 tracking-tight">Request Jadwal PT</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900">Request Jadwal PT</h1>
                     <p className="text-sm text-zinc-500 mt-1">Kelola permintaan jadwal sesi Personal Training dari member.</p>
                 </div>
                 <button
                     onClick={() => refetch()}
-                    className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl text-sm font-bold transition-colors"
+                    className="px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl text-sm font-semibold transition-colors border border-gray-500/10 shadow-sm"
                 >
-                    Refresh
+                    Muat Ulang
                 </button>
             </div>
 
             {isLoading ? (
                 <div className="space-y-4">
                     {[1, 2, 3].map(i => (
-                        <div key={i} className="h-24 bg-zinc-100 rounded-2xl animate-pulse" />
+                        <div key={i} className="h-24 bg-zinc-100 rounded-xl animate-pulse" />
                     ))}
                 </div>
             ) : requests.length === 0 ? (
-                <div className="py-20 text-center border-2 border-dashed border-zinc-200 rounded-3xl">
+                <div className="py-20 text-center border border-dashed border-gray-500/20 rounded-xl bg-zinc-50/50">
                     <Clock className="w-12 h-12 text-zinc-300 mx-auto mb-4" />
-                    <p className="text-zinc-500 font-medium">Belum ada request jadwal baru.</p>
+                    <p className="text-zinc-500 font-medium text-sm">Belum ada request jadwal baru.</p>
                 </div>
             ) : (
                 <div className="grid gap-4">
                     {requests.map((req: any) => (
-                        <div key={req.id} className="bg-white border border-zinc-200 rounded-2xl p-5 flex flex-col md:flex-row justify-between gap-6 shadow-sm">
+                        <div key={req.id} className="bg-white border border-gray-500/20 rounded-xl p-5 flex flex-col md:flex-row justify-between gap-6 shadow-sm hover:shadow-md transition-all duration-300">
                             <div>
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="px-2.5 py-1 bg-purple-100 text-purple-700 rounded-md text-[10px] font-black uppercase tracking-widest">
@@ -100,12 +100,12 @@ export default function PtRequestsPage() {
                                 </div>
                                 <h3 className="text-lg font-bold text-zinc-900">{req.member?.name}</h3>
                                 <p className="text-sm text-zinc-600 mt-1 flex items-center gap-2">
-                                    <Clock className="w-4 h-4" />
+                                    <Clock className="w-4 h-4 text-zinc-400" />
                                     {dayjs(req.date).locale("id").format("dddd, D MMM YYYY")} • {req.start_at.substring(0, 5)} - {req.end_at.substring(0, 5)}
                                 </p>
                                 {req.notes && (
-                                    <p className="text-sm text-zinc-500 mt-3 p-3 bg-zinc-50 rounded-xl border border-zinc-100">
-                                        <span className="font-semibold block mb-1">Catatan Member:</span>
+                                    <p className="text-sm text-zinc-500 mt-3 p-3 bg-zinc-50/50 rounded-xl border border-gray-500/20">
+                                        <span className="font-semibold block mb-1 text-zinc-700">Catatan Member:</span>
                                         {req.notes}
                                     </p>
                                 )}
@@ -135,8 +135,8 @@ export default function PtRequestsPage() {
             {/* Modal Tolak Request */}
             {rejectId && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-xl">
-                        <div className="p-4 border-b">
+                    <div className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-xl border border-gray-500/20">
+                        <div className="p-4 border-b border-zinc-100">
                             <h3 className="font-bold text-lg text-zinc-900">Tolak Request</h3>
                         </div>
                         <form onSubmit={handleReject} className="p-5 space-y-4">
@@ -144,7 +144,7 @@ export default function PtRequestsPage() {
                                 <label className="block text-sm font-semibold mb-1.5 text-zinc-700">Alasan Penolakan</label>
                                 <textarea
                                     required
-                                    className="w-full p-3 border border-zinc-200 rounded-xl text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+                                    className="w-full p-3 border border-gray-500/20 rounded-xl text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
                                     placeholder="Contoh: Jadwal bentrok, silakan pilih jam lain..."
                                     value={rejectReason}
                                     onChange={(e) => setRejectReason(e.target.value)}

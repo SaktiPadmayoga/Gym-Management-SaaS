@@ -77,6 +77,11 @@ class StaffController extends Controller
 
     public function store(StoreStaffRequest $request)
     {
+        $currentUser = $request->user('staff') ?? auth('staff')->user();
+        if ($currentUser && !$currentUser->isOwner()) {
+            return ApiResponse::error('Anda tidak memiliki izin untuk menambah staf baru.', null, 403);
+        }
+
         $data = $request->validated();
 
         // Prioritaskan branch_id dari payload form (dropdown). 
@@ -133,6 +138,16 @@ class StaffController extends Controller
         $staff = Staff::findOrFail($id);
         $data  = $request->validated();
 
+        $currentUser = $request->user('staff') ?? auth('staff')->user();
+        if ($currentUser && !$currentUser->isOwner()) {
+            if ($currentUser->id !== $staff->id) {
+                return ApiResponse::error('Anda tidak memiliki izin untuk mengubah data staf lain.', null, 403);
+            }
+            // Non-owner cannot change their own role or active status
+            unset($data['role']);
+            unset($data['is_active']);
+        }
+
         if ($request->hasFile('avatar')) {
             if ($staff->avatar) {
                 Storage::disk('public')->delete($staff->avatar);
@@ -154,6 +169,15 @@ class StaffController extends Controller
     {
         $staff = Staff::findOrFail($id);
 
+        $currentUser = request()->user('staff') ?? auth('staff')->user();
+        if ($currentUser && !$currentUser->isOwner()) {
+            return ApiResponse::error('Anda tidak memiliki izin untuk menghapus staf.', null, 403);
+        }
+
+        if ($currentUser && $currentUser->id === $staff->id) {
+            return ApiResponse::error('Anda tidak dapat menghapus akun Anda sendiri!', null, 403);
+        }
+
         StaffBranch::where('staff_id', $staff->id)->update(['is_active' => false]);
         $staff->delete();
 
@@ -162,6 +186,11 @@ class StaffController extends Controller
 
     public function assignBranch(AssignBranchRequest $request, string $id)
     {
+        $currentUser = $request->user('staff') ?? auth('staff')->user();
+        if ($currentUser && !$currentUser->isOwner()) {
+            return ApiResponse::error('Anda tidak memiliki izin untuk mengelola cabang staf.', null, 403);
+        }
+
         $staff = Staff::findOrFail($id);
         $data  = $request->validated();
 
@@ -198,6 +227,11 @@ class StaffController extends Controller
 
     public function revokeBranch(string $id, string $branchId)
     {
+        $currentUser = request()->user('staff') ?? auth('staff')->user();
+        if ($currentUser && !$currentUser->isOwner()) {
+            return ApiResponse::error('Anda tidak memiliki izin untuk mengelola cabang staf.', null, 403);
+        }
+
         $staffBranch = StaffBranch::where('staff_id', $id)
             ->where('branch_id', $branchId)
             ->firstOrFail();

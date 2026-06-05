@@ -15,22 +15,22 @@ import { useProducts, useDeleteProduct, useToggleProduct } from "@/hooks/tenant/
 import { useDebounce } from "@/hooks/useDebounce";
 
 export default function Products() {
-    const router        = useRouter();
-    const searchParams  = useSearchParams();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const hasShownToast = useRef(false);
 
-    const [page,    setPage]    = useState(() => Number(searchParams.get("page"))     || 1);
+    const [page, setPage] = useState(() => Number(searchParams.get("page")) || 1);
     const [perPage, setPerPage] = useState(() => Number(searchParams.get("per_page")) || 15);
 
     const form = useForm<ProductDataWithKeyword>({
         defaultValues: { search: searchParams.get("search") || "" },
     });
 
-    const searchValue     = form.watch("search");
+    const searchValue = form.watch("search");
     const debouncedSearch = useDebounce(searchValue, 500);
 
     const { data, isLoading, isError } = useProducts({
-        search:   debouncedSearch,
+        search: debouncedSearch,
         page,
         per_page: perPage,
     });
@@ -53,10 +53,22 @@ export default function Products() {
         const updated = searchParams.get("updated");
         const deleted = searchParams.get("deleted");
 
-        if (!success && !updated && !deleted) { hasShownToast.current = false; return; }
-        if (success === "true" && !hasShownToast.current) { toast.success("Product created successfully"); hasShownToast.current = true; }
-        if (updated === "true" && !hasShownToast.current) { toast.success("Product updated successfully"); hasShownToast.current = true; }
-        if (deleted === "true" && !hasShownToast.current) { toast.success("Product deleted successfully"); hasShownToast.current = true; }
+        if (!success && !updated && !deleted) {
+            hasShownToast.current = false;
+            return;
+        }
+        if (success === "true" && !hasShownToast.current) {
+            toast.success("Produk berhasil dibuat");
+            hasShownToast.current = true;
+        }
+        if (updated === "true" && !hasShownToast.current) {
+            toast.success("Produk berhasil diperbarui");
+            hasShownToast.current = true;
+        }
+        if (deleted === "true" && !hasShownToast.current) {
+            toast.success("Produk berhasil dihapus");
+            hasShownToast.current = true;
+        }
 
         window.history.replaceState({}, "", "/products");
     }, [searchParams]);
@@ -65,8 +77,8 @@ export default function Products() {
     const totalData = entries.length;
 
     if (isError) {
-        toast.error("Error loading products");
-        return <div className="py-10 text-center text-red-500">Error loading products</div>;
+        toast.error("Gagal memuat produk");
+        return <div className="py-10 text-center text-red-500">Gagal memuat produk</div>;
     }
 
     /* =========================
@@ -74,12 +86,24 @@ export default function Products() {
      * ========================= */
     const stockBadge = (item: ProductData) => {
         if (item.is_out_of_stock) {
-            return <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">{item.stock} {item.unit}</span>;
+            return (
+                <span className="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-700">
+                    {item.stock} {item.unit}
+                </span>
+            );
         }
         if (item.is_low_stock) {
-            return <span className="px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">{item.stock} {item.unit}</span>;
+            return (
+                <span className="px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                    {item.stock} {item.unit}
+                </span>
+            );
         }
-        return <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">{item.stock} {item.unit}</span>;
+        return (
+            <span className="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                {item.stock} {item.unit}
+            </span>
+        );
     };
 
     /* =========================
@@ -87,26 +111,16 @@ export default function Products() {
      * ========================= */
     const columns: Column<ProductData>[] = [
         {
-            header: "Image",
+            header: "Gambar",
             render: (item) => (
                 <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
-                    {item.image_url ? (
-                        <Image
-                            src={item.image_url}
-                            alt={item.name}
-                            width={48}
-                            height={48}
-                            className="object-cover w-full h-full"
-                        />
-                    ) : (
-                        <span className="text-zinc-400 text-xs">No img</span>
-                    )}
+                    {item.image_url ? <Image src={item.image_url} alt={item.name} width={48} height={48} className="object-cover w-full h-full" /> : <span className="text-zinc-400 text-xs">Tanpa gambar</span>}
                 </div>
             ),
             width: "w-20",
         },
         {
-            header: "Product Name",
+            header: "Nama Produk",
             render: (item) => (
                 <div>
                     <Link href={`/products/${item.id}`} className="font-medium text-zinc-800 hover:underline">
@@ -118,39 +132,27 @@ export default function Products() {
             width: "w-52",
         },
         {
-            header: "Category",
-            render: (item) => (
-                <span className="text-sm text-zinc-600">{item.category}</span>
-            ),
+            header: "Kategori",
+            render: (item) => <span className="text-sm text-zinc-600">{item.category}</span>,
             width: "w-36",
         },
         {
-            header: "Cost Price",
-            render: (item) => (
-                <span className="text-sm text-zinc-700">
-                    Rp {Number(item.cost_price).toLocaleString("id-ID")}
-                </span>
-            ),
+            header: "Harga Beli",
+            render: (item) => <span className="text-sm text-zinc-700">Rp {Number(item.cost_price).toLocaleString("id-ID")}</span>,
             width: "w-36",
         },
         {
-            header: "Selling Price",
-            render: (item) => (
-                <span className="font-medium text-zinc-800">
-                    Rp {Number(item.selling_price).toLocaleString("id-ID")}
-                </span>
-            ),
+            header: "Harga Jual",
+            render: (item) => <span className="font-medium text-zinc-800">Rp {Number(item.selling_price).toLocaleString("id-ID")}</span>,
             width: "w-36",
         },
         {
             header: "Margin",
-            render: (item) => (
-                <span className="text-sm text-zinc-600">{item.margin ?? 0}%</span>
-            ),
+            render: (item) => <span className="text-sm text-zinc-600">{item.margin ?? 0}%</span>,
             width: "w-24",
         },
         {
-            header: "Stock",
+            header: "Stok",
             render: (item) => stockBadge(item),
             width: "w-28",
         },
@@ -158,9 +160,9 @@ export default function Products() {
             header: "Status",
             render: (item) =>
                 item.is_active ? (
-                    <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium text-sm">Active</span>
+                    <span className="text-green-600 rounded-lg px-2 py-1 bg-green-600/10 font-medium text-sm">Aktif</span>
                 ) : (
-                    <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium text-sm">Inactive</span>
+                    <span className="text-zinc-500 rounded-lg px-2 py-1 bg-zinc-300/10 font-medium text-sm">Tidak Aktif</span>
                 ),
             width: "w-24",
         },
@@ -171,36 +173,36 @@ export default function Products() {
      * ========================= */
     const actions: ActionItem<ProductData>[] = [
         {
-            label: "View Details",
-            icon:  "eye",
+            label: "Lihat Detail",
+            icon: "eye",
             onClick: (row) => router.push(`/products/${row.id}`),
         },
         {
-            label: "Edit",
-            icon:  "edit",
+            label: "Ubah",
+            icon: "edit",
             className: "text-blue-600 hover:bg-blue-50",
             onClick: (row) => router.push(`/products/${row.id}`),
         },
         {
-            label: (row) => row.is_active ? "Deactivate" : "Activate",
-            icon:  "eye",
+            label: (row) => (row.is_active ? "Nonaktifkan" : "Aktifkan"),
+            icon: "eye",
             onClick: (row) => {
                 toggleMutation.mutate(row.id, {
-                    onSuccess: () => toast.success(`Product ${row.is_active ? "deactivated" : "activated"}`),
-                    onError:   () => toast.error("Failed to update status"),
+                    onSuccess: () => toast.success(`Produk ${row.is_active ? "dinonaktifkan" : "diaktifkan"}`),
+                    onError: () => toast.error("Gagal memperbarui status"),
                 });
             },
         },
         {
-            label: "Delete",
-            icon:  "trash",
+            label: "Hapus",
+            icon: "trash",
             className: "text-red-600 hover:bg-red-50",
             divider: true,
             onClick: (row) => {
-                if (confirm("Are you sure you want to delete this product?")) {
+                if (confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
                     deleteMutation.mutate(row.id, {
-                        onSuccess: () => toast.success("Product deleted"),
-                        onError:   () => toast.error("Failed to delete product"),
+                        onSuccess: () => toast.success("Produk berhasil dihapus"),
+                        onError: () => toast.error("Gagal menghapus produk"),
                     });
                 }
             },
@@ -217,26 +219,22 @@ export default function Products() {
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
                             <li>Master Data</li>
-                            <li className="text-aksen-secondary">Products</li>
+                            <li className="text-aksen-secondary">Produk</li>
                         </ul>
                     </div>
 
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-zinc-800">Products</h1>
-                            <p className="text-zinc-500">Manage your gym products and inventory</p>
+                            <h1 className="text-2xl font-semibold text-zinc-800">Produk</h1>
+                            <p className="text-zinc-500">Kelola produk gym dan inventaris Anda</p>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="w-64 text-zinc-800">
-                                <SearchInput name="search" />
+                                <SearchInput name="search" placeholder="Cari produk..." />
                             </div>
-                            <CustomButton
-                                className="px-3 py-2 text-sm text-white"
-                                iconName="plus"
-                                onClick={() => router.push("/products/create")}
-                            >
-                                New Product
+                            <CustomButton className="px-3 py-2 text-sm text-white" iconName="plus" onClick={() => router.push("/products/create")}>
+                                Produk Baru
                             </CustomButton>
                         </div>
                     </div>
@@ -250,28 +248,16 @@ export default function Products() {
                                 ))}
                             </div>
                         ) : (
-                            <CustomTable
-                                columns={columns}
-                                data={entries}
-                                actions={actions}
-                                onRowClick={(row) => router.push(`/products/${row.id}`)}
-                            />
+                            <CustomTable columns={columns} data={entries} actions={actions} onRowClick={(row) => router.push(`/products/${row.id}`)} />
                         )}
                     </div>
 
                     <div className="mt-4 text-sm text-zinc-500">
-                        Showing {entries.length > 0 ? 1 : 0} to {entries.length} of {totalData} data
+                        Menampilkan {entries.length > 0 ? 1 : 0} sampai {entries.length} dari {totalData} data
                     </div>
-                </div>
-
-                <div className="mt-4">
-                    <PaginationWithRows
-                        hasNextPage={false}
-                        hasPrevPage={false}
-                        totalItems={totalData}
-                        rowOptions={[5, 10, 20, 50]}
-                        defaultRowsPerPage={perPage}
-                    />
+                    <div className="mt-4">
+                        <PaginationWithRows hasNextPage={false} hasPrevPage={false} totalItems={totalData} rowOptions={[5, 10, 15, 20, 50]} defaultRowsPerPage={perPage} />
+                    </div>
                 </div>
             </div>
         </FormProvider>

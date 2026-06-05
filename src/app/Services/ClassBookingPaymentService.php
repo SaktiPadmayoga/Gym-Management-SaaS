@@ -54,10 +54,8 @@ class ClassBookingPaymentService
                         // Status kehadiran tetap 'booked', staf bisa ubah manual ke 'attended' saat member datang
                     ]);
 
-                    // 4. PENTING: Tambah kuota kelas (karena saat pending di awal kita tidak menambahkannya)
-                    if ($attendance->class_schedule_id) {
-                        ClassSchedule::where('id', $attendance->class_schedule_id)->increment('total_booked');
-                    }
+                    // 4. PENTING: Kuota kelas sudah di-increment di ClassBookingService saat pending.
+                    // Jadi tidak perlu increment ulang di sini.
                     
                     Log::info('[ClassBookingPayment] Sukses konfirmasi payment kelas', ['attendance_id' => $attendance->id]);
                 } else {
@@ -105,8 +103,10 @@ class ClassBookingPaymentService
                         'notes'          => 'Dibatalkan karena pembayaran expired/gagal',
                     ]);
                     
-                    // Kita TIDAK PERLU mengurangi (decrement) total_booked kelas
-                    // karena saat statusnya pending, kita memang belum menambahkannya.
+                    // 4. PENTING: Kuota kelas dikurangi kembali karena saat pending di awal kita sudah menambahkannya.
+                    if ($attendance->class_schedule_id) {
+                        ClassSchedule::where('id', $attendance->class_schedule_id)->decrement('total_booked');
+                    }
                 }
             });
         } catch (\Exception $e) {

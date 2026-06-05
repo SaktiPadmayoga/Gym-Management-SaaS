@@ -50,4 +50,38 @@ class NotificationService
             ]);
         }
     }
+
+    public function notifyTenantDeactivated(Tenant $tenant, string $status, ?string $message = null): void
+    {
+        $this->createTenantForTenant(
+            $tenant,
+            null,
+            'tenant_deactivated',
+            'Gym Nonaktif',
+            $message ?? "Gym {$tenant->name} telah dinonaktifkan dengan status {$status}."
+        );
+    }
+
+    public function notifyDomainRequestApproved(Tenant $tenant, ?string $branchId, string $requestedDomain): void
+    {
+        $this->createTenantForTenant(
+            $tenant,
+            $branchId,
+            'domain_request_approved',
+            'Pengajuan Domain Disetujui',
+            "Pengajuan ganti domain ke {$requestedDomain} telah disetujui oleh platform."
+        );
+    }
+
+    public function notifyDomainRequestRejected(Tenant $tenant, ?string $branchId, string $requestedDomain, ?string $rejectionReason = null): void
+    {
+        $reason = $rejectionReason ? " Alasan: {$rejectionReason}" : '';
+        $this->createTenantForTenant(
+            $tenant,
+            $branchId,
+            'domain_request_rejected',
+            'Pengajuan Domain Ditolak',
+            "Pengajuan ganti domain ke {$requestedDomain} ditolak.{$reason}"
+        );
+    }
 }

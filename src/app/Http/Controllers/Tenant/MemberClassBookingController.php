@@ -86,11 +86,7 @@ class MemberClassBookingController extends Controller
             'cancelled_at' => now(),
         ]);
 
-        // ✅ PERBAIKAN: Gunakan relasi yang benar (classSchedule, bukan schedule)
-        // Kurangi slot hanya jika payment sudah dihitung (bukan pending)
-        if ($attendance->payment_status !== 'pending') {
-            $attendance->classSchedule()->decrement('total_booked');
-        }
+        $attendance->classSchedule()->decrement('total_booked');
 
         return ApiResponse::success(null, 'Booking berhasil dibatalkan.');
     }

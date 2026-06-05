@@ -12,7 +12,7 @@ const repeatedLogos = [...logos, ...logos, ...logos, ...logos];
 
 const LogoCloud = () => {
   return (
-    <section className="py-12 border-y border-slate-200 bg-white overflow-hidden relative font-sans">
+    <section className="py-12 lg:py-10 border-y border-slate-200 bg-white overflow-hidden relative font-sans">
       <div className="max-w-7xl mx-auto px-6">
         <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-8">
           Dipercaya oleh 500+ Fasilitas Kebugaran Terkemuka
@@ -36,11 +36,11 @@ const LogoCloud = () => {
         >
           {repeatedLogos.map((name, idx) => (
             <div key={idx} className="flex items-center">
-              <span className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-slate-200 hover:text-teal-500 transition-colors duration-300 cursor-default select-none">
+              <span className="text-2xl md:text-2xl font-black uppercase tracking-tighter text-slate-200 hover:text-teal-500 transition-colors duration-300 cursor-default select-none">
                 {name}
               </span>
               {/* Separator / Ornamen antar logo */}
-              <span className="mx-8 md:mx-16 text-xl font-light text-slate-200">
+              <span className="mx-8 md:mx-12 text-xl font-light text-slate-200">
                 /
               </span>
             </div>

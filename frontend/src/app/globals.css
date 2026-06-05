@@ -21,6 +21,10 @@
     --color-geonet-primary-bg: #f3f3f3;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 :root {
     --background: #ffffff;
     --foreground: #171717;

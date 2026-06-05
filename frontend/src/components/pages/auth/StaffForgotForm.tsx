@@ -6,7 +6,7 @@ import { toast, Toaster } from "sonner";
 import { TextInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
 import { useRouter } from "next/navigation";
-import { Building2, ArrowLeft, Send } from "lucide-react";
+import { Building2, ArrowLeft, Send, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import tenantApiClient from "@/lib/tenant-api-client";
 import { useTenantHeader } from "@/hooks/useTenantHeader";
@@ -14,6 +14,16 @@ import { usePublicBranchSettings } from "@/hooks/tenant/useBranchSettings";
 
 interface ForgotFormData {
     email: string;
+}
+
+function isColorDark(hex: string): boolean {
+    const c = hex.replace("#", "");
+    const r = parseInt(c.substring(0, 2), 16) || 255;
+    const g = parseInt(c.substring(2, 4), 16) || 255;
+    const b = parseInt(c.substring(4, 6), 16) || 255;
+
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance < 0.5;
 }
 
 export default function StaffForgotForm() {
@@ -25,7 +35,7 @@ export default function StaffForgotForm() {
     const { data: publicSettings } = usePublicBranchSettings(undefined);
 
     const primaryColor = publicSettings?.primary_color ?? "#0f766e"; 
-    const logoUrl = publicSettings?.logo_url ?? null;
+    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || null;
     const tenantName = tenant?.name ?? "Workspace";
 
     const form = useForm<ForgotFormData>({
@@ -58,101 +68,132 @@ export default function StaffForgotForm() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex items-center justify-center font-sans p-4 md:p-6 lg:p-8 relative overflow-hidden">
+        <div className="min-h-screen bg-white flex font-sans overflow-hidden">
             <Toaster position="top-center" />
 
-            {/* Background Grid */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-50" />
+            {/* ========================================================= */}
+            {/* KIRI: VISUAL BRANDING & GYM SAAS VIBE (Sembunyi di Mobile) */}
+            {/* ========================================================= */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-950 flex-col justify-between p-12 overflow-hidden">
+                {/* Gym Background Image */}
+                <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity"
+                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop')" }}
+                />
+
+                {/* Gradient Masking dengan Hint PrimaryColor milik Tenant */}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-transparent to-transparent" />
+                <div className="absolute inset-0 opacity-20 mix-blend-color" style={{ backgroundColor: primaryColor }} />
+
+                {/* Top Branding (Tenant Logo & Name) */}
+                <div className="relative z-10 flex items-center gap-4">
+                    {logoUrl ? (
+                        <img src={logoUrl} alt={tenantName} className="w-12 h-12 rounded-xl object-cover bg-white p-0.5 shadow-lg" />
+                    ) : (
+                        <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
+                            <Building2 className="w-6 h-6 text-white" />
+                        </div>
+                    )}
+                    <span className="text-2xl font-black text-white uppercase tracking-tighter">{tenantName}</span>
+                </div>
+
+                {/* Bottom Copywriting */}
+                <div className="relative z-10">
+                    <h1 className="text-4xl xl:text-5xl font-black text-white tracking-tighter uppercase leading-[0.9] mb-4">
+                        Staff & <br />
+                        <span style={{ color: primaryColor }}>Management.</span>
+                    </h1>
+                    <p className="text-sm font-semibold text-zinc-400 max-w-md leading-relaxed">Masukkan alamat email terdaftar Anda untuk memulihkan kata sandi portal staf Anda secara aman.</p>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mt-6">Powered by GYMFIT OS</p>
+                </div>
             </div>
 
-            <div className="relative z-10 w-full max-w-xl mx-auto">
-                <motion.div 
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                    className="w-full shrink-0 rounded-[2.5rem] bg-white border border-slate-200 p-8 md:p-12 shadow-[0_8px_30px_rgb(0,0,0,0.03)] flex flex-col justify-center relative overflow-hidden"
-                >
-                    {/* Tenant Branding Accent */}
-                    <div 
-                        className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 rounded-b-full" 
-                        style={{ backgroundColor: primaryColor }}
-                    />
+            {/* ========================================================= */}
+            {/* KANAN: FORM LUPA SANDI AREA                                   */}
+            {/* ========================================================= */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative bg-white">
+                {/* Mobile Header (Hanya muncul di HP) */}
+                <div className="absolute top-8 left-6 lg:hidden flex items-center gap-3">
+                    {logoUrl ? (
+                        <img src={logoUrl} alt={tenantName} className="w-8 h-8 rounded-lg object-cover bg-white shadow-sm" />
+                    ) : (
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: primaryColor }}>
+                            <Building2 className="w-4 h-4 text-white" />
+                        </div>
+                    )}
+                    <span className="text-lg font-black text-zinc-900 uppercase tracking-tighter">{tenantName}</span>
+                </div>
 
-                    <div className="flex items-center gap-3 mb-8 justify-center">
-                        {logoUrl ? (
-                            <img src={logoUrl} alt={tenantName} className="w-10 h-10 rounded-xl object-cover shadow-sm" />
-                        ) : (
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: primaryColor }}>
-                                <Building2 className="w-5 h-5 text-white" />
-                            </div>
-                        )}
-                        <span className="text-xl font-black text-slate-900 uppercase tracking-tighter">
-                            {tenantName}
-                        </span>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="w-full max-w-md">
+                    <div className="mb-10">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-zinc-100 rounded-full text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-6">
+                            <Activity className="w-3 h-3 animate-pulse" style={{ color: primaryColor }} />
+                            Pemulihan Akun
+                        </div>
+                        <h2 className="text-3xl sm:text-4xl font-black text-zinc-900 tracking-tighter uppercase mb-2">Lupa Kata Sandi</h2>
+                        <p className="text-sm font-medium text-zinc-500">
+                            {!isSuccess 
+                                ? "Masukkan email terdaftar untuk menerima link reset kata sandi."
+                                : "Link instruksi pemulihan berhasil dikirim."}
+                        </p>
                     </div>
 
                     {!isSuccess ? (
-                        <>
-                            <div className="mb-10 text-center flex flex-col items-center">
-                                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Lupa Kata Sandi</h2>
-                                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">
-                                    Masukkan email staf Anda untuk mereset kata sandi.
-                                </p>
-                            </div>
+                        <FormProvider {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
+                                <TextInput
+                                    name="email"
+                                    label="Alamat Email"
+                                    placeholder="staff@gym.com"
+                                    type="email"
+                                />
 
-                            <FormProvider {...form}>
-                                <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-
-                                    <TextInput
-                                        name="email"
-                                        label="Alamat Email"
-                                        placeholder="staff@gym.com"
-                                        type="email"
-                                    />
-
-                                    <CustomButton
-                                        type="submit"
-                                        disabled={isLoading}
-                                        className="w-full h-14 mt-4 text-xs font-black uppercase tracking-widest rounded-2xl shadow-lg active:scale-[0.98] disabled:opacity-50 transition-all duration-300 flex items-center justify-center gap-2"
-                                        style={{ 
-                                            backgroundColor: primaryColor, 
-                                            color: '#ffffff',
-                                            boxShadow: `0 10px 25px -5px ${primaryColor}40`
-                                        }}
-                                    >
-                                        {isLoading ? "Mengirim..." : "Kirim Link Reset"}
-                                        {!isLoading && <Send className="w-4 h-4" />}
-                                    </CustomButton>
-                                </form>
-                            </FormProvider>
-                        </>
+                                <CustomButton
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full h-14 mt-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                                    style={{
+                                        backgroundColor: primaryColor,
+                                        color: isColorDark(primaryColor) ? "#ffffff" : "#18181b",
+                                        boxShadow: `0 10px 25px -5px ${primaryColor}40`,
+                                    }}
+                                >
+                                    {isLoading ? "Mengirim..." : "Kirim Link Reset"}
+                                    {!isLoading && <Send className="w-4 h-4" />}
+                                </CustomButton>
+                            </form>
+                        </FormProvider>
                     ) : (
-                        <div className="text-center py-8">
-                            <div 
-                                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-opacity-10"
-                                style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
-                            >
+                        <div className="text-center py-6 bg-zinc-50/50 rounded-2xl border border-zinc-100 p-6">
+                            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>
                                 <Send className="w-8 h-8" />
                             </div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase mb-4">Email Terkirim</h2>
-                            <p className="text-sm font-medium text-slate-500 leading-relaxed mb-8">
-                                Kami telah mengirimkan tautan untuk mereset kata sandi Anda ke <strong>{form.getValues('email')}</strong>. Silakan periksa kotak masuk Anda.
+                            <h3 className="text-lg font-bold text-zinc-800 mb-2">Email Terkirim</h3>
+                            <p className="text-xs text-zinc-500 leading-relaxed mb-4">
+                                Kami telah mengirimkan tautan untuk mereset kata sandi Anda ke <strong>{form.getValues('email')}</strong>. Silakan periksa kotak masuk email Anda.
                             </p>
                         </div>
                     )}
 
-                    <div className="mt-8 text-center border-t border-slate-100 pt-8">
+                    {/* Back redirection link */}
+                    <div className="mt-8 text-center pt-6 border-t border-zinc-100">
                         <button 
                             type="button" 
                             onClick={() => router.push('/tenant-auth/login')}
-                            className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-slate-700 transition-colors uppercase tracking-wider"
+                            className="inline-flex items-center gap-2 text-xs font-bold transition-colors hover:opacity-85"
+                            style={{ color: primaryColor }}
                         >
                             <ArrowLeft className="w-4 h-4" />
                             Kembali ke Login
                         </button>
                     </div>
 
+                    {/* Security Notice */}
+                    <div className="mt-12 flex items-center justify-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Sistem Terenkripsi & Terlindungi</p>
+                    </div>
                 </motion.div>
             </div>
         </div>

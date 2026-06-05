@@ -47,7 +47,7 @@ const PricingSection = () => {
   };
 
   return (
-    <section id="pricing" className="relative py-24 md:py-32 px-6 bg-white overflow-hidden font-sans">
+    <section id="pricing" className="relative py-24 md:py-24 px-6 bg-white overflow-hidden font-sans">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_20%,transparent_100%)] opacity-50" />
       </div>
@@ -60,13 +60,13 @@ const PricingSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          className="mb-12 md:mb-16 text-center flex flex-col items-center"
+          className="mb-12 md:mb-12 text-center flex flex-col items-center"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
              <CreditCard className="w-3 h-3 text-teal-400" />
              Transparent Pricing
           </div>
-          <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900 mb-6">
+          <h2 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900 mb-6">
             Scale Your <br />
             <span className="text-teal-500">Revenue.</span>
           </h2>
@@ -115,7 +115,7 @@ const PricingSection = () => {
 
         {/* --- PRICING CARDS --- */}
         {!isLoading && !isError && (
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-8 items-center">
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-6 items-center">
             {publicPlans.map((plan, i) => {
               const isPopular = plan.code.toLowerCase().includes("pro") || i === 1;
               const priceValue = billingCycle === "monthly" ? plan.pricing.monthly : plan.pricing.yearly;
@@ -135,7 +135,7 @@ const PricingSection = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }}
                   transition={{ duration: 0.6, delay: i * 0.15, ease: [0.22, 1, 0.36, 1] }}
-                  className={`relative rounded-[2.5rem] p-8 md:p-10 transition-all duration-500 flex flex-col h-full ${
+                  className={`relative rounded-[2.5rem] lg:rounded-[2rem] p-8 md:p-8 transition-all duration-500 flex flex-col h-full ${
                     isPopular
                       ? "bg-slate-950 text-white border border-slate-800 shadow-2xl shadow-teal-900/20 lg:scale-105 z-10"
                       : "bg-slate-50 text-slate-900 border border-slate-200 shadow-sm hover:border-teal-200 hover:bg-white z-0"
@@ -164,7 +164,7 @@ const PricingSection = () => {
 
                   <div className="mb-8 relative z-10 flex items-end gap-1">
                     {isCustom ? (
-                      <span className="text-5xl md:text-6xl font-black tracking-tighter uppercase">
+                      <span className="text-5xl md:text-5xl font-black tracking-tighter uppercase">
                         Custom
                       </span>
                     ) : (
@@ -172,7 +172,7 @@ const PricingSection = () => {
                         <span className={`text-2xl font-black mb-1 ${isPopular ? "text-slate-400" : "text-slate-400"}`}>
                           {plan.pricing.currency === "IDR" ? "Rp" : plan.pricing.currency}
                         </span>
-                        <span className="text-6xl md:text-7xl font-black tracking-tighter leading-none">
+                        <span className="text-6xl md:text-6xl font-black tracking-tighter leading-none">
                           {amount}
                         </span>
                         <span className={`text-2xl font-black ${isPopular ? "text-teal-500" : "text-slate-900"}`}>

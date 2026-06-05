@@ -38,7 +38,7 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section id="testimonials" className="py-24 px-6 bg-white font-sans relative overflow-hidden">
+    <section id="testimonials" className="py-24 lg:py-20 px-6 bg-white font-sans relative overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:20px_20px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_20%,transparent_100%)] opacity-50" />
@@ -52,20 +52,20 @@ const TestimonialsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
-          className="mb-16 md:mb-20"
+          className="mb-16 md:mb-16"
         >
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-black text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
             <Star className="w-3 h-3 text-teal-400 fill-teal-400" />
             Testimoni Mitra
           </div>
-          <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900 mb-6">
+          <h2 className="text-5xl md:text-6xl font-black tracking-tighter leading-[0.85] uppercase text-slate-900 mb-6">
             Dipercaya Oleh <br />
             <span className="text-slate-300">Pemimpin Industri.</span>
           </h2>
         </motion.div>
 
         {/* Bento Grid Testimonials */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-3">
           {testimonials.map((t, i) => (
             <motion.div
               key={i}
@@ -73,13 +73,13 @@ const TestimonialsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.5, delay: i * 0.15 }}
-              className={`${t.span} ${t.theme} rounded-[2.5rem] p-8 md:p-12 border flex flex-col justify-between relative overflow-hidden group`}
+              className={`${t.span} ${t.theme} rounded-[2.5rem] lg:rounded-[2rem] p-8 md:p-10 border flex flex-col justify-between relative overflow-hidden group`}
             >
               {/* Giant Quote Watermark */}
               <Quote className="absolute -top-4 -right-4 w-40 h-40 opacity-5 rotate-12 pointer-events-none" />
 
-              <p className={`text-xl md:text-3xl font-bold tracking-tight leading-snug mb-10 relative z-10 ${t.textClass}`}>
-                "{t.content}"
+              <p className={`text-xl md:text-2xl font-bold tracking-tight leading-snug mb-10 relative z-10 ${t.textClass}`}>
+                &ldquo;{t.content}&rdquo;
               </p>
 
               <div className="flex items-center gap-4 relative z-10">

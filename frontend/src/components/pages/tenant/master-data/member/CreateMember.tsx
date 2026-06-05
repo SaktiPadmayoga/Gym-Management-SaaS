@@ -18,9 +18,9 @@ import { useCreateMember } from "@/hooks/tenant/useMembers";
  * ========================= */
 
 const genderOptions: DropdownOption<string>[] = [
-    { key: "male", label: "Male", value: "male" },
-    { key: "female", label: "Female", value: "female" },
-    { key: "other", label: "Other", value: "other" },
+    { key: "male", label: "Laki-laki", value: "male" },
+    { key: "female", label: "Perempuan", value: "female" },
+    { key: "other", label: "Lainnya", value: "other" },
 ];
 
 /* =========================
@@ -98,12 +98,12 @@ export default function CreateMember() {
             // Kirim FormData ke React Query mutation
             const newMember = await createMutation.mutateAsync(payload);
 
-            toast.success("Member profile created successfully");
+            toast.success("Profil anggota berhasil dibuat");
 
             // Redirect ke halaman detail agar staff bisa melanjutkan proses Assign Membership (Langkah 2)
             router.push(`/members/${newMember.id}?success=true`);
         } catch (err) {
-            toast.error("Failed to create member");
+            toast.error("Gagal membuat anggota");
             console.error(err);
         }
     };
@@ -117,11 +117,11 @@ export default function CreateMember() {
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
                         <ul>
-                            <li>Management</li>
+                            <li>Manajemen</li>
                             <li>
-                                <Link href="/members">Members</Link>
+                                <Link href="/members">Anggota</Link>
                             </li>
-                            <li className="text-aksen-secondary">Create new</li>
+                            <li className="text-aksen-secondary">Buat baru</li>
                         </ul>
                     </div>
 
@@ -132,23 +132,23 @@ export default function CreateMember() {
                                 <Icon name="back" className="h-7 w-7 cursor-pointer" />
                             </button>
                             <div>
-                                <h1 className="text-2xl font-semibold">Create Member</h1>
+                                <h1 className="text-2xl font-semibold">Buat Anggota</h1>
                                 {currentBranch && (
                                     <p className="text-sm text-zinc-500">
-                                        Home Branch: <span className="font-medium text-zinc-700">{currentBranch.name}</span>
+                                        Cabang Utama: <span className="font-medium text-zinc-700">{currentBranch.name}</span>
                                     </p>
                                 )}
                             </div>
                         </div>
                         <CustomButton type="submit" disabled={createMutation.isPending} className="bg-aksen-secondary text-white px-5 py-2.5 disabled:opacity-50">
-                            {createMutation.isPending ? "Saving..." : "Save Profile"}
+                            {createMutation.isPending ? "Menyimpan..." : "Simpan Profil"}
                         </CustomButton>
                     </div>
 
                     <hr className="border-gray-100" />
 
                     <div className="flex flex-col md:flex-row gap-8 mt-6">
-                        {/* LEFT COLUMN: AVATAR UPLOAD */}
+                        {/* LEFT COLUMN: AVATAR UPLOAD
                         <div className="flex flex-col items-center gap-3 w-full md:w-1/4">
                             <div className="w-32 h-32 rounded-full border-2 border-dashed border-zinc-300 flex items-center justify-center overflow-hidden bg-zinc-50 relative group">
                                 {previewUrl ? (
@@ -167,43 +167,43 @@ export default function CreateMember() {
                             <p className="text-xs text-zinc-400 text-center">
                                 Allowed formats: JPG, PNG. <br /> Max size: 2MB.
                             </p>
-                        </div>
+                        </div> */}
 
                         {/* RIGHT COLUMN: IDENTITY FORM */}
                         <div className="flex-1 flex flex-col gap-6">
                             <div className="grid grid-cols-12 gap-4">
                                 <div className="col-span-12 md:col-span-6">
-                                    <TextInput name="name" label="Full Name *" placeholder="e.g John Doe" />
+                                    <TextInput name="name" label="Nama Lengkap *" placeholder="misal: John Doe" />
                                 </div>
                                 <div className="col-span-12 md:col-span-6">
-                                    <TextInput name="email" label="Email (optional)" placeholder="e.g member@email.com" />
+                                    <TextInput name="email" label="Email (opsional)" placeholder="misal: member@email.com" />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-12 gap-4">
                                 <div className="col-span-12 md:col-span-4">
-                                    <TextInput name="phone" label="Phone" placeholder="e.g 0812345678" />
+                                    <TextInput name="phone" label="Nomor Telepon" placeholder="misal: 0812345678" />
                                 </div>
                                 <div className="col-span-12 md:col-span-4">
-                                    <TextInput name="emergency_contact" label="Emergency Contact" placeholder="e.g 0812345678" />
+                                    <TextInput name="emergency_contact" label="Kontak Darurat" placeholder="misal: 0812345678" />
                                 </div>
                                 <div className="col-span-12 md:col-span-4">
-                                    <SearchableDropdown name="gender" label="Gender" options={genderOptions} />
+                                    <SearchableDropdown name="gender" label="Jenis Kelamin" options={genderOptions} />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-12 gap-4">
                                 <div className="col-span-12 md:col-span-4">
-                                    <TextInput name="date_of_birth" label="Date of Birth" type="date" />
+                                    <TextInput name="date_of_birth" label="Tanggal Lahir" type="date" />
                                 </div>
                                 <div className="col-span-12 md:col-span-8">
-                                    <TextInput name="id_card_number" label="ID Card Number (KTP)" placeholder="e.g 3201..." />
+                                    <TextInput name="id_card_number" label="Nomor KTP" placeholder="misal: 3201..." />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-12 gap-4">
                                 <div className="col-span-12">
-                                    <TextInput name="address" label="Address (optional)" placeholder="Full address" />
+                                    <TextInput name="address" label="Alamat (opsional)" placeholder="Alamat lengkap" />
                                 </div>
                             </div>
                         </div>

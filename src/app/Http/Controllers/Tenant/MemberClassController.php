@@ -95,13 +95,19 @@ class MemberClassController extends Controller
         try {
             DB::beginTransaction();
 
-            $attendance = ClassAttendance::create([
-                'class_schedule_id' => $id,
-                'member_id'         => $member->id,
-                'checked_in_by'     => null, // self booking
-                'status'            => 'booked',
-                'booked_at'         => now(),
-            ]);
+            $attendance = ClassAttendance::withTrashed()->updateOrCreate(
+                [
+                    'class_schedule_id' => $id,
+                    'member_id'         => $member->id,
+                ],
+                [
+                    'checked_in_by'     => null, // self booking
+                    'status'            => 'booked',
+                    'booked_at'         => now(),
+                    'cancelled_at'      => null,
+                    'deleted_at'        => null,
+                ]
+            );
 
             $schedule->increment('total_booked');
 
