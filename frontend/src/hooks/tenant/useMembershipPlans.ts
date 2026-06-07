@@ -157,9 +157,9 @@ export function useSyncClassPlans() {
     });
 }
 
-export function useAvailableMembershipPlans(params?: MembershipPlansQueryParams) {
+export function useAvailableMembershipPlans(params?: MembershipPlansQueryParams & { branch_id?: string }) {
     return useQuery({
-        queryKey: membershipPlanKeys.list(params),
+        queryKey: [...membershipPlanKeys.list(params), params?.branch_id],
         queryFn: () => membershipPlansAPI.getAvailablePlans(params),
         staleTime: 5 * 60 * 1000,
     });

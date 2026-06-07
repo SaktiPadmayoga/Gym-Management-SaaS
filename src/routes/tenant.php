@@ -273,6 +273,7 @@ Route::middleware(['auth:staff', 'check_tenant_access'])->group(function () {
     Route::prefix('pos')->middleware('permission:pos')->group(function () {
         Route::post('/checkout', [POSController::class, 'checkout']);
         Route::get('/history',   [POSController::class, 'history']);
+        Route::post('/invoices/{invoiceNumber}/send-email', [POSController::class, 'sendReceiptEmail']);
     });
 
     // Subscription

@@ -127,6 +127,8 @@ class CheckInController extends Controller
 
             DB::commit();
 
+            $checkIn->load(['member', 'membership.plan', 'branch']);
+
             $message = 'Selamat latihan, ' . $member->name . '!';
             if (!$membership->unlimited_checkin) {
                 $message .= ' (Sisa kuota: ' . $membership->remaining_checkin_quota . ')';

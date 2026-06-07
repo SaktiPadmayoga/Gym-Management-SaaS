@@ -9,7 +9,8 @@ export function middleware(request: NextRequest) {
     let hostname = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
     hostname = hostname.split(":")[0];
 
-    const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "gymfit.id";
+    const defaultDomain = process.env.NODE_ENV === "development" ? "localhost" : "gymfit.id";
+    const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || defaultDomain;
 
     const isSubdomain = hostname !== mainDomain && hostname.endsWith(mainDomain);
 

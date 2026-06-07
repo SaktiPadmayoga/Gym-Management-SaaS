@@ -69,7 +69,8 @@ export const membershipPlansAPI = {
         category?: string; 
         access_type?: string; 
         is_active?: boolean; 
-        available_only?: boolean 
+        available_only?: boolean;
+        branch_id?: string;
     }): Promise<MembershipPlanData[]> => {
         
         const response = await tenantApiClient.get("/member/membershipAvailable", {
@@ -83,6 +84,7 @@ export const membershipPlansAPI = {
                 is_active: (params?.is_active ?? true) ? 1 : 0, 
                 available_only: (params?.available_only ?? true) ? 1 : 0,
             },
+            headers: params?.branch_id ? { "X-Branch-Id": params.branch_id } : {},
         });
         
         return response?.data.data ?? []; 

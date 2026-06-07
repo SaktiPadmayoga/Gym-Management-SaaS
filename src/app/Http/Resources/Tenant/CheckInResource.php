@@ -9,9 +9,11 @@ class CheckInResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $timezone = $this->branch?->timezone ?? 'Asia/Jakarta';
+
         return [
             'id' => $this->id,
-            'checked_in_at' => $this->checked_in_at->format('Y-m-d H:i:s'),
+            'checked_in_at' => $this->checked_in_at->setTimezone($timezone)->format('Y-m-d H:i:s'),
             'status' => $this->status,
             'notes' => $this->notes,
             'member' => [

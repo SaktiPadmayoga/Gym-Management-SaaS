@@ -135,7 +135,19 @@
     <div class="container">
         <div class="header">
             <h1>NOTA PEMBAYARAN</h1>
-            <p>{{ $invoice->branch?->name ?? tenant('name') ?? 'GymFit' }}</p>
+            <p style="margin: 0; font-size: 18px; font-weight: 700; text-transform: uppercase;">
+                {{ $invoice->branch?->name ?? tenant('name') ?? 'GymFit' }}
+            </p>
+            @if($invoice->branch?->address)
+                <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9; line-height: 1.4;">
+                    {{ $invoice->branch->address }}
+                </p>
+            @endif
+            @if($invoice->branch?->phone)
+                <p style="margin: 2px 0 0 0; font-size: 12px; opacity: 0.9;">
+                    Telp: {{ $invoice->branch->phone }}
+                </p>
+            @endif
         </div>
         
         <div class="body">
@@ -207,6 +219,12 @@
                 </tbody>
             </table>
             
+            @if($invoice->notes)
+                <div style="margin-top: 20px; padding: 15px; background-color: #f7fafc; border: 1px dashed #e2e8f0; border-radius: 6px; font-size: 13px;">
+                    <strong>Catatan:</strong> {{ $invoice->notes }}
+                </div>
+            @endif
+
             <div class="thank-you">
                 <p>Terima kasih atas pembayaran Anda. Selamat berlatih!</p>
             </div>

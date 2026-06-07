@@ -24,6 +24,8 @@ import { getCurrentBranchId } from "@/lib/tenant-api-client";
 import { MembershipGrid } from "./MembershipGrid";
 import { PtPackageGrid } from "./PtPackageGrid";
 import { useRouter } from "next/navigation";
+import { useBranch } from "@/providers/BranchProvider";
+import { useTenantBranch } from "@/hooks/useTenantBranches";
 
 
 type PosTab = "product" | "membership" | "pt_package";
@@ -50,6 +52,8 @@ export const POSWrapper: React.FC = () => {
     const checkoutMutation = usePOSCheckout();
 
     const { staff } = useStaffAuth();
+    const { currentBranch } = useBranch();
+    const { data: branchDetails } = useTenantBranch(currentBranch?.id ?? undefined);
 
     // Calculations
     const subtotal = calcSubtotal(cartItems);
@@ -62,7 +66,9 @@ export const POSWrapper: React.FC = () => {
     const session: POSSession = {
         id: `POS-${Date.now()}`,
         counter: "Main Counter",
-        branch: "Main Branch", 
+        branch: currentBranch?.name || "Main Branch", 
+        branchAddress: branchDetails?.address || currentBranch?.address || undefined,
+        branchPhone: branchDetails?.phone || undefined,
         startTime: new Date(),
         customer,
         items: cartItems,
@@ -181,11 +187,22 @@ export const POSWrapper: React.FC = () => {
 
         checkoutMutation.mutate(payload, {
             onSuccess: (data: any) => {
+                const finalSession: POSSession = {
+                    ...session,
+                    discount: paymentData.discountAmount,
+                    total: session.subtotal + session.tax - paymentData.discountAmount,
+                    status: "completed"
+                };
+
                 if (paymentData.paymentMethod === "midtrans" && data.snap_token) {
                     (window as any).snap.pay(data.snap_token, {
                         onSuccess: () => {
                             toast.success(`Pembayaran Midtrans Berhasil! (INV: ${data.invoice_number})`);
-                            setLastPaymentData({ ...paymentData, invoiceNumber: data.invoice_number });
+                            setLastPaymentData({ 
+                                ...paymentData, 
+                                invoiceNumber: data.invoice_number,
+                                session: finalSession
+                            });
                             setIsReceiptModalOpen(true);
                             setCartItems([]);
                             setCustomer(DEFAULT_WALK_IN_CUSTOMER);
@@ -206,7 +223,11 @@ export const POSWrapper: React.FC = () => {
                     });
                 } else {
                     toast.success(`Transaksi Tunai Berhasil! (INV: ${data.invoice_number})`);
-                    setLastPaymentData({ ...paymentData, invoiceNumber: data.invoice_number });
+                    setLastPaymentData({ 
+                        ...paymentData, 
+                        invoiceNumber: data.invoice_number,
+                        session: finalSession
+                    });
                     setIsReceiptModalOpen(true);
                     setCartItems([]);
                     setCustomer(DEFAULT_WALK_IN_CUSTOMER);

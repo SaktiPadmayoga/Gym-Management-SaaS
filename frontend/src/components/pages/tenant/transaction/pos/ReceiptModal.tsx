@@ -1,12 +1,15 @@
 // File: src/components/pos/ReceiptModal.tsx
 "use client";
 
+import { useState } from "react";
 import { CartItem, POSSession } from "@/types/tenant/pos";
 import { Payment } from "@/types/payment";
 import { PaymentCalculator } from "@/lib/utils/payment-calculator";
 import { getItemName } from "@/lib/utils/pos-cart";
 import { jsPDF } from "jspdf";
 import { toPng } from "html-to-image";
+import { useTenantHeader } from "@/hooks/useTenantHeader";
+import tenantApiClient from "@/lib/tenant-api-client";
 
 interface ReceiptModalProps {
     isOpen: boolean;
@@ -15,6 +18,9 @@ interface ReceiptModalProps {
 }
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, paymentData, onClose }) => {
+    const { data: tenantData } = useTenantHeader();
+    const [sendingEmail, setSendingEmail] = useState(false);
+
     if (!isOpen || !paymentData) return null;
 
     const { session, paymentMethod, amountPaid, discountAmount, invoiceNumber } = paymentData;
@@ -31,15 +37,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, paymentData,
         hour12: true,
     });
 
-    // --- FITUR PRINT WINDOW ---
-    const handlePrint = () => {
-        window.print();
-    };
-
-    // --- FITUR DOWNLOAD PDF (THERMAL SIZE) ---
-    const handleDownloadPDF = async () => {
+    // --- PDF GENERATOR ---
+    const generatePDF = async (): Promise<{ pdf: jsPDF, base64: string } | null> => {
         const input = document.getElementById("receipt-print-area");
-        if (!input) return;
+        if (!input) return null;
 
         try {
             // Render elemen HTML menjadi gambar menggunakan html-to-image (Mendukung oklch)
@@ -63,53 +64,54 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, paymentData,
             });
 
             pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`${receiptNumber}.pdf`);
+            const base64 = pdf.output("datauristring");
+            return { pdf, base64 };
         } catch (error) {
             console.error("Gagal men-generate PDF", error);
-            alert("Gagal mengunduh PDF.");
+            return null;
         }
     };
 
-    // --- FITUR DOWNLOAD HTML ---
-    const handleDownloadHTML = () => {
-        const input = document.getElementById("receipt-print-area");
-        if (!input) return;
+    // --- FITUR PRINT WINDOW (Dengan auto PDF download) ---
+    const handlePrint = async () => {
+        const res = await generatePDF();
+        if (res) {
+            res.pdf.save(`${receiptNumber}.pdf`);
+        }
+        window.print();
+    };
 
-        const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Receipt - ${receiptNumber}</title>
-                <style>
-                    body { font-family: monospace; padding: 20px; max-width: 400px; margin: 0 auto; color: #000; }
-                    .text-center { text-align: center; }
-                    .flex { display: flex; }
-                    .justify-between { justify-content: space-between; }
-                    .font-bold { font-weight: bold; }
-                    .text-xl { font-size: 1.25rem; }
-                    .mb-6 { margin-bottom: 1.5rem; }
-                    .pb-4 { padding-bottom: 1rem; }
-                    .border-b { border-bottom: 1px dashed #ccc; }
-                    .space-y-2 > * + * { margin-top: 0.5rem; }
-                    .mt-6 { margin-top: 1.5rem; }
-                    .pt-4 { padding-top: 1rem; }
-                </style>
-            </head>
-            <body>
-                ${input.innerHTML}
-            </body>
-            </html>
-        `;
+    // --- FITUR KIRIM EMAIL MEMBER (Dengan auto PDF attachment) ---
+    const handleSendEmail = async () => {
+        if (!session.customer?.email) {
+            alert("Email customer tidak ditemukan.");
+            return;
+        }
 
-        const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${receiptNumber}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setSendingEmail(true);
+        try {
+            const res = await generatePDF();
+            if (!res) {
+                alert("Gagal men-generate PDF untuk lampiran email.");
+                setSendingEmail(false);
+                return;
+            }
+
+            const response = await tenantApiClient.post(`/pos/invoices/${receiptNumber}/send-email`, {
+                pdf_base64: res.base64
+            });
+
+            if (response.data?.success) {
+                alert(`Nota berhasil dikirim ke email: ${session.customer.email}`);
+            } else {
+                alert(response.data?.message || "Gagal mengirim email.");
+            }
+        } catch (error: any) {
+            console.error("Gagal mengirim email", error);
+            alert(error.response?.data?.message || "Gagal mengirim email.");
+        } finally {
+            setSendingEmail(false);
+        }
     };
 
     return (
@@ -138,8 +140,15 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, paymentData,
                             <div id="receipt-print-area" className="bg-white rounded-lg p-6 font-mono text-sm border border-gray-200 text-black">
                                 
                                 <div className="text-center mb-6 pb-4 border-b border-dashed border-gray-400">
-                                    <h3 className="text-xl font-bold">GYM FITNESS CENTER</h3>
-                                    <p style={{ fontSize: '11px', marginTop: '4px' }}>Jl. Sehat Selalu No. 123</p>
+                                    <h3 className="text-xl font-bold uppercase">{tenantData?.name || "GYM FITNESS CENTER"}</h3>
+                                    <p style={{ fontSize: '11px', marginTop: '4px' }}>
+                                        {session.branchAddress || tenantData?.current_branch?.address || "Jl. Sehat Selalu No. 123"}
+                                    </p>
+                                    {session.branchPhone && (
+                                        <p style={{ fontSize: '11px', marginTop: '2px' }}>
+                                            Telp: {session.branchPhone}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2 mb-6 pb-4 border-b border-dashed border-gray-400">
@@ -246,28 +255,25 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ isOpen, paymentData,
                         </div>
 
                         <div className="border-t border-gray-200 px-6 py-6 bg-gray-50 rounded-b-2xl space-y-4">
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Print Options</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={handlePrint} className="flex items-center justify-center gap-2 bg-aksen-secondary hover:bg-teal-700 text-white py-2 rounded-lg font-semibold transition">
-                                        <span>🖨️</span>
-                                        Thermal Print
-                                    </button>
-                                </div>
-                            </div>
+                            <div className="grid grid-cols-1 gap-3">
+                                <button 
+                                    onClick={handlePrint} 
+                                    className="flex items-center justify-center gap-2 bg-aksen-secondary hover:bg-teal-700 text-white py-3 rounded-lg font-semibold transition shadow-sm w-full"
+                                >
+                                    <span>🖨️</span>
+                                    Thermal Print & Save PDF
+                                </button>
 
-                            <div>
-                                <h3 className="text-sm font-semibold text-gray-900 mb-3">Download Options</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button onClick={handleDownloadHTML} className="flex items-center justify-center gap-2 border-2 border-gray-300 hover:bg-gray-100 text-gray-900 py-2 rounded-lg font-semibold transition">
-                                        <span>⬇️</span>
-                                        HTML File
+                                {session.customer?.type === "registered" && session.customer?.email && (
+                                    <button 
+                                        onClick={handleSendEmail} 
+                                        disabled={sendingEmail}
+                                        className="flex items-center justify-center gap-2 border-2 border-aksen-secondary text-aksen-secondary hover:bg-teal-50 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-semibold transition w-full"
+                                    >
+                                        <span>📧</span>
+                                        {sendingEmail ? "Mengirim..." : "Kirim Nota ke Email Member"}
                                     </button>
-                                    <button onClick={handleDownloadPDF} className="flex items-center justify-center gap-2 border-2 border-gray-300 hover:bg-gray-100 text-gray-900 py-2 rounded-lg font-semibold transition">
-                                        <span>📋</span>
-                                        Generate PDF
-                                    </button>
-                                </div>
+                                )}
                             </div>
 
                             <button onClick={onClose} className="w-full bg-gray-900 hover:bg-gray-800 text-white py-3 rounded-lg font-semibold transition">

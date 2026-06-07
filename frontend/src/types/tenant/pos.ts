@@ -56,6 +56,8 @@ export const POSSessionSchema = z.lazy(() =>
         id: z.string(),
         counter: z.string(),
         branch: z.string(),
+        branchAddress: z.string().nullable().optional(),
+        branchPhone: z.string().nullable().optional(),
         startTime: z.date(),
         endTime: z.date().optional(),
         customer: CustomerSchema.nullable(),

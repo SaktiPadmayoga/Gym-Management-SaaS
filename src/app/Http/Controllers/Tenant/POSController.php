@@ -46,11 +46,52 @@ class POSController extends Controller
 
     public function history(): JsonResponse
     {
-        $invoices = \App\Models\Tenant\TenantInvoice::with('items')
-            ->where('payment_gateway', 'manual')
-            ->latest()
-            ->paginate(20);
+        $branchId = request()->header('X-Branch-Id');
+
+        $query = \App\Models\Tenant\TenantInvoice::with(['items', 'branch', 'member'])
+            ->where('invoice_number', 'like', 'INV-POS-%');
+
+        if ($branchId) {
+            $query->where('branch_id', $branchId);
+        }
+
+        $invoices = $query->latest()->paginate(20);
 
         return response()->json(['success' => true, 'data' => $invoices]);
+    }
+
+    public function sendReceiptEmail(string $invoiceNumber): JsonResponse
+    {
+        try {
+            $invoice = \App\Models\Tenant\TenantInvoice::with(['items', 'branch', 'member'])
+                ->where('invoice_number', $invoiceNumber)
+                ->firstOrFail();
+
+            $recipientEmail = $invoice->member?->email ?? $invoice->guest_email;
+
+            if (!$recipientEmail) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Recipient email not found for this transaction.'
+                ], 422);
+            }
+
+            $pdfBase64 = request()->input('pdf_base64');
+
+            \Illuminate\Support\Facades\Mail::to($recipientEmail)->queue(
+                new \App\Mail\SendInvoiceReceiptMail($invoice, $pdfBase64)
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Receipt email queued successfully to ' . $recipientEmail
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send email: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

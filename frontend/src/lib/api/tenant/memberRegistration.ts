@@ -16,8 +16,10 @@ export interface RegisterMemberResponse {
 }
 
 export const memberRegistrationAPI = {
-    register: async (payload: RegisterMemberRequest): Promise<RegisterMemberResponse> => {
-        const response = await tenantApiClient.post("/member/register", payload);
+    register: async (payload: RegisterMemberRequest, branchId?: string): Promise<RegisterMemberResponse> => {
+        const response = await tenantApiClient.post("/member/register", payload, {
+            headers: branchId ? { "X-Branch-Id": branchId } : {},
+        });
         return response?.data.data;
     },
 };

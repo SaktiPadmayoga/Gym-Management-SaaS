@@ -99,6 +99,8 @@ export default function TransactionsHistory() {
                 rawTax: Number(trx.tax || 0),
                 rawSubtotal: Number(trx.subtotal || 0),
                 branchName: trx.branch?.name || "Main Branch",
+                branchAddress: trx.branch?.address || "",
+                branchPhone: trx.branch?.phone || "",
                 notes: trx.notes,
             };
         });
@@ -159,6 +161,8 @@ export default function TransactionsHistory() {
                 id: row.id,
                 counter: "History View",
                 branch: row.branchName,
+                branchAddress: row.branchAddress,
+                branchPhone: row.branchPhone,
                 startTime: new Date(row.date),
                 customer: {
                     id: "guest",

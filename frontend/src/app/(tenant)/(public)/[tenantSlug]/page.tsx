@@ -3,9 +3,10 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useAvailableMembershipPlans } from "@/hooks/tenant/useMembershipPlans";
+import { useTenantHeader } from "@/hooks/useTenantHeader";
 import { Toaster, toast } from "sonner";
 import CustomButton from "@/components/ui/button/CustomButton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, CheckCircle2, Dumbbell, Timer, Users, Zap, Play, Star, MapPin, Phone, Mail, Instagram, Facebook, Twitter, ShieldCheck, Clock, Award, Check, ChevronDown, ShieldAlert } from "lucide-react";
 
 export default function TenantLandingPage() {
@@ -13,7 +14,20 @@ export default function TenantLandingPage() {
     const router = useRouter();
 
     const tenantSlug = params?.tenantSlug as string;
-    const { data: plansData, isLoading, isError } = useAvailableMembershipPlans();
+    const { data: tenantData } = useTenantHeader();
+    const tenantBranches = tenantData?.branches || [];
+    const [selectedBranchId, setSelectedBranchId] = useState<string>("");
+
+    // Sync selected branch ID
+    useEffect(() => {
+        if (tenantBranches.length > 0 && !selectedBranchId) {
+            setSelectedBranchId(tenantData?.current_branch?.id || tenantBranches[0]?.id || "");
+        }
+    }, [tenantBranches, tenantData, selectedBranchId]);
+
+    const { data: plansData, isLoading, isError } = useAvailableMembershipPlans({
+        branch_id: selectedBranchId || undefined,
+    });
 
     const plans = plansData || [];
     const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -361,11 +375,36 @@ export default function TenantLandingPage() {
             {/* --- PRICING / PLAN SECTION --- */}
             <section id="pricing" className="py-28 px-6 bg-zinc-900/30 border-y border-zinc-900 relative">
                 <div className="max-w-7xl mx-auto z-10 relative">
-                    <div className="text-center mb-20">
+                    <div className="text-center mb-12">
                         <h2 className="text-blue-500 text-[10px] font-black uppercase tracking-widest mb-4">Rencana Keanggotaan</h2>
                         <h3 className="text-4xl md:text-6xl font-black text-white mb-4 tracking-tight uppercase">Pilih Paket Keanggotaan</h3>
                         <p className="text-zinc-400 text-sm max-w-lg mx-auto">Mulai perjalanan sehat Anda dengan paket berlangganan tanpa ikatan kontrak jangka panjang.</p>
                     </div>
+
+                    {/* Branch Selection Tabs */}
+                    {tenantBranches.length > 1 && (
+                        <div className="flex justify-center mb-12">
+                            <div className="bg-zinc-900/50 p-1.5 rounded-2xl border border-zinc-800/80 inline-flex gap-1.5 backdrop-blur-md">
+                                {tenantBranches.map((b: any) => {
+                                    const isSelected = selectedBranchId === b.id;
+                                    return (
+                                        <button
+                                            key={b.id}
+                                            type="button"
+                                            onClick={() => setSelectedBranchId(b.id)}
+                                            className={`relative px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 ${
+                                                isSelected
+                                                    ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg shadow-blue-500/20"
+                                                    : "text-zinc-400 hover:text-white"
+                                            }`}
+                                        >
+                                            {b.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
 
                     {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -435,7 +474,7 @@ export default function TenantLandingPage() {
                                             className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-transform hover:scale-[1.02] shadow-md ${
                                                 isPopular ? "bg-white hover:bg-zinc-100 text-blue-600 shadow-blue-500/10" : "bg-zinc-800 hover:bg-zinc-700 text-white"
                                             }`}
-                                            onClick={() => router.push(`/member/register?plan_id=${plan.id}`)}
+                                            onClick={() => router.push(`/member/register?plan_id=${plan.id}${selectedBranchId ? `&branch_id=${selectedBranchId}` : ""}`)}
                                         >
                                             Gabung Sekarang
                                         </CustomButton>
@@ -443,8 +482,8 @@ export default function TenantLandingPage() {
                                 );
                             })}
                         </div>
-                    )}
-                </div>
+                    )
+                }</div>
             </section>
 
             {/* --- TESTIMONIALS SECTION --- */}
