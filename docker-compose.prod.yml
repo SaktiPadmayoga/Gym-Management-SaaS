@@ -17,9 +17,7 @@ services:
             dockerfile: Dockerfile
         container_name: gym-caddy
         ports:
-            - "80:80"
-            - "443:443"
-            - "443:443/udp"
+            - "3100:80"
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile:ro
         environment:

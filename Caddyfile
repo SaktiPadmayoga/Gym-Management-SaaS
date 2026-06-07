@@ -6,12 +6,14 @@
 # Caddy bertugas routing wildcard subdomain tenant
 # =============================================
 
-gymfit.id, *.gymfit.id {
-	tls {
-		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-	}
+{
+	auto_https off
+}
 
+:80 {
+	# Semua request ke Nginx internal
 	reverse_proxy nginx:80 {
+		# Forward real client info ke Nginx/app
 		header_up Host {host}
 		header_up X-Real-IP {remote_host}
 		header_up X-Forwarded-For {remote_host}
