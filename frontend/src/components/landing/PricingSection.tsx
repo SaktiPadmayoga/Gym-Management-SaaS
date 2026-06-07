@@ -246,7 +246,7 @@ const PricingSection = () => {
                       {/* Member Limit */}
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className={`w-5 h-5 shrink-0 ${isPopular ? "text-teal-500" : "text-slate-300"}`} />
-                        <span className={`text-sm font-bold leading-tight ${isPopular ? "text-slate-200" : "text-slate-800"}`}>
+                        <span className={`text-sm font-medium leading-tight ${isPopular ? "text-slate-300" : "text-slate-600"}`}>
                           {plan.limits?.max_membership === 0 
                             ? "Member Tanpa Batas" 
                             : `Maks. ${plan.limits?.max_membership.toLocaleString("id-ID")} Member`}
@@ -255,7 +255,7 @@ const PricingSection = () => {
                       {/* Branch Limit */}
                       <li className="flex items-start gap-3">
                         <CheckCircle2 className={`w-5 h-5 shrink-0 ${isPopular ? "text-teal-500" : "text-slate-300"}`} />
-                        <span className={`text-sm font-bold leading-tight ${isPopular ? "text-slate-200" : "text-slate-800"}`}>
+                        <span className={`text-sm font-medium leading-tight ${isPopular ? "text-slate-300" : "text-slate-600"}`}>
                           {plan.limits?.max_branches === 0 
                             ? "Cabang Tanpa Batas" 
                             : `Maks. ${plan.limits?.max_branches.toLocaleString("id-ID")} Cabang`}

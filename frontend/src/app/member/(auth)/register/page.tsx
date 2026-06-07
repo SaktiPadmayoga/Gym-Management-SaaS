@@ -47,7 +47,7 @@ const formatRupiah = (value: string | number) => {
         style: "currency",
         currency: "IDR",
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0
+        maximumFractionDigits: 0,
     }).format(num);
 };
 
@@ -67,13 +67,13 @@ function RegisterForm() {
     const { data: plansData, isLoading: isLoadingPlans, isError: isErrorPlans } = useAvailableMembershipPlans({
         branch_id: branchIdParam || undefined,
     });
-    
+
     const { isReady: isSnapReady, pay } = useMidtransSnap();
 
     // Auto-fill selected plan
     useEffect(() => {
         if (plansData && plansData.length > 0) {
-            if (planIdParam && plansData.some(p => p.id === planIdParam)) {
+            if (planIdParam && plansData.some((p) => p.id === planIdParam)) {
                 setSelectedPlanId(planIdParam);
             } else {
                 setSelectedPlanId(plansData[0].id);
@@ -82,7 +82,7 @@ function RegisterForm() {
     }, [plansData, planIdParam]);
 
     // Find current active plan
-    const selectedPlan = plansData?.find(p => p.id === selectedPlanId);
+    const selectedPlan = plansData?.find((p) => p.id === selectedPlanId);
     const planPrice = selectedPlan ? (typeof selectedPlan.price === "string" ? parseFloat(selectedPlan.price) : selectedPlan.price) : 0;
     const total = planPrice;
 
@@ -174,18 +174,14 @@ function RegisterForm() {
     const gymName = tenantData?.name || "GYMFIT SYSTEM";
 
     return (
-        <div className="min-h-screen lg:h-screen bg-zinc-950 text-white flex flex-col lg:flex-row font-sans selection:bg-blue-500/30 selection:text-white lg:overflow-hidden">
+        <div className="min-h-screen lg:h-screen bg-slate-50 text-slate-900 flex flex-col lg:flex-row font-sans selection:bg-blue-500/30 selection:text-white lg:overflow-hidden">
             <Toaster position="top-center" richColors />
 
             {/* --- LEFT SIDE: BRANDING --- */}
-            <div className="hidden lg:flex lg:w-[40%] bg-zinc-950 p-12 text-white flex-col justify-between relative overflow-hidden border-r border-zinc-900/80">
+            <div className="hidden lg:flex lg:w-[50%] bg-zinc-950 p-12 text-white flex-col justify-between relative overflow-hidden border-r border-zinc-900/80">
                 {/* Background Image and Overlays */}
                 <div className="absolute inset-0 z-0">
-                    <img 
-                        src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop" 
-                        alt="Gym Member Training" 
-                        className="w-full h-full object-cover opacity-25 scale-105" 
-                    />
+                    <img src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop" alt="Gym Member Training" className="w-full h-full object-cover opacity-25 scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/80 via-zinc-950/90 to-zinc-950" />
                     <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px] opacity-10" />
                     {/* Glowing Accent Orbs */}
@@ -197,7 +193,7 @@ function RegisterForm() {
                     <div>
                         <div className="inline-flex items-center gap-3 mb-12">
                             {logoUrl ? (
-                                <img src={logoUrl} alt={gymName} className="w-10 h-10 rounded-xl object-cover bg-white p-0.5 shadow-md" />
+                                <img src={logoUrl} alt={gymName} className="w-10 h-10 rounded-xl object-cover bg-zinc-950 p-0.5 shadow-md" />
                             ) : (
                                 <div className="w-10 h-10 bg-gradient-to-tr from-blue-600 to-cyan-500 rounded-xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(37,99,235,0.4)]">
                                     <Dumbbell size={22} strokeWidth={2.5} />
@@ -215,53 +211,48 @@ function RegisterForm() {
                                 BENTUK FISIK <br />
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400">TERBAIKMU.</span>
                             </h1>
-                            <p className="text-zinc-450 text-sm font-medium max-w-sm leading-relaxed mb-10 text-zinc-400">
-                                Selamat datang! Selangkah lagi untuk memulai perjalanan kebugaran Anda. Daftarkan akun Anda dan mulailah berlatih hari ini.
-                            </p>
+                            <p className="text-sm font-medium max-w-sm leading-relaxed mb-10 text-zinc-400">Selamat datang! Selangkah lagi untuk memulai perjalanan kebugaran Anda. Daftarkan akun Anda dan mulailah berlatih hari ini.</p>
 
                             <ul className="space-y-4">
-                                {[
-                                    "Akses masuk instan via QR Code member di lobi",
-                                    "Booking kelas & atur jadwal latihan langsung dari HP",
-                                    "Pendampingan Personal Trainer bersertifikasi",
-                                    "Pembayaran aman & instan via Midtrans"
-                                ].map((item, idx) => (
-                                    <li key={idx} className="flex items-start gap-3 text-xs font-semibold text-zinc-355 text-zinc-300">
-                                        <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                                        <span>{item}</span>
-                                    </li>
-                                ))}
+                                {["Akses masuk instan via QR Code member di lobi", "Booking kelas & atur jadwal latihan langsung dari HP", "Pendampingan Personal Trainer bersertifikasi", "Pembayaran aman & instan via Midtrans"].map(
+                                    (item, idx) => (
+                                        <li key={idx} className="flex items-start gap-3 text-xs font-semibold text-zinc-300">
+                                            <CheckCircle2 className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                                            <span>{item}</span>
+                                        </li>
+                                    ),
+                                )}
                             </ul>
                         </motion.div>
                     </div>
 
                     {/* Step Indicator on Left Side */}
                     <div className="flex gap-2 mt-8">
-                        <div className={`h-1.5 rounded-full transition-all duration-300 ${step >= 1 ? "w-12 bg-blue-500" : "w-6 bg-zinc-800"}`} />
-                        <div className={`h-1.5 rounded-full transition-all duration-300 ${step >= 2 ? "w-12 bg-blue-500" : "w-6 bg-zinc-800"}`} />
+                        <div className={`h-1.5 rounded-full transition-all duration-300 ${step >= 1 ? "w-12 bg-blue-500/100" : "w-6 bg-zinc-800"}`} />
+                        <div className={`h-1.5 rounded-full transition-all duration-300 ${step >= 2 ? "w-12 bg-blue-500/100" : "w-6 bg-zinc-800"}`} />
                     </div>
                 </div>
             </div>
 
             {/* --- RIGHT SIDE: FORM MULTI-STEP --- */}
-            <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12 overflow-y-auto h-full min-h-0 bg-zinc-950 relative">
+            <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-12 overflow-y-auto h-full min-h-0 bg-slate-50 relative">
                 {/* Glowing radial background orb behind the form */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none z-0" />
                 <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none z-0" />
 
-                <div className="w-full max-w-xl bg-zinc-900/40 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-zinc-800/60 shadow-2xl relative z-10 [&_input]:text-zinc-100 [&_input]:placeholder:text-zinc-650 [&_input]:bg-zinc-950/40 [&_input]:border-zinc-850/80 [&_input:focus]:border-blue-500 [&_input:focus]:ring-1 [&_input:focus]:ring-blue-500/20 [&_p.block]:text-zinc-300 [&_p.text-red-500]:text-red-400">
+                <div className="w-full max-w-xl  p-6 sm:p-8 relative z-10 [&_input]:text-slate-900 [&_input]:placeholder:text-slate-400 [&_input]:bg-white/40 [&_input]:border-slate-300 [&_input:focus]:border-blue-500 [&_input:focus]:ring-1 [&_input:focus]:ring-blue-500/20 [&_p.block]:text-slate-600 [&_p.text-red-500]:text-red-400">
                     <div className="min-h-0 flex flex-col">
                         {/* Mobile Top Navigation (Hanya muncul di HP) */}
-                        <div className="lg:hidden flex items-center justify-between w-full mb-6 pb-4 border-b border-zinc-800/80">
+                        <div className="lg:hidden flex items-center justify-between w-full mb-6 pb-4 border-b border-slate-200/80">
                             <div className="flex items-center gap-3">
                                 {logoUrl ? (
                                     <img src={logoUrl} alt={gymName} className="w-8 h-8 rounded-lg object-cover bg-white shadow-sm" />
                                 ) : (
-                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white font-black">
-                                        <Dumbbell className="w-4 h-4 text-white" />
+                                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-slate-900 font-black">
+                                        <Dumbbell className="w-4 h-4 text-slate-900" />
                                     </div>
                                 )}
-                                <span className="text-base font-black text-white uppercase tracking-tighter">{gymName}</span>
+                                <span className="text-base font-black text-slate-900 uppercase tracking-tighter">{gymName}</span>
                             </div>
                             <Link href="/member/login" className="text-xs font-bold text-blue-400 hover:underline">
                                 Portal Masuk
@@ -272,25 +263,14 @@ function RegisterForm() {
                         <div className="mb-6">
                             <div className="flex justify-between items-end mb-4">
                                 <div>
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-500/10 border border-blue-500/20 rounded-full text-[9px] font-black uppercase tracking-widest text-blue-400 mb-3">
-                                        <Activity className="w-3 h-3 animate-pulse" />
-                                        Mulai Perjalanan Kebugaranmu
-                                    </div>
-                                    <h2 className="text-2xl font-black tracking-tighter uppercase text-white mb-1">
-                                        {step === 1 ? "Pilih Paket & Akun" : "Review & Pembayaran"}
-                                    </h2>
-                                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                                        {step === 1 ? "Langkah 1 dari 2: Informasi Layanan & Profil" : "Langkah 2 dari 2: Ringkasan & Checkout"}
-                                    </p>
+                                    <h2 className="text-2xl font-black tracking-tighter uppercase text-slate-900 mb-1">{step === 1 ? "Pilih Paket & Akun" : "Review & Pembayaran"}</h2>
+                                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{step === 1 ? "Langkah 1 dari 2: Informasi Layanan & Profil" : "Langkah 2 dari 2: Ringkasan & Checkout"}</p>
                                 </div>
                             </div>
-                            
+
                             {/* Animated step progress line */}
-                            <div className="w-full bg-zinc-800 h-1 rounded-full overflow-hidden">
-                                <div 
-                                    className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-300"
-                                    style={{ width: step === 1 ? "50%" : "100%" }}
-                                />
+                            <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
+                                <div className="bg-gradient-to-r from-blue-500 to-cyan-400 h-full transition-all duration-300" style={{ width: step === 1 ? "50%" : "100%" }} />
                             </div>
                         </div>
 
@@ -302,7 +282,7 @@ function RegisterForm() {
                                         <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }} className="flex-1 space-y-5">
                                             {/* PLAN SELECTOR FETCHED FROM API */}
                                             <div className="space-y-3">
-                                                <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                                                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                                                     <h3 className="text-xs font-black uppercase tracking-widest text-blue-400">Pilihan Paket Membership</h3>
                                                 </div>
 
@@ -318,30 +298,26 @@ function RegisterForm() {
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[220px] overflow-y-auto pr-1">
                                                         {plansData?.map((plan) => {
                                                             const isSelected = selectedPlanId === plan.id;
-                                                            
+
                                                             return (
                                                                 <div
                                                                     key={plan.id}
                                                                     onClick={() => setSelectedPlanId(plan.id)}
                                                                     className={`relative p-3 rounded-2xl border-2 cursor-pointer transition-all flex flex-col ${
-                                                                        isSelected 
-                                                                            ? "border-blue-500 bg-blue-950/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]" 
-                                                                            : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/30"
+                                                                        isSelected ? "border-blue-500 bg-blue-50 shadow-[0_0_15px_rgba(59,130,246,0.15)]" : "border-slate-200 hover:border-slate-300 bg-slate-50"
                                                                     }`}
                                                                 >
                                                                     <div className="flex justify-between items-center mb-1">
-                                                                        <h4 className={`font-bold uppercase tracking-tight text-xs ${isSelected ? "text-blue-400" : "text-zinc-200"}`}>{plan.name}</h4>
+                                                                        <h4 className={`font-bold uppercase tracking-tight text-xs ${isSelected ? "text-blue-400" : "text-slate-700"}`}>{plan.name}</h4>
                                                                         {isSelected && <CheckCircle2 className="w-4 h-4 text-blue-400" />}
                                                                     </div>
 
                                                                     <div className="flex items-end gap-1 mb-1">
-                                                                        <span className="text-base font-black tracking-tighter leading-none text-white">
-                                                                            {formatRupiah(plan.price)}
-                                                                        </span>
+                                                                        <span className="text-base font-black tracking-tighter leading-none text-slate-900">{formatRupiah(plan.price)}</span>
                                                                     </div>
 
-                                                                    <p className="text-[10px] font-bold text-zinc-400 capitalize">
-                                                                        Durasi: {plan.duration} {plan.duration_unit === 'month' ? 'Bulan' : plan.duration_unit === 'day' ? 'Hari' : plan.duration_unit === 'week' ? 'Minggu' : 'Tahun'}
+                                                                    <p className="text-[10px] font-bold text-slate-500 capitalize">
+                                                                        Durasi: {plan.duration} {plan.duration_unit === "month" ? "Bulan" : plan.duration_unit === "day" ? "Hari" : plan.duration_unit === "week" ? "Minggu" : "Tahun"}
                                                                     </p>
                                                                 </div>
                                                             );
@@ -352,7 +328,7 @@ function RegisterForm() {
 
                                             {/* MEMBER INFO */}
                                             <div className="space-y-3">
-                                                <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 border-b border-zinc-800 pb-2">Informasi Profil Member</h3>
+                                                <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 border-b border-slate-200 pb-2">Informasi Profil Member</h3>
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div className="sm:col-span-2">
@@ -367,7 +343,13 @@ function RegisterForm() {
                                                         <TextInput name="email" label="Alamat Email" type="email" placeholder="Cth: budi@email.com" rules={{ required: "Email wajib diisi" }} />
                                                     </div>
 
-                                                    <TextInput name="password" label="Buat Password" type="password" placeholder="Minimal 8 karakter" rules={{ required: "Password wajib diisi", minLength: { value: 8, message: "Minimal 8 karakter" } }} />
+                                                    <TextInput
+                                                        name="password"
+                                                        label="Buat Password"
+                                                        type="password"
+                                                        placeholder="Minimal 8 karakter"
+                                                        rules={{ required: "Password wajib diisi", minLength: { value: 8, message: "Minimal 8 karakter" } }}
+                                                    />
                                                     <TextInput name="password_confirmation" label="Konfirmasi Password" type="password" placeholder="Ketik ulang password" rules={{ required: "Konfirmasi password wajib diisi" }} />
                                                 </div>
                                             </div>
@@ -388,33 +370,41 @@ function RegisterForm() {
                                     {step === 2 && (
                                         <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.3 }} className="flex-1 flex flex-col space-y-5">
                                             <div className="space-y-3">
-                                                <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 border-b border-zinc-800 pb-2">Ringkasan Pembayaran</h3>
+                                                <h3 className="text-xs font-black uppercase tracking-widest text-blue-400 border-b border-slate-200 pb-2">Ringkasan Pembayaran</h3>
 
-                                                <div className="bg-zinc-950/60 rounded-2xl p-4 border border-zinc-850 space-y-3">
+                                                <div className="bg-white/60 rounded-2xl p-4 border border-slate-200 space-y-3">
                                                     <div className="flex justify-between items-center text-xs">
-                                                        <span className="text-zinc-400">Paket Terpilih:</span>
-                                                        <span className="font-bold text-white uppercase tracking-tight">{selectedPlan?.name || "-"}</span>
+                                                        <span className="text-slate-500">Paket Terpilih:</span>
+                                                        <span className="font-bold text-slate-900 uppercase tracking-tight">{selectedPlan?.name || "-"}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-xs">
-                                                        <span className="text-zinc-400">Durasi Paket:</span>
-                                                        <span className="font-semibold text-zinc-350 capitalize">
-                                                            {selectedPlan ? `${selectedPlan.duration} ${selectedPlan.duration_unit === 'month' ? 'Bulan' : selectedPlan.duration_unit === 'day' ? 'Hari' : selectedPlan.duration_unit === 'week' ? 'Minggu' : 'Tahun'}` : "-"}
+                                                        <span className="text-slate-500">Durasi Paket:</span>
+                                                        <span className="font-semibold text-slate-600 capitalize">
+                                                            {selectedPlan
+                                                                ? `${selectedPlan.duration} ${
+                                                                      selectedPlan.duration_unit === "month" ? "Bulan" : selectedPlan.duration_unit === "day" ? "Hari" : selectedPlan.duration_unit === "week" ? "Minggu" : "Tahun"
+                                                                  }`
+                                                                : "-"}
                                                         </span>
                                                     </div>
                                                     <div className="flex justify-between items-center text-xs">
-                                                        <span className="text-zinc-400">Harga Layanan:</span>
-                                                        <span className="font-semibold text-zinc-200">{formatRupiah(planPrice)}</span>
+                                                        <span className="text-slate-500">Harga Layanan:</span>
+                                                        <span className="font-semibold text-slate-700">{formatRupiah(planPrice)}</span>
                                                     </div>
-                                                    <div className="border-t border-zinc-800 pt-3 flex justify-between items-center">
-                                                        <span className="font-black text-zinc-300 text-[10px] uppercase tracking-wider">Total Tagihan:</span>
+                                                    <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                                                        <span className="font-black text-slate-600 text-[10px] uppercase tracking-wider">Total Tagihan:</span>
                                                         <span className="text-lg font-black text-blue-400">{formatRupiah(total)}</span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <div className="pt-2 mt-auto flex gap-3">
-                                                <CustomButton type="button" onClick={() => setStep(1)} className="w-12 h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl flex items-center justify-center shrink-0 border border-zinc-700">
-                                                    <ArrowLeft className="w-5 h-5 text-zinc-400" />
+                                                <CustomButton
+                                                    type="button"
+                                                    onClick={() => setStep(1)}
+                                                    className="w-12 h-12 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-2xl flex items-center justify-center shrink-0 border border-slate-200"
+                                                >
+                                                    <ArrowLeft className="w-5 h-5 text-slate-500" />
                                                 </CustomButton>
 
                                                 <CustomButton
