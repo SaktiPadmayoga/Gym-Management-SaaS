@@ -26,6 +26,7 @@ services:
             - nginx
         networks:
             - gym-network
+            - dokploy-network
         restart: unless-stopped
 
     # ========================================
