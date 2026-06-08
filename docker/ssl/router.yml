@@ -1,0 +1,20 @@
+http:
+  routers:
+    gymfit-wildcard-https:
+      rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
+      entryPoints:
+        - websecure
+      tls: {}
+      service: gymfit-nginx-service
+
+    gymfit-wildcard-http:
+      rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
+      entryPoints:
+        - web
+      service: gymfit-nginx-service
+
+  services:
+    gymfit-nginx-service:
+      loadBalancer:
+        servers:
+          - url: "http://gym-nginx:80"
