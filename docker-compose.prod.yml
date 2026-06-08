@@ -173,6 +173,7 @@ services:
             - nextjs
         networks:
             - gym-network
+            - dokploy-network
         restart: unless-stopped
 
 # ========================================
@@ -181,6 +182,8 @@ services:
 networks:
     gym-network:
         driver: bridge
+    dokploy-network:
+        external: true
 
 # ========================================
 # Volumes
