@@ -171,20 +171,6 @@ services:
             - "8080:80"
         volumes:
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-        labels:
-            - "traefik.enable=true"
-            # HTTP Router (Port 80)
-            - "traefik.http.routers.gym-nginx-wildcard-http.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gym-nginx-wildcard-http.entrypoints=web"
-            - "traefik.http.routers.gym-nginx-wildcard-http.service=gym-nginx-service"
-            # HTTPS Router (Port 443)
-            - "traefik.http.routers.gym-nginx-wildcard-https.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gym-nginx-wildcard-https.entrypoints=websecure"
-            - "traefik.http.routers.gym-nginx-wildcard-https.tls=true"
-            - "traefik.http.routers.gym-nginx-wildcard-https.tls.certresolver=letsencrypt"
-            # Service
-            - "traefik.http.services.gym-nginx-service.loadbalancer.server.port=80"
-            - "traefik.docker.network=dokploy-network"
         depends_on:
             - php
             - nextjs
