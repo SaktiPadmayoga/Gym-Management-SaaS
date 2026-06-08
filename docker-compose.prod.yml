@@ -178,7 +178,8 @@ services:
             - "traefik.enable=true"
             - "traefik.http.routers.gymfit-nginx.rule=Host(`gymfit.id`) || Host(`www.gymfit.id`) || Host(`*.gymfit.id`)"
             - "traefik.http.routers.gymfit-nginx.entrypoints=web"
-            - "traefik.http.services.gymfit-nginx-service.loadbalancer.server.port=80"
+            - "traefik.http.routers.gymfit-nginx.service=gymfit-nginx"
+            - "traefik.http.services.gymfit-nginx.loadbalancer.server.port=80"
         restart: unless-stopped
 
 # ========================================
