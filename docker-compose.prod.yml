@@ -174,9 +174,16 @@ services:
         labels:
             - "traefik.enable=true"
             - "traefik.docker.network=dokploy-network"
-            - "traefik.http.routers.gymfit-wildcard.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gymfit-wildcard.entrypoints=web"
-            - "traefik.http.routers.gymfit-wildcard.service=gymfit-nginx-wc"
+            # Bulletproof Wildcard HTTP
+            - "traefik.http.routers.gymfit-wildcard-http.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
+            - "traefik.http.routers.gymfit-wildcard-http.entrypoints=web"
+            - "traefik.http.routers.gymfit-wildcard-http.service=gymfit-nginx-wc"
+            # Bulletproof Wildcard HTTPS
+            - "traefik.http.routers.gymfit-wildcard-https.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
+            - "traefik.http.routers.gymfit-wildcard-https.entrypoints=websecure"
+            - "traefik.http.routers.gymfit-wildcard-https.tls=true"
+            - "traefik.http.routers.gymfit-wildcard-https.service=gymfit-nginx-wc"
+            # Shared Service
             - "traefik.http.services.gymfit-nginx-wc.loadbalancer.server.port=80"
         depends_on:
             - php
