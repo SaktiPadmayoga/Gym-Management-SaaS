@@ -166,6 +166,8 @@ services:
             context: .
             dockerfile: docker/nginx/Dockerfile
         container_name: gym-nginx
+        ports:
+            - "8080:80"
         volumes:
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
         depends_on:
