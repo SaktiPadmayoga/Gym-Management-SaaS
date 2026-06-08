@@ -200,7 +200,8 @@ services:
             cp /repo-ssl/chain.crt /dynamic/certificates/gymfit/ &&
             cp /repo-ssl/privkey.key /dynamic/certificates/gymfit/ &&
             cp /repo-ssl/certificate.yml /dynamic/certificate-gymfit.yml &&
-            echo 'Traefik certificates installed perfectly!'
+            cp /repo-ssl/router.yml /dynamic/gymfit-router.yml &&
+            echo 'Traefik certificates and routers installed perfectly!'
             "
         restart: "no"
 

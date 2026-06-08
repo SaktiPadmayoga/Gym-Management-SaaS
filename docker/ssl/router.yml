@@ -1,5 +1,14 @@
 http:
   routers:
+    # Router untuk main domain (gymfit.id) via HTTPS
+    gymfit-main-https:
+      rule: "Host(`gymfit.id`, `www.gymfit.id`)"
+      entryPoints:
+        - websecure
+      tls: {}
+      service: gymfit-nginx-service
+
+    # Router untuk wildcard subdomain (*.gymfit.id) via HTTPS
     gymfit-wildcard-https:
       rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
       entryPoints:
@@ -7,14 +16,9 @@ http:
       tls: {}
       service: gymfit-nginx-service
 
-    gymfit-wildcard-http:
-      rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
-      entryPoints:
-        - web
-      service: gymfit-nginx-service
-
   services:
     gymfit-nginx-service:
       loadBalancer:
         servers:
+          # Arahkan ke container Nginx internal
           - url: "http://gym-nginx:80"
