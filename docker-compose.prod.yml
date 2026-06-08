@@ -171,6 +171,12 @@ services:
             - "8080:80"
         volumes:
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.gymfit-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
+            - "traefik.http.routers.gymfit-wildcard.entrypoints=websecure"
+            - "traefik.http.routers.gymfit-wildcard.tls=true"
+            - "traefik.http.services.gym-nginx.loadbalancer.server.port=80"
         depends_on:
             - php
             - nextjs
@@ -186,11 +192,16 @@ services:
         image: alpine
         container_name: gym-init-cert
         volumes:
-            # Mount folder ssl dari repo ke dalam container
             - ./docker/ssl:/repo-ssl:ro
-            # Mount folder Traefik di VPS (lokasi instalasi Dokploy) ke dalam container
-            - /etc/dokploy/traefik/dynamic/certificates:/traefik-certs
-        command: sh -c "mkdir -p /traefik-certs/gymfit && cp /repo-ssl/* /traefik-certs/gymfit/ && echo 'Sertifikat Traefik berhasil diinstal!'"
+            - /etc/dokploy/traefik/dynamic:/dynamic
+        command: >
+            sh -c "
+            mkdir -p /dynamic/certificates/gymfit &&
+            cp /repo-ssl/chain.crt /dynamic/certificates/gymfit/ &&
+            cp /repo-ssl/privkey.key /dynamic/certificates/gymfit/ &&
+            cp /repo-ssl/certificate.yml /dynamic/certificate-gymfit.yml &&
+            echo 'Traefik certificates installed perfectly!'
+            "
         restart: "no"
 
 
