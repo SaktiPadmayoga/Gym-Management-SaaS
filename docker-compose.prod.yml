@@ -171,20 +171,6 @@ services:
             - "8080:80"
         volumes:
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-        labels:
-            - "traefik.enable=true"
-            # Main Domain (HTTP & HTTPS)
-            - "traefik.http.routers.gymfit-main.rule=Host(`gymfit.id`, `www.gymfit.id`)"
-            - "traefik.http.routers.gymfit-main.entrypoints=web,websecure"
-            - "traefik.http.routers.gymfit-main.tls=true"
-            - "traefik.http.routers.gymfit-main.service=gymfit-nginx"
-            # Wildcard Subdomain (HTTP & HTTPS)
-            - "traefik.http.routers.gymfit-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gymfit-wildcard.entrypoints=web,websecure"
-            - "traefik.http.routers.gymfit-wildcard.tls=true"
-            - "traefik.http.routers.gymfit-wildcard.service=gymfit-nginx"
-            # Service Target
-            - "traefik.http.services.gymfit-nginx.loadbalancer.server.port=80"
         depends_on:
             - php
             - nextjs
