@@ -176,7 +176,7 @@ services:
             - dokploy-network
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.gymfit-nginx.rule=Host(`gymfit.id`) || Host(`www.gymfit.id`) || HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
+            - "traefik.http.routers.gymfit-nginx.rule=Host(`gymfit.id`) || Host(`www.gymfit.id`) || Host(`*.gymfit.id`)"
             - "traefik.http.routers.gymfit-nginx.entrypoints=web"
             - "traefik.http.services.gymfit-nginx-service.loadbalancer.server.port=80"
         restart: unless-stopped
