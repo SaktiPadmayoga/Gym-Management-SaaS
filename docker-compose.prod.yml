@@ -173,10 +173,18 @@ services:
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
         labels:
             - "traefik.enable=true"
+            # Main Domain (HTTP & HTTPS)
+            - "traefik.http.routers.gymfit-main.rule=Host(`gymfit.id`, `www.gymfit.id`)"
+            - "traefik.http.routers.gymfit-main.entrypoints=web,websecure"
+            - "traefik.http.routers.gymfit-main.tls=true"
+            - "traefik.http.routers.gymfit-main.service=gymfit-nginx"
+            # Wildcard Subdomain (HTTP & HTTPS)
             - "traefik.http.routers.gymfit-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gymfit-wildcard.entrypoints=websecure"
+            - "traefik.http.routers.gymfit-wildcard.entrypoints=web,websecure"
             - "traefik.http.routers.gymfit-wildcard.tls=true"
-            - "traefik.http.services.gym-nginx.loadbalancer.server.port=80"
+            - "traefik.http.routers.gymfit-wildcard.service=gymfit-nginx"
+            # Service Target
+            - "traefik.http.services.gymfit-nginx.loadbalancer.server.port=80"
         depends_on:
             - php
             - nextjs
@@ -184,26 +192,6 @@ services:
             - gym-network
             - dokploy-network
         restart: unless-stopped
-
-    # ========================================
-    # SSL Auto-Installer (Bypass Traefik UI)
-    # ========================================
-    init-cert:
-        image: alpine
-        container_name: gym-init-cert
-        volumes:
-            - ./docker/ssl:/repo-ssl:ro
-            - /etc/dokploy/traefik/dynamic:/dynamic
-        command: >
-            sh -c "
-            mkdir -p /dynamic/certificates/gymfit &&
-            cp /repo-ssl/chain.crt /dynamic/certificates/gymfit/ &&
-            cp /repo-ssl/privkey.key /dynamic/certificates/gymfit/ &&
-            cp /repo-ssl/certificate.yml /dynamic/certificate-gymfit.yml &&
-            cp /repo-ssl/router.yml /dynamic/gymfit-router.yml &&
-            echo 'Traefik certificates and routers installed perfectly!'
-            "
-        restart: "no"
 
 
 # ========================================
