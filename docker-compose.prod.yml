@@ -179,6 +179,21 @@ services:
             - dokploy-network
         restart: unless-stopped
 
+    # ========================================
+    # SSL Auto-Installer (Bypass Traefik UI)
+    # ========================================
+    init-cert:
+        image: alpine
+        container_name: gym-init-cert
+        volumes:
+            # Mount folder ssl dari repo ke dalam container
+            - ./docker/ssl:/repo-ssl:ro
+            # Mount folder Traefik di VPS (lokasi instalasi Dokploy) ke dalam container
+            - /etc/dokploy/traefik/dynamic/certificates:/traefik-certs
+        command: sh -c "mkdir -p /traefik-certs/gymfit && cp /repo-ssl/* /traefik-certs/gymfit/ && echo 'Sertifikat Traefik berhasil diinstal!'"
+        restart: "no"
+
+
 # ========================================
 # Networks
 # ========================================

@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /etc/dokploy/traefik/dynamic/certificates/gymfit/chain.crt
+      keyFile: /etc/dokploy/traefik/dynamic/certificates/gymfit/privkey.key
