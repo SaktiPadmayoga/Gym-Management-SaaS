@@ -173,10 +173,16 @@ services:
             - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
         labels:
             - "traefik.enable=true"
-            - "traefik.http.routers.gym-nginx-wildcard.rule=HostRegexp(`{subdomain:[A-Za-z0-9-_]+}.gymfit.id`)"
-            - "traefik.http.routers.gym-nginx-wildcard.entrypoints=web,websecure"
-            - "traefik.http.routers.gym-nginx-wildcard.tls=true"
-            - "traefik.http.routers.gym-nginx-wildcard.service=gym-nginx-service"
+            # HTTP Router (Port 80)
+            - "traefik.http.routers.gym-nginx-wildcard-http.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
+            - "traefik.http.routers.gym-nginx-wildcard-http.entrypoints=web"
+            - "traefik.http.routers.gym-nginx-wildcard-http.service=gym-nginx-service"
+            # HTTPS Router (Port 443)
+            - "traefik.http.routers.gym-nginx-wildcard-https.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.gymfit.id`)"
+            - "traefik.http.routers.gym-nginx-wildcard-https.entrypoints=websecure"
+            - "traefik.http.routers.gym-nginx-wildcard-https.tls=true"
+            - "traefik.http.routers.gym-nginx-wildcard-https.tls.certresolver=letsencrypt"
+            # Service
             - "traefik.http.services.gym-nginx-service.loadbalancer.server.port=80"
             - "traefik.docker.network=dokploy-network"
         depends_on:
