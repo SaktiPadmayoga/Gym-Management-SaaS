@@ -49,15 +49,15 @@ WORKDIR /app
 
 # Set timezone
 ENV TZ=Asia/Jakarta
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
 
-# Menyalin public assets dan static files hasil build (diperlukan Next.js untuk menyajikan file statis)
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/static ./.next/static
+# Copy dependencies
+COPY --from=deps /app/node_modules ./node_modules
 
-# Menyalin file-file standalone hasil build ke workdir (/app)
-COPY --from=builder /app/.next/standalone ./
+# Copy source code
+COPY . .
+
+# Copy built files (untuk production)
+COPY --from=builder /app/.next ./.next
 
 # Expose port
 EXPOSE 3000
@@ -66,5 +66,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})" || exit 1
 
-# Start script yang mendeteksi environment (production vs development)
-CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then node server.js; else npm run dev; fi"]
+# Start script yang detect environment
+CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"production\" ]; then npm start; else npm run dev; fi"]
