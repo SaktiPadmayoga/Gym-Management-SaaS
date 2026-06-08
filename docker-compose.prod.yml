@@ -176,6 +176,7 @@ services:
             - dokploy-network
         labels:
             - "traefik.enable=true"
+            - "traefik.docker.network=dokploy-network"
             - "traefik.http.routers.gymfit-nginx.rule=Host(`gymfit.id`) || Host(`www.gymfit.id`) || Host(`*.gymfit.id`)"
             - "traefik.http.routers.gymfit-nginx.entrypoints=web"
             - "traefik.http.routers.gymfit-nginx.service=gymfit-nginx"
