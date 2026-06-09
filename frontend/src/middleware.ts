@@ -69,9 +69,10 @@ export function middleware(request: NextRequest) {
         // BLOCK CENTRAL ROUTES
         // -------------------------------------------
         if (isCentralRoute) {
-            const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-
-            return NextResponse.redirect(new URL(pathname, `${protocol}://${mainDomain}`));
+            // Rewrite ke path yg tidak ada agar memicu 404
+            const url = request.nextUrl.clone();
+            url.pathname = "/404";
+            return NextResponse.rewrite(url);
         }
 
         // -------------------------------------------
@@ -142,7 +143,10 @@ export function middleware(request: NextRequest) {
 
     // BLOCK TENANT ROUTES
     if (isTenantAppRoute) {
-        return NextResponse.redirect(new URL("/auth/login", request.url));
+        // Rewrite ke path yg tidak ada agar memicu 404 secara natural
+        const url = request.nextUrl.clone();
+        url.pathname = "/404";
+        return NextResponse.rewrite(url);
     }
 
     // =========================

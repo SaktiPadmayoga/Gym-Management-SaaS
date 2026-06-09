@@ -13,9 +13,15 @@ export function useTenantHeader() {
         queryKey: TENANT_HEADER_KEY,
         queryFn: () => tenantAPI.getCurrent(),
         staleTime: 5 * 60 * 1000,
-        retry: 3,
-        retryDelay: 1000,
+        retry: 0, // Jangan retry jika 404/500 (tenant tidak valid)
     });
+
+    // Jika tenant gagal diload (invalid slug/domain tidak terdaftar)
+    if (!query.isLoading && query.isError) {
+        // Panggil notFound() dari Next.js untuk menampilkan halaman 404 tanpa redirect URL
+        const { notFound } = require("next/navigation");
+        notFound();
+    }
 
     // Fungsi switch branch — simpan ke localStorage lalu refetch
     const switchBranch = useCallback((branchId: string) => {
