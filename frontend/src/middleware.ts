@@ -6,7 +6,9 @@ export function middleware(request: NextRequest) {
     // -----------------------------------------------
     // 1. EXTRACT HOSTNAME
     // -----------------------------------------------
-    let hostname = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    // Traefik automatically overwrites x-forwarded-host.
+    // So we use x-tenant-host from Cloudflare Worker if available.
+    let hostname = request.headers.get("x-tenant-host") || request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
     hostname = hostname.split(":")[0];
 
     const defaultDomain = process.env.NODE_ENV === "development" ? "localhost" : "gymfit.id";
