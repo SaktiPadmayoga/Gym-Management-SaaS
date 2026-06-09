@@ -28,10 +28,10 @@ export default function NotFound() {
                         404
                     </h1>
                     <h2 className="text-2xl font-bold tracking-tight text-white/90">
-                        Sesi Latihan Tersesat
+                        Halaman Tidak Ditemukan
                     </h2>
                     <p className="text-sm text-neutral-400 leading-relaxed max-w-xs mx-auto">
-                        Halaman yang Anda cari tidak tersedia atau telah dipindahkan. Mari kembali ke jalur latihan Anda.
+                        Maaf, halaman yang Anda cari tidak tersedia, telah dipindahkan, atau Anda tidak memiliki akses ke halaman ini.
                     </p>
                 </div>
 
