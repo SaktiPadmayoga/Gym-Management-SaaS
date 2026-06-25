@@ -14,9 +14,7 @@ class TenantDashboardController extends Controller
         protected TenantDashboardService $dashboardService
     ) {}
 
-    /**
-     * GET /api/dashboard/summary
-     */
+
     public function getSummary(Request $request)
     {
         try {

@@ -25,8 +25,6 @@ class ClassBookingService
         ?string $notes = null,
         string $paymentMethod = 'midtrans'
     ): array {
-        $this->assertBookable($schedule, $member);
-
         $plan = $schedule->classPlan;
 
         if (! $plan->requiresPayment()) {
@@ -43,9 +41,12 @@ class ClassBookingService
     private function bookFree(ClassSchedule $schedule, Member $member, ?string $staffId, ?string $notes): array
     {
         $attendance = DB::transaction(function () use ($schedule, $member, $staffId, $notes) {
+            $lockedSchedule = ClassSchedule::lockForUpdate()->find($schedule->id);
+            $this->assertBookable($lockedSchedule, $member);
+
             $attendance = ClassAttendance::withTrashed()->updateOrCreate(
                 [
-                    'class_schedule_id' => $schedule->id,
+                    'class_schedule_id' => $lockedSchedule->id,
                     'member_id'         => $member->id,
                 ],
                 [
@@ -60,7 +61,7 @@ class ClassBookingService
                 ]
             );
 
-            $schedule->increment('total_booked');
+            $lockedSchedule->increment('total_booked');
 
             return $attendance;
         });
@@ -89,6 +90,8 @@ class ClassBookingService
         $isCash = $paymentMethod === 'cash';
 
         return DB::transaction(function () use ($schedule, $plan, $member, $staffId, $notes, $paymentMethod, $isCash) {
+            $lockedSchedule = ClassSchedule::lockForUpdate()->find($schedule->id);
+            $this->assertBookable($lockedSchedule, $member);
 
             // 1. Buat Invoice
             $invoice = TenantInvoice::create([
@@ -120,7 +123,7 @@ class ClassBookingService
             // 3. Buat/Update ClassAttendance
             $attendance = ClassAttendance::withTrashed()->updateOrCreate(
                 [
-                    'class_schedule_id' => $schedule->id,
+                    'class_schedule_id' => $lockedSchedule->id,
                     'member_id'         => $member->id,
                 ],
                 [
@@ -142,7 +145,7 @@ class ClassBookingService
 
             // 5. CASH: slot langsung terkurangi, tidak perlu Midtrans
             if ($isCash) {
-                $schedule->increment('total_booked');
+                $lockedSchedule->increment('total_booked');
                 $attendance->load(['member', 'checkedInBy']);
 
                 return [
@@ -164,7 +167,7 @@ class ClassBookingService
             // agar kapasitas langsung terkurangi saat booking dibuat (status pending).
             // Jika payment gagal/expired, webhook Midtrans / job cleanup akan
             // cancel attendance dan decrement kembali.
-            $schedule->increment('total_booked');
+            $lockedSchedule->increment('total_booked');
 
             $attendance->load(['member', 'checkedInBy']);
 

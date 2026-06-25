@@ -159,8 +159,6 @@ class MemberClassController extends Controller
         }
     }
 
-    // GET /member/my-classes
-    // Riwayat kelas member
     public function myClasses(Request $request)
     {
         $member = $request->user('member');

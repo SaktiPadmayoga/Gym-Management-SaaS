@@ -14,13 +14,9 @@ class TenantUpgradeController extends Controller
     public function __construct(protected CentralPaymentService $paymentService)
     {}
 
-    /**
-     * POST /api/central/tenant/upgrade
-     */
     public function upgrade(Request $request)
     {
         try {
-            // Asumsi middleware tenancy sudah set context tenant yang sedang login
             $tenant = tenant(); 
 
             if (!$tenant) {
@@ -32,7 +28,6 @@ class TenantUpgradeController extends Controller
                 'billing_cycle' => 'required|in:monthly,yearly',
             ]);
 
-            // Ambil detail Plan dari Central DB
             $plan = DB::connection('central')->table('plans')
                 ->where('id', $validated['plan_id'])
                 ->where('is_active', true)
@@ -43,21 +38,18 @@ class TenantUpgradeController extends Controller
                 return ApiResponse::error('Plan tidak ditemukan atau tidak aktif.', null, 404);
             }
 
-            // Ambil data kontak Owner dari Central DB
             $tenantData = DB::connection('central')->table('tenants')->where('id', $tenant->id)->first();
             
             $customerEmail = $tenantData->owner_email ?? ($tenant->slug . '@tenant.local');
             $customerName  = $tenantData->owner_name ?? $tenantData->name ?? $tenant->slug;
             $customerPhone = $tenantData->phone ?? '';
 
-            // Cari langganan lama yang sedang berjalan untuk dibatalkan nanti
             $currentSub = DB::connection('central')->table('subscriptions')
                 ->where('tenant_id', $tenant->id)
                 ->whereIn('status', ['active', 'trial'])
                 ->latest('created_at')
                 ->first();
 
-            // Panggil Service untuk buat Invoice, Payment, dan Token
             $paymentResult = $this->paymentService->createPaymentToken(
                 $tenant, 
                 $plan, 
@@ -67,7 +59,7 @@ class TenantUpgradeController extends Controller
                     'owner_email' => $customerEmail,
                     'phone'       => $customerPhone,
                 ], 
-                $currentSub ? $currentSub->id : null // Berikan ID langganan lama
+                $currentSub ? $currentSub->id : null 
             );
 
             return ApiResponse::success([

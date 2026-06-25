@@ -14,14 +14,10 @@ class CentralDashboardController extends Controller
         protected CentralDashboardService $dashboardService
     ) {}
 
-    /**
-     * GET /api/central/dashboard/summary
-     */
+
     public function getSummary(Request $request)
     {
-        try {
-            // Jika ada pengecekan role superadmin, letakkan di middleware route
-            
+        try {            
             $data = $this->dashboardService->getDashboardData();
 
             return ApiResponse::success($data, 'Dashboard data retrieved successfully');

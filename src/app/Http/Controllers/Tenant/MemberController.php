@@ -43,9 +43,6 @@ class MemberController extends Controller
         return $query;
     }
 
-    /**
-     * List member dengan filter lengkap
-     */
     public function index(Request $request)
     {
         $query = $this->getMemberQuery($request)->with(['homeBranch', 'memberships.plan']);
@@ -88,49 +85,34 @@ class MemberController extends Controller
         ]);
     }
 
-    /**
-     * Detail member beserta paket aktifnya
-     */
+
     public function show(Request $request, string $id)
     {
         $member = $this->getMemberQuery($request)->with(['homeBranch', 'memberships.plan'])->findOrFail($id);
-
         return ApiResponse::success(new MemberResource($member));
     }
 
-    /**
-     * Create Profil Member (Langkah 1)
-     */
     public function store(StoreMemberRequest $request)
     {
         $data = $request->validated();
-
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $request->file('avatar')->store('members/avatars', 'public');
         }
-
         if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
             $data['password'] = Hash::make('password123');
         }
-
         $data['home_branch_id'] = $request->header('X-Branch-Id');
-
         $data['member_since'] = now()->toDateString();
-        // Default inactive karena belum assign paket (membership)
         $data['status'] = 'inactive'; 
         $data['qr_token'] = Str::uuid()->toString();
-
         $member = Member::create($data);
         $member->load('homeBranch');
 
         return ApiResponse::success(new MemberResource($member), 'Member profile created successfully', 201);
     }
 
-    /**
-     * Update Profil Member
-     */
     public function update(UpdateMemberRequest $request, string $id)
     {
         $member = $this->getMemberQuery($request)->findOrFail($id);

@@ -43,16 +43,13 @@ class FacilityController extends Controller
     public function store(StoreFacilityRequest $request)
     {
         $data = $request->validated();
-
         if (empty($data['branch_id'])) {
             $data['branch_id'] = $request->header('X-Branch-Id') ?? null;
         }
-
         if (!empty($data['always_available'])) {
             $data['available_from']  = null;
             $data['available_until'] = null;
         }
-
         $facility = Facility::create($data);
 
         return ApiResponse::success(new FacilityResource($facility), 'Facility created successfully', 201);

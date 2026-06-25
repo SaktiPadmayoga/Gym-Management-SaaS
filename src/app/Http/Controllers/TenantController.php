@@ -23,15 +23,11 @@ use App\Support\ErrorResolver;
 
 class TenantController extends Controller
 {
-    /**
-     * GET /api/tenants
-     */
     public function index(Request $request)
     {
         try {
             $query = Tenant::with(['domains', 'latestSubscription.plan']);
 
-            // Search
             if ($request->filled('search')) {
                 $search = strtolower(trim($request->search));
                 $query->where(function ($q) use ($search) {
@@ -42,12 +38,10 @@ class TenantController extends Controller
                 });
             }
 
-            // Filter status
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
             }
 
-            // Sorting
             $sortBy = $request->input('sort_by', 'created_at');
             $sortOrder = strtoupper($request->input('sort_order', 'DESC')) === 'ASC' ? 'ASC' : 'DESC';
 
@@ -84,11 +78,6 @@ class TenantController extends Controller
         }
     }
 
-    /**
-     * POST /api/tenants
-     */
-    
-
     public function store(StoreTenantRequest $request)
     {
         try {
@@ -110,11 +99,6 @@ class TenantController extends Controller
         }
     }
 
-
-
-    /**
-     * GET /api/tenants/{id}
-     */
     public function show(Tenant $tenant)
     {
         return ApiResponse::success(
@@ -123,9 +107,6 @@ class TenantController extends Controller
         );
     }
 
-    /**
-     * PUT /api/tenants/{id}
-     */
     public function update(Request $request, Tenant $tenant)
     {
         try {
@@ -176,9 +157,6 @@ class TenantController extends Controller
         }
     }   
 
-    /**
-     * DELETE /api/tenants/{id}
-     */
     public function destroy(Tenant $tenant)
     {
         $tenant->delete();

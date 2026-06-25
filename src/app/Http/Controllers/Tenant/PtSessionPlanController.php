@@ -42,11 +42,9 @@ class PtSessionPlanController extends Controller
     public function store(StorePtSessionPlanRequest $request)
     {
         $data = $request->validated();
-
         if (empty($data['branch_id'])) {
             $data['branch_id'] = $request->header('X-Branch-Id') ?? null;
         }
-
         if (!empty($data['unlimited_sold'])) $data['total_quota'] = null;
         if (!empty($data['always_available'])) {
             $data['available_from']  = null;
@@ -54,7 +52,6 @@ class PtSessionPlanController extends Controller
         }
 
         $plan = PtSessionPlan::create($data);
-
         return ApiResponse::success(new PtSessionPlanResource($plan), 'PT session plan created successfully', 201);
     }
 

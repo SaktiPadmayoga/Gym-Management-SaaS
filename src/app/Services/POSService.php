@@ -142,7 +142,7 @@ class POSService
 
     private function resolveProduct(array $item): array
     {
-        $product = Product::findOrFail($item['id']);
+        $product = Product::lockForUpdate()->findOrFail($item['id']);
 
         throw_if(
             $product->stock < $item['quantity'],

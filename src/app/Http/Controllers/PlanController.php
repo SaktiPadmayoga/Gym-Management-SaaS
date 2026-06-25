@@ -13,17 +13,13 @@ use Illuminate\Support\Facades\Log;
 
 class PlanController extends Controller
 {
-    /**
-     * GET /api/plans
-     * List all plans dengan pagination & filtering
-     */
+
     public function index(Request $request)
     {
         
         try {
             $query = Plan::query();
 
-            // ✅ Search - Case Insensitive
             $keyword = $request->input('search') ?? $request->input('keyword');
 
             if ($keyword) {
@@ -34,7 +30,6 @@ class PlanController extends Controller
                 });
             }
 
-            // Filtering
             if ($request->has('is_active')) {
                 $query->where('is_active', $request->boolean('is_active'));
             }
@@ -43,20 +38,15 @@ class PlanController extends Controller
                 $query->where('is_public', $request->boolean('is_public'));
             }
 
-            // Sorting
             $sortBy = $request->input('sort_by', 'created_at');
             $sortOrder = $request->input('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            // Pagination
             $perPage = min($request->input('per_page', 15), 100);
             $page = $request->input('page', 1);
             
             $plans = $query->paginate($perPage, ['*'], 'page', $page);
 
-         
-
-            // ✅ STANDARDIZED RESPONSE
             return ApiResponse::success(
                 PlanResource::collection($plans->items()),
                 'Plans retrieved successfully',
@@ -67,9 +57,6 @@ class PlanController extends Controller
                     $plans->lastPage()
                 ]
             );
-
-        
-
         } catch (\Exception $e) {
             Log::error('Error fetching plans: ' . $e->getMessage());
             return ApiResponse::error(
@@ -80,25 +67,18 @@ class PlanController extends Controller
         }
     }
 
-    /**
-     * POST /api/plans
-     * Create new plan
-     */
+
     public function store(StorePlanRequest $request)
     {
         try {
             $validated = $request->validated();
 
-            // Handle features as JSON
             if (isset($validated['features']) && is_array($validated['features'])) {
                 $validated['features'] = json_encode($validated['features']);
             }
-
             $plan = Plan::create($validated);
 
-            Log::info('Plan created', ['plan_id' => $plan->id]); //'user_id' => auth()->id()]
-
-            // ✅ STANDARDIZED RESPONSE
+            Log::info('Plan created', ['plan_id' => $plan->id]); 
             return ApiResponse::success(
                 new PlanResource($plan),
                 'Plan created successfully',
@@ -116,12 +96,8 @@ class PlanController extends Controller
         }
     }
 
-    /**
-     * GET /api/plans/{id}
-     * Get single plan
-     */
     public function show($id)
-{
+    {
     try {
         $plan = Plan::find($id);
 
@@ -144,10 +120,6 @@ class PlanController extends Controller
     }
 }
 
-    /**
-     * PUT/PATCH /api/plans/{id}
-     * Update plan
-     */
     public function update(UpdatePlanRequest $request, $id)
 {
     try {

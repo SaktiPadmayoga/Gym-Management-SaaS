@@ -42,6 +42,7 @@ class CheckInController extends Controller
 
         return ApiResponse::success(CheckInResource::collection($data)->response()->getData());
     }
+
     public function store(StoreCheckInRequest $request)
     {
         $qrToken = $request->validated('qr_token');
@@ -80,13 +81,10 @@ class CheckInController extends Controller
         $hasBranchAccess = false;
 
         if (is_null($plan->branch_id)) {
-            // A. All Access / VIP (Branch ID null = Boleh di mana saja)
             $hasBranchAccess = true;
         } elseif ($plan->access_type === 'single_branch') {
-            // B. Single Branch
             $hasBranchAccess = ($plan->branch_id === $branchId);
         } elseif ($plan->access_type === 'cross_branch') {
-            // C. Cross Branch (Cek tabel pivot)
             $hasBranchAccess = DB::table('plan_branch_access')
                 ->where('plan_id', $plan->id)
                 ->where('branch_id', $branchId)

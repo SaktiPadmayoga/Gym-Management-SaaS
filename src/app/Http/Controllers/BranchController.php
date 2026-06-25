@@ -76,7 +76,6 @@ class BranchController extends Controller
     public function store(StoreBranchRequest $request)
     {
         try {
-            // Validasi limit branch berdasarkan paket subscription
             $maxBranches = \Illuminate\Support\Facades\DB::connection('central')
                 ->table('tenants')
                 ->where('id', tenant('id'))

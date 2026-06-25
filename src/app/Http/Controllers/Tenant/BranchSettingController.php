@@ -12,16 +12,13 @@ use Illuminate\Http\Request;
 
 class BranchSettingController extends Controller
 {
-    /**
-     * Ambil semua setting branch, dikelompokkan per group
-     */
+
     public function index(Request $request, string $branchId)
     {
         $settings = BranchSetting::where('branch_id', $branchId)
             ->when($request->filled('group'), fn($q) => $q->where('group', $request->group))
             ->get();
 
-        // Kembalikan dalam bentuk grouped
         $grouped = $settings->groupBy('group')->map(function ($items) {
             return $items->mapWithKeys(fn($s) => [$s->key => [
                 'value'     => $s->casted_value,
@@ -36,10 +33,7 @@ class BranchSettingController extends Controller
         ]);
     }
 
-    /**
-     * Ambil setting publik saja — tidak perlu auth
-     * Dipakai untuk theming (warna, logo)
-     */
+
     public function public(string $branchId)
     {
         $settings = BranchSetting::where('branch_id', $branchId)
@@ -50,9 +44,7 @@ class BranchSettingController extends Controller
         return ApiResponse::success($settings);
     }
 
-    /**
-     * Update satu atau banyak setting sekaligus
-     */
+
     public function update(UpdateBranchSettingRequest $request, string $branchId)
     {
         $updated = [];
@@ -60,7 +52,6 @@ class BranchSettingController extends Controller
         foreach ($request->settings as $item) {
             $value = $item['value'];
 
-            // Encode array ke JSON string sebelum simpan
             if (is_array($value)) {
                 $value = json_encode($value);
             }
@@ -84,10 +75,7 @@ class BranchSettingController extends Controller
         );
     }
 
-    /**
-     * Update setting per group (lebih simpel untuk frontend per-tab)
-     * Contoh: PUT /branches/{id}/settings/appearance
-     */
+
     public function updateGroup(Request $request, string $branchId, string $group)
     {
         $validated = $request->validate([

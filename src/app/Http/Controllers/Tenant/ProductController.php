@@ -12,9 +12,7 @@ use App\Http\Responses\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-// Disk yang dipakai untuk gambar produk.
-// Production: 'r2' (Cloudflare R2) jika key tersedia
-// Local dev:  'public' (storage/app/public) jika R2 belum dikonfigurasi
+
 function getProductDisk(): string
 {
     return env('CLOUDFLARE_R2_ACCESS_KEY_ID') ? 'r2' : 'public';
@@ -50,25 +48,19 @@ class ProductController extends Controller
     public function store(StoreProductRequest $request)
     {
         $data = $request->validated();
-
         if (empty($data['branch_id'])) {
             $data['branch_id'] = $request->header('X-Branch-Id') ?? null;
         }
-
         if ($request->hasFile('image')) {
             $prefix = $this->getTenantStoragePrefix();
             $data['image'] = $request->file('image')->store("{$prefix}/products/images", getProductDisk());
         }
-
         $initialStock = $data['stock'] ?? 0;
-        $data['stock'] = 0; // mulai dari 0, catat via movement
-
+        $data['stock'] = 0;
         $product = Product::create($data);
-
         if ($initialStock > 0) {
             $product->increaseStock($initialStock, 'purchase', 'Initial stock');
         }
-
         return ApiResponse::success(new ProductResource($product->fresh('branch')), 'Product created successfully', 201);
     }
 

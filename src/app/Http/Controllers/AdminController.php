@@ -46,8 +46,7 @@ class AdminController extends Controller
 
     public function show($id)
     {
-    $admin = Admin::find($id);
-
+        $admin = Admin::find($id);
         return ApiResponse::success(new AdminResource($admin), 'Admin detail');
     }
 
@@ -61,7 +60,6 @@ class AdminController extends Controller
         }
 
         $admin->update($data);
-
         return ApiResponse::success(new AdminResource($admin), 'Admin updated');
     }
 

@@ -21,40 +21,31 @@ class ClassScheduleController extends Controller
         protected ClassBookingService $bookingService
     ) {}
 
-    // GET /class-schedules
     public function index(Request $request)
     {
         $query = ClassSchedule::with(['classPlan', 'instructor', 'branch'])
             ->latest('date');
-
         if ($request->filled('branch_id')) {
             $query->where('branch_id', $request->branch_id);
         } elseif ($branchId = $request->header('X-Branch-Id')) {
             $query->where('branch_id', $branchId);
         }
-
         if ($request->filled('date')) {
             $query->whereDate('date', $request->date);
         }
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
         if ($request->filled('class_plan_id')) {
             $query->where('class_plan_id', $request->class_plan_id);
         }
-
         if ($request->filled('instructor_id')) {
             $query->where('instructor_id', $request->instructor_id);
         }
-
         if ($request->filled('date_from') && $request->filled('date_to')) {
             $query->whereBetween('date', [$request->date_from, $request->date_to]);
         }
-
         $data = $query->paginate($request->per_page ?? 15);
-
         return ApiResponse::success([
             'data' => ClassScheduleResource::collection($data->items()),
             'meta' => [
@@ -67,7 +58,6 @@ class ClassScheduleController extends Controller
         ]);
     }
 
-    // GET /class-schedules/:id
     public function show(string $id)
     {
         $schedule = ClassSchedule::with([
@@ -78,7 +68,6 @@ class ClassScheduleController extends Controller
         return ApiResponse::success(new ClassScheduleResource($schedule));
     }
 
-    // POST /class-schedules
     public function store(StoreClassScheduleRequest $request)
     {
         $data = $request->validated();
@@ -94,7 +83,6 @@ class ClassScheduleController extends Controller
         );
     }
 
-    // PUT /class-schedules/:id
     public function update(UpdateClassScheduleRequest $request, string $id)
     {
         $schedule = ClassSchedule::findOrFail($id);
@@ -123,7 +111,6 @@ class ClassScheduleController extends Controller
         return ApiResponse::success(null, 'Jadwal kelas berhasil dihapus');
     }
 
-    // PATCH /class-schedules/:id/cancel
     public function cancel(Request $request, string $id)
     {
         $request->validate([
@@ -147,11 +134,7 @@ class ClassScheduleController extends Controller
         );
     }
 
-    // =============================================
-    // ATTENDANCE — dipakai staff (manual check-in)
-    // =============================================
 
-    // GET /class-schedules/:id/attendances
     public function attendances(string $id)
     {
         $schedule = ClassSchedule::findOrFail($id);
@@ -164,13 +147,11 @@ class ClassScheduleController extends Controller
         );
     }
 
-    // POST /class-schedules/:id/attendances
-    // Staff menambahkan member ke jadwal (manual booking)
+
     public function addAttendance(StoreClassAttendanceRequest $request, string $id)
     {
         $schedule = ClassSchedule::with('classPlan')->findOrFail($id);
 
-        // Lazy-load member dari request
         $member = \App\Models\Tenant\Member::findOrFail($request->member_id);
 
         try {
@@ -186,7 +167,6 @@ class ClassScheduleController extends Controller
             return ApiResponse::error('Gagal mendaftarkan member.', null, 500);
         }
 
-        // Kelas gratis — attendance langsung confirmed
         if ($result['snap_token'] === null) {
             return ApiResponse::success(
                 new ClassAttendanceResource($result['attendance']),
@@ -195,7 +175,6 @@ class ClassScheduleController extends Controller
             );
         }
 
-        // Kelas berbayar — kembalikan snap_token untuk pembayaran
         return ApiResponse::success(
             [
                 'attendance' => new ClassAttendanceResource($result['attendance']),
@@ -212,8 +191,7 @@ class ClassScheduleController extends Controller
         );
     }
 
-    // PATCH /class-schedules/:id/attendances/:attendanceId/checkin
-    // Staff mark member sebagai hadir
+
     public function markAttended(Request $request, string $id, string $attendanceId)
     {
         $attendance = ClassAttendance::where('class_schedule_id', $id)
@@ -227,7 +205,6 @@ class ClassScheduleController extends Controller
             return ApiResponse::error('Attendance sudah dibatalkan.', null, 422);
         }
 
-        // Untuk kelas berbayar, pastikan pembayaran sudah confirmed
         if ($attendance->payment_status === 'pending') {
             return ApiResponse::error('Pembayaran belum dikonfirmasi.', null, 422);
         }
@@ -256,7 +233,6 @@ class ClassScheduleController extends Controller
         }
     }
 
-    // PATCH /class-schedules/:id/attendances/:attendanceId/cancel
     public function cancelAttendance(Request $request, string $id, string $attendanceId)
     {
         $attendance = ClassAttendance::where('class_schedule_id', $id)
@@ -285,10 +261,7 @@ class ClassScheduleController extends Controller
         }
     }
 
-    /**
-     * POST /api/class-schedules/{id}/book-by-staff
-     * Endpoint khusus Staff/POS untuk mendaftarkan member dan bayar di tempat.
-     */
+
     public function bookByStaff(Request $request, $id, ClassBookingService $bookingService)
     {
         $request->validate([
@@ -300,12 +273,10 @@ class ClassScheduleController extends Controller
             $schedule = ClassSchedule::with('classPlan')->findOrFail($id);
             $member   = \App\Models\Tenant\Member::findOrFail($request->member_id);
             
-            // Ambil ID staff yang sedang login (sesuaikan dengan guard auth kamu)
             $staffId  = auth('staff')->id(); 
             
             $paymentMethod = $request->payment_method ?? 'cash';
 
-            // Panggil service yang sudah kita update
             $result = $bookingService->book($schedule, $member, $staffId, 'Booked via Staff POS', $paymentMethod);
 
             return ApiResponse::success([

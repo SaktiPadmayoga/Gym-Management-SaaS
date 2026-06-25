@@ -29,8 +29,14 @@ class CheckTenantAccess
             return $next($request);
         }
 
-        $tenant = $tenant->fresh();
-        $subscription = $tenant->activeSubscription;
+        // Cache active subscription for 5 minutes to prevent heavy N+1 central DB queries
+        $subscription = \Illuminate\Support\Facades\Cache::remember(
+            "tenant.{$tenant->id}.active_subscription",
+            300,
+            function () use ($tenant) {
+                return $tenant->fresh()->activeSubscription;
+            }
+        );
         
         $user = $request->user('staff') ?? $request->user('member') ?? $request->user();
         
@@ -110,17 +116,7 @@ class CheckTenantAccess
              }
         }
 
-        if ($subscription && !$subscription->isExpired() && $subscription->status !== 'pending') {
-            $plan = $subscription->plan;
-            if ($plan) {
-                $tenant->run(function () use ($plan) {
-                    if (!$plan->isUnlimitedMembers() && \App\Models\Tenant\Member::count() >= $plan->max_membership) {
-                        // Jangan abort, tapi berikan warning atau batasi pembuatan (biasanya di create endpoint)
-                        // Untuk middleware general, kita lewati saja agar tidak memblokir GET request.
-                    }
-                });
-            }
-        }
+        // Member quota check has been moved to POST /api/tenant/members to prevent N+1 queries on every request.
 
         return $response;
     }

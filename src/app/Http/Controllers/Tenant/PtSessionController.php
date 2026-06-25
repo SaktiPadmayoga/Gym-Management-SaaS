@@ -13,9 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class PtSessionController extends Controller
 {
-    /**
-     * Helper to get base query with branch scoping for non-owners/admins
-     */
+
     private function getPtSessionQuery(Request $request)
     {
         $query = PtSession::query();
@@ -29,15 +27,11 @@ class PtSessionController extends Controller
         return $query;
     }
 
-    /**
-     * List semua jadwal PT dengan filter
-     */
     public function index(Request $request)
     {
         $staff = $request->user();
         $query = $this->getPtSessionQuery($request)->with(['member', 'trainer', 'package.plan']);
 
-        // Filter branch for global managers (owner/admin)
         if ($staff && ($staff->isOwner() || $staff->role === 'admin')) {
             if ($request->filled('branch_id')) {
                 $query->where('branch_id', $request->branch_id);
@@ -46,7 +40,6 @@ class PtSessionController extends Controller
             }
         }
 
-        // Filter: Trainer hanya melihat sesinya sendiri, kecuali dia manager/owner
         $isBranchTrainer = $staff->staffBranches()->whereHas('role', fn($q) => $q->where('name', 'trainer'))->exists();
         $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->staffBranches()->whereHas('role', fn($q) => $q->whereIn('name', ['branch_manager']))->exists();
 
@@ -54,17 +47,14 @@ class PtSessionController extends Controller
             $query->where('trainer_id', $staff->id);
         }
 
-        // Filter berdasarkan tanggal (untuk Kalender atau List)
         if ($request->filled('date')) {
             $query->whereDate('date', $request->date);
         }
 
-        // Filter status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Search berdasarkan nama member atau trainer (nested where to prevent OR clause bypass)
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -91,18 +81,13 @@ class PtSessionController extends Controller
         ]);
     }
 
-    /**
-     * Detail Jadwal
-     */
+
     public function show(Request $request, $id)
     {
         $session = $this->getPtSessionQuery($request)->with(['member', 'trainer', 'package.plan', 'attendance'])->findOrFail($id);
         return ApiResponse::success($session);
     }
 
-    /**
-     * Buat Jadwal Baru (Pengecekan Kuota)
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -120,12 +105,10 @@ class PtSessionController extends Controller
         }
         $package = $packageQuery->findOrFail($request->pt_package_id);
 
-        // 1. Pastikan paket aktif
         if ($package->status !== 'active') {
             return ApiResponse::error("Paket ini sedang {$package->status}. Hanya paket 'active' yang bisa dijadwalkan.", null, 422);
         }
 
-        // 2. Cek Kuota (Rumus: Sisa = Total - (Selesai + Terjadwal))
         $scheduledCount = PtSession::where('pt_package_id', $package->id)
             ->whereIn('status', ['scheduled', 'ongoing'])
             ->count();
@@ -154,23 +137,18 @@ class PtSessionController extends Controller
         return ApiResponse::success($session->load('member', 'trainer'), 'Jadwal PT berhasil dibuat', 201);
     }
 
-    /**
-     * Update Jadwal
-     */
+
     public function update(Request $request, $id)
     {
         $session = $this->getPtSessionQuery($request)->findOrFail($id);
         $session->update($request->only(['date', 'start_at', 'end_at', 'trainer_id', 'status', 'notes']));
 
-        // Jika status diubah menjadi completed, jangan lupa update used_sessions di package
-        // Namun idealnya ini dilakukan di method khusus 'check-in' agar lebih terkontrol
+
         
         return ApiResponse::success($session, 'Jadwal berhasil diperbarui');
     }
 
-    /**
-     * Batalkan Jadwal
-     */
+
     public function cancel(Request $request, $id)
     {
         $session = $this->getPtSessionQuery($request)->findOrFail($id);
@@ -187,18 +165,13 @@ class PtSessionController extends Controller
         return ApiResponse::success(null, 'Jadwal berhasil dibatalkan');
     }
 
-    /**
-     * Tandai Sesi Sebagai Selesai
-     * Sekaligus update used_sessions di paket member.
-     */
+
     public function markComplete(Request $request, $id)
     {
         $request->validate([
             'notes' => 'nullable|string|max:2000',
         ]);
-
         $session = $this->getPtSessionQuery($request)->with('package')->findOrFail($id);
-
         if (!in_array($session->status, ['scheduled', 'ongoing'])) {
             return ApiResponse::error(
                 "Hanya sesi berstatus 'scheduled' atau 'ongoing' yang bisa diselesaikan.",
@@ -207,13 +180,10 @@ class PtSessionController extends Controller
         }
 
         DB::transaction(function () use ($session, $request) {
-            // 1. Update status sesi + simpan catatan trainer
             $session->update([
                 'status' => 'completed',
                 'notes'  => $request->notes,
             ]);
-
-            // 2. Increment used_sessions di paket (fix bug TODO sebelumnya)
             if ($session->package) {
                 $session->package->increment('used_sessions');
             }
@@ -225,27 +195,18 @@ class PtSessionController extends Controller
         );
     }
 
-    /**
-     * Update Catatan/Progress Sesi (oleh Trainer)
-     * Hanya bisa mengedit kolom notes saja.
-     */
     public function updateNotes(Request $request, $id)
     {
         $request->validate([
             'notes' => 'required|string|max:2000',
         ]);
-
         $staff   = $request->user();
         $session = $this->getPtSessionQuery($request)->findOrFail($id);
-
-        // Trainer hanya boleh edit notes sesi yang dia ampu,
-        // kecuali owner/admin yang bisa edit semuanya.
         if (!$staff->isOwner() && $staff->role !== 'admin') {
             if ($session->trainer_id !== $staff->id) {
                 return ApiResponse::error('Anda tidak berhak mengedit catatan sesi ini.', null, 403);
             }
         }
-
         $session->update(['notes' => $request->notes]);
 
         return ApiResponse::success($session->fresh(), 'Catatan sesi berhasil diperbarui');
@@ -257,7 +218,6 @@ class PtSessionController extends Controller
         $query = $this->getPtSessionQuery($request)->with(['member:id,name', 'package.plan'])
             ->where('status', 'requested');
 
-        // Filter branch for global managers (owner/admin)
         if ($staff && ($staff->isOwner() || $staff->role === 'admin')) {
             if ($request->filled('branch_id')) {
                 $query->where('branch_id', $request->branch_id);
@@ -266,8 +226,6 @@ class PtSessionController extends Controller
             }
         }
 
-        // Filter: Trainer hanya melihat request untuk dirinya sendiri,
-        // Branch manager bisa melihat semua request di cabang mereka.
         $isGlobalTrainer = $staff->role === 'trainer';
         $isBranchTrainer = $staff->staffBranches()->whereHas('role', fn($q) => $q->where('name', 'trainer'))->exists();
         $isManager = $staff->role === 'owner' || $staff->role === 'admin' || $staff->staffBranches()->whereHas('role', fn($q) => $q->whereIn('name', ['branch_manager']))->exists();
@@ -300,8 +258,6 @@ class PtSessionController extends Controller
             'status' => 'scheduled'
         ]);
 
-        // Kirim notifikasi ke member (bisa melalui table notifications terpisah untuk member jika ada, 
-        // atau kita gunakan logger/email untuk sementara).
         Log::info("PT Session {$id} approved for member {$session->member_id}");
 
         return ApiResponse::success($session, 'Request berhasil diterima menjadi scheduled');

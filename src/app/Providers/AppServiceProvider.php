@@ -10,6 +10,10 @@ use Laravel\Sanctum\Sanctum;
 // JANGAN LUPA DUA IMPORT INI 👇
 use Illuminate\Support\Facades\Gate;
 use App\Models\Tenant\Staff;
+// Import untuk Rate Limiting
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,6 +30,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ---------------------------------------------------
+        // 0. RATE LIMITING
+        // ---------------------------------------------------
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+        });
+
+        RateLimiter::for('auth', function (Request $request) {
+            return Limit::perMinute(5)->by($request->input('email') . $request->ip());
+        });
+
         // ---------------------------------------------------
         // 1. OBSERVERS
         // ---------------------------------------------------

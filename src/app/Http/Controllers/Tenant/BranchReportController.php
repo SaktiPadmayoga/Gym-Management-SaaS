@@ -14,10 +14,6 @@ class BranchReportController extends Controller
     public function __construct(protected BranchReportService $reportService)
     {}
 
-    /**
-     * GET /api/branch-reports/{type}?start_date=...&end_date=...
-     * Branch ID diambil dari header X-Branch-Id
-     */
     public function show(Request $request, string $type)
     {
         try {

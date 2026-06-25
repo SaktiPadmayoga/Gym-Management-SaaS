@@ -16,10 +16,6 @@ use App\Mail\AdminResetPasswordMail;
 
 class AdminAuthController extends Controller
 {
-    /**
-     * Login admin
-     */
-    
 
     public function login(Request $request)
     {
@@ -45,7 +41,6 @@ class AdminAuthController extends Controller
 
         return ApiResponse::success([
             'admin' => new AdminResource($admin),
-            // token TIDAK di body
         ], 'Login successful')->withCookie(CookieService::makeAdminCookie($token));
     }
 
@@ -57,17 +52,12 @@ class AdminAuthController extends Controller
             ->withCookie(CookieService::clearAdminCookie());
     }
 
-    /**
-     * Get current authenticated admin
-     */
+
     public function me(Request $request)
     {
         return ApiResponse::success(new AdminResource($request->user('admin')));
     }
 
-    /**
-     * Change password
-     */
     public function changePassword(Request $request)
     {
         $request->validate([
@@ -83,15 +73,12 @@ class AdminAuthController extends Controller
 
         $admin->update(['password' => Hash::make($request->new_password)]);
 
-        // Revoke semua token — paksa login ulang
         $admin->tokens()->delete();
 
         return ApiResponse::success(null, 'Password changed successfully. Please login again.');
     }
 
-    /**
-     * Send password reset email
-     */
+
     public function forgotPassword(Request $request)
     {
         $request->validate(['email' => 'required|email']);
@@ -110,14 +97,11 @@ class AdminAuthController extends Controller
             ['token' => Hash::make($token), 'created_at' => now()]
         );
 
-        Mail::to($admin->email)->send(new AdminResetPasswordMail($token, $admin->email));
+        Mail::to($admin->email)->queue(new AdminResetPasswordMail($token, $admin->email));
 
         return ApiResponse::success(null, 'Jika email terdaftar, link reset kata sandi telah dikirim.');
     }
 
-    /**
-     * Reset password using token
-     */
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -134,7 +118,6 @@ class AdminAuthController extends Controller
             return ApiResponse::error('Token tidak valid atau sudah kedaluwarsa.', null, 422);
         }
 
-        // Cek kedaluwarsa (1 jam)
         if (\Carbon\Carbon::parse($resetToken->created_at)->addHour()->isPast()) {
             DB::connection('central')->table('admin_password_reset_tokens')->where('email', $request->email)->delete();
             return ApiResponse::error('Token sudah kedaluwarsa. Silakan minta link reset baru.', null, 422);
@@ -151,7 +134,6 @@ class AdminAuthController extends Controller
 
         $admin->update(['password' => Hash::make($request->password)]);
 
-        // Hapus semua token login & reset token
         $admin->tokens()->delete();
         DB::connection('central')->table('admin_password_reset_tokens')->where('email', $request->email)->delete();
 

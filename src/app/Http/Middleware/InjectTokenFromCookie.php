@@ -20,6 +20,19 @@ class InjectTokenFromCookie
     if (!$request->bearerToken()) {
         $token = $this->resolveTokenFromCookie($request);
         if ($token) {
+            // CSRF Protection for Cookie Auth
+            if (in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+                if (!$request->hasHeader('X-Requested-With') || $request->header('X-Requested-With') !== 'XMLHttpRequest') {
+                    // Allow external webhooks to bypass CSRF check
+                    if (!$request->is('api/webhook/*') && !$request->is('api/payment/webhook')) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'CSRF token mismatch. Missing X-Requested-With header.'
+                        ], 419);
+                    }
+                }
+            }
+
             $request->headers->set('Authorization', "Bearer {$token}");
             Log::info('[InjectToken] berhasil inject Authorization header');
         } else {

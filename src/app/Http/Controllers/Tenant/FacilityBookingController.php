@@ -13,9 +13,7 @@ use Carbon\Carbon;
 
 class FacilityBookingController extends Controller
 {
-    /**
-     * Tampilkan semua booking fasilitas
-     */
+
     public function index(Request $request)
     {
         $query = FacilityBooking::with(['facility', 'member', 'invoice']);
@@ -45,18 +43,12 @@ class FacilityBookingController extends Controller
         ]);
     }
 
-    /**
-     * Tampilkan detail booking
-     */
     public function show(string $id)
     {
         $booking = FacilityBooking::with(['facility', 'member', 'invoice'])->findOrFail($id);
         return ApiResponse::success($booking);
     }
 
-    /**
-     * Proses Booking & Bayar (Sudah kita buat sebelumnya)
-     */
     public function store(Request $request, FacilityBookingService $service)
     {
         $request->validate([

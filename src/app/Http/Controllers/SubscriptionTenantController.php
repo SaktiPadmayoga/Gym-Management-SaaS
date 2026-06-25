@@ -22,10 +22,10 @@ class SubscriptionTenantController extends Controller
                 ->whereIn('subscriptions.status', ['active', 'expired', 'trial', 'pending'])
                 ->select(
                     'subscriptions.id',
-                    'tenants.status as status', // Gunakan status dari tenant agar konsisten dengan Header
+                    'tenants.status as status', 
                     'subscriptions.billing_cycle',
                     'subscriptions.started_at',
-                    'tenants.subscription_ends_at as current_period_ends_at', // Gunakan ends_at dari tenant
+                    'tenants.subscription_ends_at as current_period_ends_at',
                     'tenants.trial_ends_at as trial_ends_at',
                     'plans.id as plan_id',
                     'plans.name as plan_name',
@@ -39,7 +39,6 @@ class SubscriptionTenantController extends Controller
                 ->first();
 
             if (!$subscription) {
-                // Fallback: Jika tidak ada record di subscriptions, ambil dari tenants (untuk trial awal)
                 $tenantData = DB::connection('central')->table('tenants')->where('id', $tenant->id)->first();
                 if ($tenantData) {
                     return ApiResponse::success([

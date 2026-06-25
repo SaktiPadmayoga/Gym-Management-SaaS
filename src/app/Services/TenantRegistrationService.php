@@ -151,7 +151,7 @@ class TenantRegistrationService
             
             $loginUrl = $protocol . $slug . '.' . $baseDomain . '/tenant-auth/login';
 
-            \Illuminate\Support\Facades\Mail::to($data['owner_email'])->send(new \App\Mail\OwnerWelcomeMail(
+            \Illuminate\Support\Facades\Mail::to($data['owner_email'])->queue(new \App\Mail\OwnerWelcomeMail(
                 $tenant,
                 $data['owner_name'],
                 $data['owner_email'],

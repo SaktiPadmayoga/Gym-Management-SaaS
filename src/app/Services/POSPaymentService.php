@@ -207,7 +207,7 @@ class POSPaymentService
                 ? "{$scheme}://{$host}:{$frontendPort}"
                 : "{$scheme}://{$host}";
 
-            Mail::to($member->email)->send(
+            Mail::to($member->email)->queue(
                 new MemberWelcomeMail($member, $planName, $frontendUrl, $resetToken)
             );
         }

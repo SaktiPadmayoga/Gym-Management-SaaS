@@ -14,15 +14,11 @@ class CentralReportController extends Controller
     public function __construct(protected CentralReportService $reportService)
     {}
 
-    /**
-     * GET /api/central/reports?type=finance&start_date=2026-04-01&end_date=2026-04-30
-     */
     public function index(Request $request)
     {
         try {
             $type = $request->query('type', 'finance');
             
-            // Default ke awal bulan dan akhir bulan ini jika tidak ada parameter
             $startDate = $request->query('start_date') 
                 ? Carbon::parse($request->query('start_date'))->startOfDay() 
                 : now()->startOfMonth();

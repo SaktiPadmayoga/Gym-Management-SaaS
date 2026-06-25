@@ -14,14 +14,11 @@ class TenantReportController extends Controller
     public function __construct(protected TenantReportService $reportService)
     {}
 
-    /**
-     * GET /api/reports?type=finance&start_date=2026-04-01&end_date=2026-04-30&branch_id=xxx
-     */
     public function index(Request $request)
     {
         try {
             $type = $request->query('type', 'finance');
-            $branchId = $request->query('branch_id'); // null = semua cabang
+            $branchId = $request->query('branch_id');
 
             $startDate = $request->query('start_date')
                 ? Carbon::parse($request->query('start_date'))->startOfDay()
@@ -54,9 +51,6 @@ class TenantReportController extends Controller
         }
     }
 
-    /**
-     * GET /api/reports/branches — Daftar cabang aktif untuk dropdown filter
-     */
     public function branches()
     {
         try {

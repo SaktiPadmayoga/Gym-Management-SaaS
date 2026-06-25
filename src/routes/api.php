@@ -38,64 +38,26 @@ Route::prefix('tenant-auth')->group(function () {
 });
     
     
-    // Rute Webhook Midtrans khusus Tenant (Bypass CSRF & Auth)
-    Route::post('/payment/member-webhook', [MidtransWebhookController::class, 'handle']);
+// Rute Webhook Midtrans khusus Tenant (Bypass CSRF & Auth)
+Route::post('/payment/member-webhook', [MidtransWebhookController::class, 'handle']);
 
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);
     Route::post('/register-paid', [TenantRegistrationController::class, 'registerPaid']);
 });
 
-    
-    Route::post('plans/{id}/restore', [PlanController::class, 'restore']);
-    Route::delete('plans/{id}/force', [PlanController::class, 'forceDelete']);
-
-    Route::prefix('tenants')->group(function () {
-    Route::get('/', [TenantController::class, 'index']);
-    Route::post('/', [TenantController::class, 'store']);
-    Route::get('/{tenant}', [TenantController::class, 'show']);
-    Route::put('/{tenant}', [TenantController::class, 'update']);
-    Route::delete('/{tenant}', [TenantController::class, 'destroy']);
-    Route::post('/{id}/restore', [TenantController::class, 'restore']);
-});
-
-Route::prefix('plans')->group(function () {
-    Route::get('/', [PlanController::class, 'index']);
-    Route::post('/', [PlanController::class, 'store']);
-    Route::get('{id}', [PlanController::class, 'show']);
-    Route::get('{id}/edit', [PlanController::class, 'edit']);
-    Route::put('{id}', [PlanController::class, 'update']);
-    Route::patch('{id}/cancel', [PlanController::class, 'cancel']);
-    Route::delete('{id}', [PlanController::class,'destroy']);
-
-});
-
-
-
-Route::apiResource('tenant-users', TenantUserController::class);
-
-
-
-Route::prefix('subscriptions')->group(function () {
-    Route::get('/', [SubscriptionController::class, 'index']);
-    Route::get('{id}', [SubscriptionController::class, 'show']);
-    Route::get('{id}/edit', [SubscriptionController::class, 'edit']);
-    Route::put('{id}', [SubscriptionController::class, 'update']);
-    Route::patch('{id}/cancel', [SubscriptionController::class, 'cancel']);
-
-});
-
- 
 // -----------------------------------------------
 // Admin Auth — tidak perlu middleware tenant
 // -----------------------------------------------
  
 Route::prefix('admin/auth')->group(function () {
     // Public
-    Route::post('/login',           [AdminAuthController::class, 'login']);
-    Route::post('/forgot-password', [AdminAuthController::class, 'forgotPassword']);
-    Route::post('/reset-password',  [AdminAuthController::class, 'resetPassword']);
+    Route::middleware('throttle:auth')->group(function () {
+        Route::post('/login',           [AdminAuthController::class, 'login']);
+        Route::post('/forgot-password', [AdminAuthController::class, 'forgotPassword']);
+        Route::post('/reset-password',  [AdminAuthController::class, 'resetPassword']);
+    });
  
     // Protected
     Route::middleware('auth:admin')->group(function () {
@@ -105,65 +67,95 @@ Route::prefix('admin/auth')->group(function () {
     });
 });
  
-// Semua route admin lainnya dilindungi auth:admin
-Route::middleware('auth:admin')->prefix('admin')->group(function () {
-    Route::apiResource('admins', AdminController::class);
-    
+// ============================================
+// ADMIN ROUTES (Require Admin Auth)
+// ============================================
+Route::middleware('auth:admin')->group(function () {
+    Route::prefix('admin')->group(function () {
+        Route::apiResource('admins', AdminController::class);
+    });
+
+    Route::get('/central/dashboard/summary', [CentralDashboardController::class, 'getSummary']);
+    Route::get('/central/reports', [CentralReportController::class, 'index']);
+    Route::get('/central/reports/export', [CentralReportController::class, 'export']);
+
+    Route::get('/central/notifications', [CentralNotificationController::class, 'index']);
+    Route::post('/central/notifications/{id}/read', [CentralNotificationController::class, 'markAsRead']);
+    Route::post('/central/notifications/mark-all-read', [CentralNotificationController::class, 'markAllAsRead']);
+
+    Route::post('plans/{id}/restore', [PlanController::class, 'restore']);
+    Route::delete('plans/{id}/force', [PlanController::class, 'forceDelete']);
+
+    Route::prefix('tenants')->group(function () {
+        Route::get('/', [TenantController::class, 'index']);
+        Route::post('/', [TenantController::class, 'store']);
+        Route::get('/{tenant}', [TenantController::class, 'show']);
+        Route::put('/{tenant}', [TenantController::class, 'update']);
+        Route::delete('/{tenant}', [TenantController::class, 'destroy']);
+        Route::post('/{id}/restore', [TenantController::class, 'restore']);
+    });
+
+    Route::prefix('plans')->group(function () {
+        Route::get('/', [PlanController::class, 'index']);
+        Route::post('/', [PlanController::class, 'store']);
+        Route::get('{id}', [PlanController::class, 'show']);
+        Route::get('{id}/edit', [PlanController::class, 'edit']);
+        Route::put('{id}', [PlanController::class, 'update']);
+        Route::patch('{id}/cancel', [PlanController::class, 'cancel']);
+        Route::delete('{id}', [PlanController::class,'destroy']);
+    });
+
+    Route::apiResource('tenant-users', TenantUserController::class);
+
+    Route::prefix('subscriptions')->group(function () {
+        Route::get('/', [SubscriptionController::class, 'index']);
+        Route::get('{id}', [SubscriptionController::class, 'show']);
+        Route::get('{id}/edit', [SubscriptionController::class, 'edit']);
+        Route::put('{id}', [SubscriptionController::class, 'update']);
+        Route::patch('{id}/cancel', [SubscriptionController::class, 'cancel']);
+    });
+
+    Route::prefix('payments')->group(function () {
+        Route::get('/', [PaymentController::class, 'index']);
+        Route::get('/{id}', [PaymentController::class, 'show']);
+    });
+
+    Route::prefix('invoices')->group(function () {
+        Route::get('/', [PaymentController::class, 'indexInvoices']);
+        Route::get('/{id}', [PaymentController::class, 'showInvoice']);
+    });
 });
 
 // ============================================
 // TENANT-SCOPED ROUTES (tenant database)
-// Middleware InitializeTenancy resolve tenant dari X-Tenant header
 // ============================================
-
-Route::middleware([\App\Http\Middleware\InitializeTenancy::class])->group(function () {
-    
+Route::middleware(['auth:staff', \App\Http\Middleware\InitializeTenancy::class, 'check_tenant_access'])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::patch('branches/{branch}/toggle-active', [BranchController::class, 'toggleActive']);
 
-    Route::apiResource('domains', DomainController::class);
-
-    Route::prefix('domain-requests')->group(function () {
-        Route::get('/my', [DomainRequestController::class, 'myRequests']);
-        Route::post('/', [DomainRequestController::class, 'store']);
-        Route::delete('/{id}', [DomainRequestController::class, 'destroy']);
-    });
-
-
-
-     Route::get('/subscription/current', [SubscriptionTenantController::class, 'current']);
+    Route::get('/subscription/current', [SubscriptionTenantController::class, 'current']);
     Route::get('/subscription/history', [SubscriptionTenantController::class, 'history']);
 
     Route::post('/payment/token', [PaymentController::class, 'createToken']);
 });
 
 // ============================================
-// DOMAIN ROUTES (central database)
-// Bisa diakses dari central maupun tenant
-// Filter tenant_id otomatis dari X-Tenant header jika ada
+// DOMAIN ROUTES (SHARED ADMIN & STAFF)
+// central database
 // ============================================
-Route::apiResource('domains', DomainController::class);
-Route::patch('domains/{domain}/toggle-primary', [DomainController::class, 'togglePrimary']);
+Route::middleware('auth:admin,staff')->group(function () {
+    Route::apiResource('domains', DomainController::class);
+    Route::patch('domains/{domain}/toggle-primary', [DomainController::class, 'togglePrimary']);
 
-Route::prefix('domain-requests')->group(function () {
-    Route::get('/', [DomainRequestController::class, 'index']);
-    Route::get('/{id}', [DomainRequestController::class, 'show']);
-    Route::post('/{id}/review', [DomainRequestController::class, 'review']);
+    Route::prefix('domain-requests')->group(function () {
+        Route::get('/', [DomainRequestController::class, 'index']);
+        Route::get('/my', [DomainRequestController::class, 'myRequests']);
+        Route::post('/', [DomainRequestController::class, 'store']);
+        Route::get('/{id}', [DomainRequestController::class, 'show']);
+        Route::post('/{id}/review', [DomainRequestController::class, 'review']);
+        Route::delete('/{id}', [DomainRequestController::class, 'destroy']);
+    });
 });
-
-
 
 // Webhook — tanpa middleware, Midtrans yang call ini
 Route::post('/payment/webhook', [PaymentController::class, 'webhook']);
-
-
-// Central routes (admin)
-Route::prefix('payments')->group(function () {
-    Route::get('/', [PaymentController::class, 'index']);
-    Route::get('/{id}', [PaymentController::class, 'show']);
-});
-
-Route::prefix('invoices')->group(function () {
-    Route::get('/', [PaymentController::class, 'indexInvoices']);
-    Route::get('/{id}', [PaymentController::class, 'showInvoice']);
-});

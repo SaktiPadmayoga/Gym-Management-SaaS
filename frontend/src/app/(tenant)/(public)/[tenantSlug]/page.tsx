@@ -1,4 +1,3 @@
-// app/(tenant)/page.tsx
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
@@ -7,7 +6,7 @@ import { useTenantHeader } from "@/hooks/useTenantHeader";
 import { Toaster, toast } from "sonner";
 import CustomButton from "@/components/ui/button/CustomButton";
 import { useState, useEffect } from "react";
-import { ArrowRight, CheckCircle2, Dumbbell, Timer, Users, Zap, Play, Star, MapPin, Phone, Mail, Instagram, Facebook, Twitter, ShieldCheck, Clock, Award, Check, ChevronDown, ShieldAlert } from "lucide-react";
+import { ArrowRight, CheckCircle2, Dumbbell, Zap, Play, Star, MapPin, Phone, Mail, Instagram, Facebook, Twitter, ShieldCheck, Clock, Award, ChevronDown } from "lucide-react";
 
 export default function TenantLandingPage() {
     const params = useParams();
@@ -18,7 +17,6 @@ export default function TenantLandingPage() {
     const tenantBranches = tenantData?.branches || [];
     const [selectedBranchId, setSelectedBranchId] = useState<string>("");
 
-    // Sync selected branch ID
     useEffect(() => {
         if (tenantBranches.length > 0 && !selectedBranchId) {
             setSelectedBranchId(tenantData?.current_branch?.id || tenantBranches[0]?.id || "");
@@ -38,12 +36,10 @@ export default function TenantLandingPage() {
 
     const gymName = tenantSlug ? `${tenantSlug.replace(/-/g, " ")}` : "GYMFIT Gym";
 
-    // Scroll helper
     const scrollTo = (id: string) => {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     };
 
-    // Data Cabang & Jam Operasional Realistis
     const branches = [
         {
             name: `${gymName} - SCBD Executive Center`,
@@ -94,11 +90,10 @@ export default function TenantLandingPage() {
         <div className="min-h-screen bg-zinc-950 text-white font-figtree selection:bg-blue-600 selection:text-white antialiased">
             <Toaster position="top-center" richColors />
 
-            {/* --- HEADER / NAVBAR --- */}
             <header className="fixed top-0 w-full z-50 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-xl transition-all">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white font-black text-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] uppercase transition-transform group-hover:scale-105 group-hover:rotate-3">
+                        <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white font-black text-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] uppercase transition-transform group-hover:scale-105 group-hover:rotate-3">
                             {gymName.charAt(0)}
                         </div>
                         <span className="font-black text-2xl text-white tracking-tight uppercase hidden sm:block">
@@ -107,7 +102,6 @@ export default function TenantLandingPage() {
                         </span>
                     </div>
 
-                    {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center gap-8 text-xs font-black uppercase tracking-widest text-zinc-400">
                         <button onClick={() => scrollTo("about")} className="hover:text-blue-500 transition-colors">
                             Tentang

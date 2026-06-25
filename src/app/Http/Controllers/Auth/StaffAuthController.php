@@ -98,66 +98,58 @@ class StaffAuthController extends Controller
             : "{$scheme}://{$host}";
     }
 
-    // =============================================
-    // Email/Password Login
-    // =============================================
-
+  
     
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email'    => ['required', 'email'],
+            'password' => ['required', 'string'],
+        ]);
 
-// Login
-public function login(Request $request)
-{
-    $request->validate([
-        'email'    => ['required', 'email'],
-        'password' => ['required', 'string'],
-    ]);
+        $staff = Staff::where('email', $request->email)->first();
 
-    $staff = Staff::where('email', $request->email)->first();
-
-    if (!$staff || !Hash::check($request->password, $staff->password)) {
-        return ApiResponse::error('Invalid email or password', null, 401);
-    }
-
-    if (!$staff->is_active) {
-        return ApiResponse::error('Your account has been deactivated', null, 403);
-    }
-
-    // Periksa apakah masa aktif tenant sudah habis (kecuali untuk owner)
-    $tenant = tenant();
-    $isExpired = false;
-    if ($tenant) {
-        if (in_array($tenant->status, ['expired', 'suspended'])) {
-            $isExpired = true;
-        } elseif ($tenant->subscription_ends_at && \Carbon\Carbon::parse($tenant->subscription_ends_at)->isPast()) {
-            $isExpired = true;
+        if (!$staff || !Hash::check($request->password, $staff->password)) {
+            return ApiResponse::error('Invalid email or password', null, 401);
         }
+
+        if (!$staff->is_active) {
+            return ApiResponse::error('Your account has been deactivated', null, 403);
+        }
+
+        $tenant = tenant();
+        $isExpired = false;
+        if ($tenant) {
+            if (in_array($tenant->status, ['expired', 'suspended'])) {
+                $isExpired = true;
+            } elseif ($tenant->subscription_ends_at && \Carbon\Carbon::parse($tenant->subscription_ends_at)->isPast()) {
+                $isExpired = true;
+            }
+        }
+
+        if ($isExpired && !$staff->isOwner()) {
+            return ApiResponse::error('Masa aktif layanan gym Anda telah habis. Silakan hubungi Owner untuk memperbarui masa aktif.', null, 403);
+        }
+
+        $staff->tokens()->delete();
+        $staff->update(['last_login_at' => now()]);
+
+        $token    = $staff->createToken('staff-token')->plainTextToken;
+        $branches = $this->getBranchesForStaff($staff);
+
+        $cookie = $staff->isOwner()
+            ? CookieService::makeOwnerCookie($token)
+            : CookieService::makeStaffCookie($token);
+
+        return ApiResponse::success([
+            'staff'          => new StaffResource($staff),
+            'branches'       => $branches,
+            'global_role'    => $staff->role,
+            'dashboard_path' => $this->getDashboardPath($staff),
+        ], 'Login successful')->withCookie($cookie);
     }
 
-    if ($isExpired && !$staff->isOwner()) {
-        return ApiResponse::error('Masa aktif layanan gym Anda telah habis. Silakan hubungi Owner untuk memperbarui masa aktif.', null, 403);
-    }
 
-    $staff->tokens()->delete();
-    $staff->update(['last_login_at' => now()]);
-
-    $token    = $staff->createToken('staff-token')->plainTextToken;
-    $branches = $this->getBranchesForStaff($staff);
-
-    // Set cookie berbeda berdasarkan role agar owner & staff bisa login
-    // secara bersamaan di tab browser yang berbeda.
-    $cookie = $staff->isOwner()
-        ? CookieService::makeOwnerCookie($token)
-        : CookieService::makeStaffCookie($token);
-
-    return ApiResponse::success([
-        'staff'          => new StaffResource($staff),
-        'branches'       => $branches,
-        'global_role'    => $staff->role,
-        'dashboard_path' => $this->getDashboardPath($staff),
-    ], 'Login successful')->withCookie($cookie);
-}
-
-// Logout
     public function logout(Request $request)
     {
         $request->user('staff')->currentAccessToken()->delete();
@@ -204,14 +196,6 @@ public function login(Request $request)
         return ApiResponse::success(null, 'Password changed. Please login again.');
     }
 
-    // =============================================
-    // Google OAuth
-    // =============================================
-
-    /**
-     * Step 1 — Frontend minta URL Google
-     * Encode info tenant & frontend URL ke state parameter
-     */
     public function redirectToGoogle(Request $request)
     {
         $state = base64_encode(json_encode([
@@ -229,17 +213,6 @@ public function login(Request $request)
         return ApiResponse::success(['url' => $url]);
     }
 
-    /**
-     * Step 2 — Google redirect balik ke sini (selalu URL yang sama)
-     * Decode state untuk tahu dari tenant mana dan kemana redirect FE
-     *
-     * Route ini ada di central/auth domain:
-     * Local:      gymbaru.localhost/api/tenant-auth/google/callback
-     * Production: auth.gymbaru.com/api/tenant-auth/google/callback
-     *
-     * Karena callback di central domain, tenancy TIDAK aktif di sini.
-     * Kita perlu initialize tenant manual dari state.
-     */
     public function handleGoogleCallback(Request $request)
     {
         $state       = json_decode(base64_decode($request->get('state', '')), true) ?? [];
@@ -255,7 +228,6 @@ public function login(Request $request)
             return redirect("{$frontendUrl}/tenant-auth/callback?error=google_failed");
         }
 
-        // Initialize tenant dari host yang disimpan di state
         if ($tenantHost) {
             $tenant = \App\Models\Tenant::whereHas('domains', function ($q) use ($tenantHost) {
                 $q->where('domain', $tenantHost);
@@ -268,7 +240,6 @@ public function login(Request $request)
             tenancy()->initialize($tenant);
         }
 
-        // Sekarang query staff dari tenant DB yang sudah diinisialisasi
         $staff = Staff::where('email', $googleUser->getEmail())->first();
 
         if (!$staff) {
@@ -316,7 +287,6 @@ public function login(Request $request)
         $globalRole      = urlencode($staff->role);
         $dashboardPath   = urlencode($this->getDashboardPath($staff));
 
-        // Set cookie berbeda berdasarkan role (Google OAuth)
         $oauthCookie = $staff->isOwner()
             ? CookieService::makeOwnerCookie($token)
             : CookieService::makeStaffCookie($token);
@@ -327,13 +297,8 @@ public function login(Request $request)
             "&branches={$branchesEncoded}" .
             "&global_role={$globalRole}" .
             "&dashboard_path={$dashboardPath}"
-            // token TIDAK ada di URL
         )->withCookie($oauthCookie);
     }
-
-    // =============================================
-    // Password Reset
-    // =============================================
 
     public function forgotPassword(Request $request)
     {
@@ -347,16 +312,14 @@ public function login(Request $request)
 
         $token = Str::random(60);
 
-        // Langsung gunakan koneksi default tenant (tidak perlu specify 'central')
         DB::table('staff_password_reset_tokens')->updateOrInsert(
             ['email' => $staff->email],
             ['token' => Hash::make($token), 'created_at' => now()]
         );
 
-        // Ambil URL frontend dari header Origin atau fungsi internal
         $frontendUrl = $request->header('origin') ?? $this->getFrontendUrl($request);
 
-        Mail::to($staff->email)->send(new StaffResetPasswordMail($token, $staff->email, $frontendUrl));
+        Mail::to($staff->email)->queue(new StaffResetPasswordMail($token, $staff->email, $frontendUrl));
 
         return ApiResponse::success(null, 'Jika email terdaftar, link reset kata sandi telah dikirim.');
     }

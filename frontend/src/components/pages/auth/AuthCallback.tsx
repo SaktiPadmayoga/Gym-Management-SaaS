@@ -36,7 +36,7 @@ export default function AuthCallbackPage() {
             return;
         }
 
-        if (!token || !staffRaw || !branchesRaw) {
+        if (!staffRaw || !branchesRaw) {
             router.replace("/tenant-auth/login");
             return;
         }

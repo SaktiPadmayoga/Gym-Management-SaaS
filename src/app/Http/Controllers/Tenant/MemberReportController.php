@@ -14,9 +14,6 @@ class MemberReportController extends Controller
         protected MemberReportService $reportService
     ) {}
 
-    /**
-     * GET /api/member/reports/summary
-     */
     public function summary(Request $request)
     {
         try {

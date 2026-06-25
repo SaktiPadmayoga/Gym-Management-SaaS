@@ -14,10 +14,6 @@ use Illuminate\Support\Str;
 
 class DomainController extends Controller
 {
-    /**
-     * Helper untuk mendapatkan base query yang sudah difilter berdasarkan X-Tenant.
-     * Mencegah Tenant A mengakses/memodifikasi data Tenant B.
-     */
     private function getBaseQuery(Request $request)
     {
         $query = Domain::query();
@@ -26,27 +22,23 @@ class DomainController extends Controller
             $tenant = Tenant::where('slug', $tenantSlug)->first();
             
             if (!$tenant) {
-                // Return query yang pasti kosong (invalid tenant fallback)
                 return $query->whereRaw('1 = 0'); 
             }
             
-            // Kunci query hanya untuk tenant ini
             $query->where('tenant_id', $tenant->id);
             
-            // Simpan tenant_id di request attributes agar bisa dipakai di method lain
             $request->attributes->set('resolved_tenant_id', $tenant->id);
+        } else {
+            if (!auth()->guard('admin')->check()) {
+                abort(403, 'Akses ditolak. Header X-Tenant wajib disertakan.');
+            }
         }
-
         return $query;
     }
 
-    /**
-     * Display a listing of domains.
-     */
     public function index(Request $request)
     {
         try {
-            // Gunakan base query yang sudah aman (terfilter X-Tenant jika ada)
             $query = clone $this->getBaseQuery($request);
             $query->with(['tenant']);
 
@@ -54,32 +46,26 @@ class DomainController extends Controller
                 $query->with('branch');
             }
 
-            // Jika validasi tenant gagal di base query (invalid slug)
             if ($request->header('X-Tenant') && !$request->attributes->get('resolved_tenant_id')) {
                 return ApiResponse::error('Invalid tenant', null, 400);
             }
 
-            // Filter by tenant (manual override jika dari Central Admin, bukan Tenant Subdomain)
             if ($request->filled('tenant_id') && !$request->header('X-Tenant')) {
                 $query->where('tenant_id', $request->tenant_id);
             }
 
-            // Filter by branch
             if ($request->filled('branch_id')) {
                 $query->where('branch_id', $request->branch_id);
             }
 
-            // Filter by type
             if ($request->filled('type')) {
                 $query->where('type', $request->type);
             }
 
-            // Filter by is_primary
             if ($request->has('is_primary')) {
                 $query->where('is_primary', filter_var($request->is_primary, FILTER_VALIDATE_BOOLEAN));
             }
 
-            // Search
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
@@ -90,7 +76,6 @@ class DomainController extends Controller
                 });
             }
 
-            // Sorting
             $sortBy = $request->input('sort_by', 'created_at');
             $sortOrder = $request->input('sort_order', 'desc');
             $allowedSortFields = ['domain', 'type', 'is_primary', 'created_at', 'updated_at'];
@@ -99,7 +84,6 @@ class DomainController extends Controller
                 $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
             }
 
-            // Pagination
             $perPage = min((int)$request->input('per_page', 10), 100);
             $domains = $query->paginate($perPage);
 
@@ -126,7 +110,6 @@ class DomainController extends Controller
     public function store(StoreDomainRequest $request)
     {
         try {
-            // Panggil base query sekadar untuk me-resolve X-Tenant
             $this->getBaseQuery($request); 
             $resolvedTenantId = $request->attributes->get('resolved_tenant_id');
 
@@ -137,7 +120,6 @@ class DomainController extends Controller
             $validated = $request->validated();
             $validated['id'] = (string) Str::uuid();
 
-            // KEAMANAN: Paksa tenant_id milik session aktif, abaikan input dari body
             if ($resolvedTenantId) {
                 $validated['tenant_id'] = $resolvedTenantId;
             }
@@ -153,13 +135,11 @@ class DomainController extends Controller
         }
     }
 
-    /**
-     * Display the specified domain.
-     */
+
     public function show(Request $request, string $id)
     {
         try {
-            // Gunakan getBaseQuery untuk otomatis memblokir akses jika bukan milik tenant
+
             $domain = clone $this->getBaseQuery($request)->with('tenant')->find($id);
 
             if (!$domain) {
@@ -174,13 +154,10 @@ class DomainController extends Controller
         }
     }
 
-    /**
-     * Update the specified domain.
-     */
+
     public function update(UpdateDomainRequest $request, string $id)
     {
         try {
-            // Cek apakah domain ada DAN milik tenant yang sedang login
             $domain = clone $this->getBaseQuery($request)->find($id);
 
             if (!$domain) {

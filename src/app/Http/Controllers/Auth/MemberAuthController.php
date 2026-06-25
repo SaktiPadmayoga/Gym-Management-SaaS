@@ -17,15 +17,7 @@ use App\Mail\MemberResetPasswordMail;
 
 class MemberAuthController extends Controller
 {
-    // =============================================
-    // Helpers
-    // =============================================
 
-    /**
-     * Callback URL KHUSUS untuk Member.
-     * Pastikan ini didaftarkan di Google Cloud Console.
-     * Local:      http://gymbaru.localhost/api/tenant-auth/member/google/callback
-     */
     private function getCallbackUrl(): string
     {
         $url = env('GOOGLE_MEMBER_REDIRECT_URL');
@@ -55,7 +47,7 @@ class MemberAuthController extends Controller
 
     
 
-    // Login
+
     public function login(Request $request)
     {
         $request->validate([
@@ -81,7 +73,6 @@ class MemberAuthController extends Controller
 
         return ApiResponse::success([
             'member' => new MemberResource($member->load(['activeMembership.branch', 'activeMembership.plan'])),
-            // token TIDAK di body
         ], 'Login successful')->withCookie(CookieService::makeMemberCookie($token));
     }
 
@@ -245,7 +236,7 @@ class MemberAuthController extends Controller
 
         $frontendUrl = $request->header('origin') ?? $this->getFrontendUrl($request);
 
-        Mail::to($member->email)->send(new MemberResetPasswordMail($token, $member->email, $frontendUrl));
+        Mail::to($member->email)->queue(new MemberResetPasswordMail($token, $member->email, $frontendUrl));
 
         return ApiResponse::success(null, 'Jika email terdaftar, link reset kata sandi telah dikirim.');
     }

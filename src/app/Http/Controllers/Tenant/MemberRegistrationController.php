@@ -16,9 +16,6 @@ class MemberRegistrationController extends Controller
         protected MemberRegistrationService $service
     ) {}
 
-    /**
-     * POST /api/tenant/member/register
-     */
     public function register(MemberRegisterRequest $request): JsonResponse
     {
         $plan = MembershipPlan::findOrFail($request->validated('plan_id'));

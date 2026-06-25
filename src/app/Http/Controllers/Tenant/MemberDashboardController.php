@@ -14,9 +14,6 @@ class MemberDashboardController extends Controller
         protected MemberDashboardService $dashboardService
     ) {}
 
-    /**
-     * GET /api/member/dashboard
-     */
     public function index(Request $request)
     {
         try {

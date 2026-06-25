@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 
 class CentralNotificationController extends Controller
 {
-    // Ambil 20 notifikasi terbaru + jumlah yang belum dibaca
     public function index()
     {
         $notifications = DB::connection('central')->table('notifications')
@@ -26,7 +25,8 @@ class CentralNotificationController extends Controller
         ], 'Notifikasi berhasil diambil');
     }
 
-    // Tandai satu notifikasi sudah dibaca
+
+    
     public function markAsRead($id)
     {
         DB::connection('central')->table('notifications')
@@ -36,7 +36,6 @@ class CentralNotificationController extends Controller
         return ApiResponse::success(null, 'Notifikasi dibaca');
     }
 
-    // Tandai semua sudah dibaca
     public function markAllAsRead()
     {
         DB::connection('central')->table('notifications')

@@ -11,13 +11,9 @@ use Illuminate\Validation\Rule;
 class SubscriptionController extends Controller
 {
 
-    /**
-     * List subscriptions
-     * GET /api/subscriptions
-     */
     public function index(Request $request)
     {
-        $perPage = min((int) $request->get('per_page', 10), 100); // cap max 100
+        $perPage = min((int) $request->get('per_page', 10), 100); 
         $search  = $request->get('search');
 
         $query = Subscription::select('subscriptions.*')

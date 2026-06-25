@@ -44,25 +44,18 @@ class ClassPlanController extends Controller
     public function store(StoreClassPlanRequest $request)
     {
         $data = $request->validated();
-
         if (empty($data['branch_id'])) {
             $data['branch_id'] = $request->header('X-Branch-Id') ?? null;
         }
-
         if (!empty($data['unlimited_monthly_session'])) $data['monthly_quota'] = null;
         if (!empty($data['unlimited_daily_session']))   $data['daily_quota']   = null;
         if (!empty($data['always_available']))        { $data['available_from'] = null; $data['available_until'] = null; }
-
         $membershipPlanIds = $data['membership_plan_ids'] ?? [];
         unset($data['membership_plan_ids']);
-
         $plan = ClassPlan::create($data);
-
-        // Attach ke membership plans jika ada
         if (!empty($membershipPlanIds)) {
             $plan->membershipPlans()->sync($membershipPlanIds);
         }
-
         $plan->load('branch');
 
         return ApiResponse::success(new ClassPlanResource($plan), 'Class plan created successfully', 201);

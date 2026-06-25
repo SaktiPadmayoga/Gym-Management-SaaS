@@ -45,12 +45,12 @@ class DomainRequestController extends Controller
     return $tenant;
 }
 
-    /**
-     * GET /api/domain-requests
-     * List semua domain requests (untuk admin SaaS - central only)
-     */
     public function index(Request $request)
     {
+        if (!auth()->guard('admin')->check()) {
+            abort(403, 'Akses ditolak. Hanya admin yang dapat mengakses resource ini.');
+        }
+
         try {
             $query = DomainRequest::with(['tenant', 'reviewer']);
 
@@ -100,10 +100,6 @@ class DomainRequestController extends Controller
         }
     }
 
-    /**
-     * GET /api/domain-requests/my
-     * List domain requests milik tenant saat ini
-     */
     public function myRequests(Request $request)
     {
         try {
@@ -135,10 +131,7 @@ class DomainRequestController extends Controller
         }
     }
 
-    /**
-     * POST /api/domain-requests
-     * Buat domain request baru dari tenant
-     */
+
     public function store(Request $request)
 {
     try {
@@ -149,7 +142,6 @@ class DomainRequestController extends Controller
             'branch_id' => 'nullable|string',
         ]);
 
-        // ✅ Tidak perlu specify connection, sudah switch ke tenant DB
         if ($request->filled('branch_id')) {
             $branchExists = DB::table('branches')
                 ->where('id', $request->branch_id)
@@ -160,7 +152,6 @@ class DomainRequestController extends Controller
             }
         }
 
-        // ✅ Central DB tetap explicit
         $currentDomain = DB::connection('central')
             ->table('domains')
             ->where('tenant_id', $tenant->id)
@@ -264,13 +255,21 @@ class DomainRequestController extends Controller
      * GET /api/domain-requests/{id}
      * Detail satu request (umumnya untuk admin)
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
         try {
             $domainRequest = DomainRequest::with(['tenant', 'reviewer'])->find($id);
 
             if (!$domainRequest) {
                 return ApiResponse::error('Domain request not found', null, 404);
+            }
+
+            // Validasi kepemilikan jika bukan admin
+            if (!auth()->guard('admin')->check()) {
+                $tenantSlug = $request->header('X-Tenant');
+                if (!$tenantSlug || $domainRequest->tenant->slug !== $tenantSlug) {
+                    return ApiResponse::error('Unauthorized access to this domain request', null, 403);
+                }
             }
 
             return ApiResponse::success(
@@ -289,6 +288,11 @@ class DomainRequestController extends Controller
      */
     public function review(ReviewDomainRequestRequest $request, string $id)
 {
+    // Pastikan hanya Admin yang bisa melakukan review
+    if (!auth()->guard('admin')->check()) {
+        abort(403, 'Akses ditolak. Hanya admin yang dapat melakukan review.');
+    }
+
     try {
         $domainRequest = DB::connection('central')
             ->table('domain_requests')

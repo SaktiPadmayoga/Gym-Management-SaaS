@@ -17,7 +17,6 @@ class MemberClassBookingController extends Controller
         protected ClassBookingService $bookingService
     ) {}
 
-    // POST /member/class-schedules/:id/book-v2
     public function book(Request $request, string $scheduleId)
     {
         $schedule = ClassSchedule::with('classPlan')->findOrFail($scheduleId);
@@ -41,10 +40,6 @@ class MemberClassBookingController extends Controller
             return ApiResponse::error('Gagal melakukan booking.', null, 500);
         }
 
-        // ✅ PERBAIKAN: Selalu gunakan struktur response yang SAMA
-        // baik gratis maupun berbayar, agar frontend bisa parsing konsisten.
-        // snap_token = null  → kelas gratis, langsung confirmed
-        // snap_token = "..." → kelas berbayar, tampilkan Midtrans popup
         return ApiResponse::success(
             [
                 'attendance' => new ClassAttendanceResource($result['attendance']),
@@ -54,7 +49,7 @@ class MemberClassBookingController extends Controller
                     'total_amount'   => $result['invoice']->total_amount,
                     'due_date'       => $result['invoice']->due_date,
                 ] : null,
-                'snap_token' => $result['snap_token'], // null jika gratis
+                'snap_token' => $result['snap_token'], 
             ],
             $result['snap_token']
                 ? 'Silakan selesaikan pembayaran.'
@@ -63,7 +58,6 @@ class MemberClassBookingController extends Controller
         );
     }
 
-    // DELETE /member/class-schedules/:id/book-v2
     public function cancel(Request $request, string $scheduleId)
     {
         $member = $request->user('member');

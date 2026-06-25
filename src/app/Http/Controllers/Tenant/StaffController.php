@@ -18,18 +18,6 @@ class StaffController extends Controller
 {
     public function index(Request $request)
     {
-        // TODO: uncomment setelah auth diterapkan
-        // $branchId  = $request->header('X-Branch-Id');
-        // $authStaff = $request->user();
-        // if (!$authStaff->isOwner()) {
-        //     if (!$branchId) {
-        //         return ApiResponse::error('Branch context required', null, 422);
-        //     }
-        //     $query->whereHas('staffBranches', function ($q) use ($branchId) {
-        //         $q->where('branch_id', $branchId)->where('is_active', true);
-        //     });
-        // }
-
         $query = Staff::query()->with(['staffBranches.branch', 'staffBranches.role']);
 
         if ($request->filled('branch_id')) {
@@ -38,13 +26,10 @@ class StaffController extends Controller
             });
         }
 
-        // ✅ PERBAIKAN: Cari role di tabel global ATAU di relasi cabang
         if ($request->filled('role')) {
             $role = $request->role;
             $query->where(function ($q) use ($role) {
-                // 1. Cek apakah cocok dengan role global di tabel staffs
                 $q->where('role', $role)
-                  // 2. ATAU cek apakah cocok dengan role di tabel staff_branches (melalui relasi role.name)
                   ->orWhereHas('staffBranches.role', function ($sq) use ($role) {
                       $sq->where('name', $role)->where('staff_branches.is_active', true);
                   });
@@ -81,17 +66,11 @@ class StaffController extends Controller
         if ($currentUser && !$currentUser->isOwner()) {
             return ApiResponse::error('Anda tidak memiliki izin untuk menambah staf baru.', null, 403);
         }
-
         $data = $request->validated();
-
-        // Prioritaskan branch_id dari payload form (dropdown). 
-        // Jika form tidak mengirim (null), baru fallback ke header.
         $data['branch_id'] = $data['branch_id'] ?? $request->header('X-Branch-Id');
-
         if ($request->hasFile('avatar')) {
             $data['avatar'] = $request->file('avatar')->store('staff/avatars', 'public');
         }
-
         $staff = Staff::create([
             'name'      => $data['name'],
             'email'     => $data['email'],
@@ -100,7 +79,6 @@ class StaffController extends Controller
             'avatar'    => $data['avatar'] ?? null,
             'role'      => $data['role'] ?? 'staff',
         ]);
-
         if (!empty($data['branch_id'])) {
             $role = \App\Models\Tenant\Role::where('name', $data['branch_role'])->firstOrFail();
 
@@ -111,25 +89,13 @@ class StaffController extends Controller
                 'joined_at' => now(),
             ]);
         }
-
         $staff->load(['staffBranches.branch', 'staffBranches.role']);
-
         return ApiResponse::success(new StaffResource($staff), 'Staff created successfully', 201);
     }
 
     public function show(Request $request, string $id)
     {
         $staff = Staff::with(['staffBranches.branch', 'staffBranches.role'])->findOrFail($id);
-
-        // TODO: uncomment setelah auth diterapkan
-        // $authStaff = $request->user();
-        // $branchId  = $request->header('X-Branch-Id');
-        // if (!$authStaff->isOwner()) {
-        //     if (!$staff->hasAccessToBranch($branchId)) {
-        //         return ApiResponse::error('Staff not found in this branch', null, 404);
-        //     }
-        // }
-
         return ApiResponse::success(new StaffResource($staff));
     }
 

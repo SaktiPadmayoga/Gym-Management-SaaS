@@ -84,13 +84,10 @@ class TenantRegistrationController extends Controller
         }
 
         try {
-            // 1. Buat Tenant dengan status 'suspended'
             $tenant = $this->registrationService->provisionTenant($validated, 'suspended');
 
-            // Kirim email sukses & panduan awal ke owner (dengan status suspended awaiting payment)
             $this->registrationService->sendWelcomeMail($tenant, $validated, $plan->name ?? 'Paid Plan', 'suspended');
 
-            // 2. Serahkan tagihan ke Payment Service
             $paymentResult = $this->paymentService->createPaymentToken($tenant, $plan, $validated['billing_cycle'], [
                 'owner_name' => $validated['owner_name'],
                 'owner_email' => $validated['owner_email'],

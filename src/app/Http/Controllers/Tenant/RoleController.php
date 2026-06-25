@@ -13,10 +13,7 @@ use Illuminate\Support\Str;
 
 class RoleController extends Controller
 {
-    /**
-     * GET /roles
-     * List all roles with their permissions.
-     */
+
     public function index()
     {
         try {
@@ -40,10 +37,7 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * GET /roles/{id}
-     * Show detail of a single role.
-     */
+
     public function show($id)
     {
         $role = Role::with('permissions')->find($id);
@@ -65,10 +59,6 @@ class RoleController extends Controller
         return ApiResponse::success($data, 'Detail role berhasil dimuat');
     }
 
-    /**
-     * POST /roles
-     * Create a new role with permissions.
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -108,10 +98,6 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * PUT /roles/{id}
-     * Update role details and optionally sync permissions.
-     */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -182,10 +168,6 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * PUT /roles/{id}/permissions
-     * Sync all permissions for a role (full replace).
-     */
     public function syncPermissions(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -214,16 +196,6 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * PATCH /roles/{id}/permissions/access
-     * Set access level for a specific resource group.
-     *
-     * Body: { "group": "members", "level": "view" | "manage" | "none" }
-     *
-     * - "none"   → remove all permissions from this group
-     * - "view"   → grant only .view, remove .manage
-     * - "manage" → grant both .view and .manage
-     */
     public function updateAccessLevel(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -247,7 +219,6 @@ class RoleController extends Controller
         $group = $request->group;
         $level = $request->level;
 
-        // Get all permission IDs for this group
         $groupPermissions = Permission::where('group', $group)->get();
         if ($groupPermissions->isEmpty()) {
             return ApiResponse::error("Group '{$group}' tidak ditemukan", null, 404);
@@ -257,11 +228,9 @@ class RoleController extends Controller
         $managePerm = $groupPermissions->firstWhere('action', 'manage');
 
         try {
-            // Detach all permissions from this group first
             $groupPermissionIds = $groupPermissions->pluck('id')->toArray();
             $role->permissions()->detach($groupPermissionIds);
 
-            // Attach based on level
             if ($level === 'view' && $viewPerm) {
                 $role->permissions()->attach($viewPerm->id);
             } elseif ($level === 'manage') {
@@ -270,9 +239,7 @@ class RoleController extends Controller
                 if ($managePerm) $attachIds[] = $managePerm->id;
                 $role->permissions()->attach($attachIds);
             }
-            // level === 'none' → nothing to attach
-
-            // Return updated permission state
+ 
             $role->load('permissions');
 
             return ApiResponse::success([
@@ -284,10 +251,6 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * GET /permissions
-     * Return all available permissions, grouped by resource.
-     */
     public function availablePermissions()
     {
         try {
@@ -316,10 +279,6 @@ class RoleController extends Controller
         }
     }
 
-    /**
-     * POST /permissions
-     * Create a new custom permission group (module) dynamically.
-     */
     public function storePermission(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -338,7 +297,6 @@ class RoleController extends Controller
         $label = $request->label;
         $description = $request->description;
 
-        // Check if group already exists
         $exists = Permission::where('group', $group)->exists();
         if ($exists) {
             return ApiResponse::error("Kode modul '{$group}' sudah digunakan", null, 422);
@@ -347,11 +305,9 @@ class RoleController extends Controller
         try {
             DB::beginTransaction();
 
-            // Calculate next sort order
             $maxSort = Permission::max('sort_order') ?? 0;
             $nextSort = $maxSort + 1;
 
-            // 1. Create view permission
             $viewId = (string) Str::uuid();
             Permission::create([
                 'id'           => $viewId,
@@ -363,7 +319,6 @@ class RoleController extends Controller
                 'sort_order'   => $nextSort,
             ]);
 
-            // 2. Create manage permission
             $manageId = (string) Str::uuid();
             Permission::create([
                 'id'           => $manageId,

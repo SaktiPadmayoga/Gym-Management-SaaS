@@ -15,26 +15,21 @@ class MemberMembershipController extends Controller
     {
         $request->validate([
             'membership_plan_id' => 'required|uuid|exists:membership_plans,id',
-            // Opsional: Jika member bisa memilih mau aktif di cabang mana
             'branch_id'          => 'nullable|uuid|exists:branches,id', 
         ]);
 
         try {
-            // Ambil data member yang sedang login
             /** @var \App\Models\Tenant\Member $member */
             $member = Auth::guard('member')->user(); 
             $plan   = MembershipPlan::findOrFail($request->membership_plan_id);
 
-            // Ambil branch_id dari Membership aktif, BUKAN dari tabel member
-            $activeMembership = $member->activeMembership; // Sesuaikan dengan nama relasi di model Member kamu
+            $activeMembership = $member->activeMembership;
             $branchId = $request->branch_id ?? $activeMembership?->branch_id;
 
             if (!$branchId) {
                 return response()->json(['message' => 'Silakan pilih cabang terlebih dahulu.'], 422);
             }
 
-            // Panggil Service yang SAMA PERSIS dengan yang dipakai POS Kasir
-            // Paksakan payment_method = 'midtrans' karena ini dari aplikasi member
             $result = $purchaseService->purchase(
                 member: $member,
                 plan: $plan,

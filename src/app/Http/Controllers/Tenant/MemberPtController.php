@@ -16,15 +16,11 @@ class MemberPtController extends Controller
         protected PtPackagePurchaseService $purchaseService
     ) {}
 
-    /**
-     * GET /api/tenant/member/pt-plans
-     * Katalog paket PT yang bisa dibeli member.
-     */
+
     public function availablePlans(Request $request)
     {
         $query = PtSessionPlan::where('is_active', true);
 
-        // Filter berdasarkan cabang (jika plan spesifik untuk cabang tertentu)
         if ($branchId = $request->header('X-Branch-Id')) {
             $query->where(function($q) use ($branchId) {
                 $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
@@ -36,10 +32,7 @@ class MemberPtController extends Controller
         return ApiResponse::success($plans, 'Katalog PT Plan berhasil diambil');
     }
 
-    /**
-     * POST /api/tenant/member/pt-packages/purchase
-     * Member membeli paket PT.
-     */
+
     public function purchase(Request $request)
     {
         $request->validate([
@@ -48,18 +41,13 @@ class MemberPtController extends Controller
 
         $plan = PtSessionPlan::findOrFail($request->pt_session_plan_id);
         
-        // 1. Pastikan memanggil auth guard member agar object member tidak null
         $member = auth('member')->user(); 
 
-        // 2. Ambil nilai header
         $branchId = $request->header('X-Branch-Id');
 
-        // 3. Gunakan fungsi empty(), karena empty() mendeteksi null DAN string kosong ("")
         if (empty($branchId)) {
             $branchId = $member->home_branch_id ?? $member->branch_id;
         }
-
-        // 4. Validasi akhir
         if (empty($branchId)) {
             return ApiResponse::error('Cabang tidak ditentukan. Member tidak memiliki Home Branch.', null, 400);
         }
@@ -88,17 +76,12 @@ class MemberPtController extends Controller
         }
     }
 
-    /**
-     * GET /api/tenant/member/my-pt-packages
-     * Member melihat daftar paket yang mereka miliki (aktif, pending, dsb).
-     */
     public function myPackages(Request $request)
     {
         $member = $request->user();
 
         $packages = PtPackage::with(['plan', 'invoice:id,status,invoice_number'])
             ->where('member_id', $member->id)
-            // Ganti bagian orderByRaw menjadi CASE statement untuk PostgreSQL
             ->orderByRaw("
                 CASE status 
                     WHEN 'active' THEN 1 
@@ -120,10 +103,7 @@ class MemberPtController extends Controller
         return ApiResponse::success($packages, 'Daftar paket PT berhasil diambil');
     }
 
-    /**
-     * GET /api/tenant/member/my-pt-sessions
-     * Member melihat daftar sesi PT individual dari paket mereka.
-     */
+
     public function mySessions(Request $request)
     {
         $member = $request->user();
