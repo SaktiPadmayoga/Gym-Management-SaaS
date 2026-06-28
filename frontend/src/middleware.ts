@@ -87,10 +87,11 @@ export function middleware(request: NextRequest) {
 
                 const isMemberPublic = memberPublicPaths.some((p) => pathname.startsWith(p));
 
-                // ✅ sudah login -> jangan ke login lagi
-                if (memberCookie && isMemberPublic) {
-                    return NextResponse.redirect(new URL("/member/dashboard", request.url));
-                }
+                // ✅ biarkan auth provider client-side yang handle redirect jika token masih valid
+                // ini untuk mencegah infinite loop jika cookie masih ada tapi token sudah expired
+                // if (memberCookie && isMemberPublic) {
+                //     return NextResponse.redirect(new URL("/member/dashboard", request.url));
+                // }
 
                 // ❌ belum login -> protected route
                 if (!memberCookie && !isMemberPublic) {
@@ -157,10 +158,11 @@ export function middleware(request: NextRequest) {
 
         const isAdminPublic = adminPublicPaths.some((p) => pathname.startsWith(p));
 
-        // ✅ sudah login -> jangan login lagi
-        if (adminCookie && pathname.startsWith("/auth/login")) {
-            return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-        }
+        // ✅ biarkan auth provider client-side yang handle redirect jika token masih valid
+        // ini untuk mencegah infinite loop jika cookie masih ada tapi token sudah expired
+        // if (adminCookie && pathname.startsWith("/auth/login")) {
+        //     return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+        // }
 
         // PUBLIC
         if (isAdminPublic) {
