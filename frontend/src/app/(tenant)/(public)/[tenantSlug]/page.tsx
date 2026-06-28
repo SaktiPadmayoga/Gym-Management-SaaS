@@ -6,7 +6,7 @@ import { useTenantHeader } from "@/hooks/useTenantHeader";
 import { Toaster, toast } from "sonner";
 import CustomButton from "@/components/ui/button/CustomButton";
 import { useState, useEffect } from "react";
-import { ArrowRight, CheckCircle2, Dumbbell, Zap, Play, Star, MapPin, Phone, Mail, Instagram, Facebook, Twitter, ShieldCheck, Clock, Award, ChevronDown } from "lucide-react";
+import { ArrowRight, CheckCircle2, Dumbbell, Zap, Play, Star, MapPin, Phone, Mail, Instagram, Facebook, Twitter, ShieldCheck, Clock, Award, ChevronDown, Users } from "lucide-react";
 
 export default function TenantLandingPage() {
     const params = useParams();

@@ -15,4 +15,5 @@ export const outfit = Outfit({
 export const atkin = Atkinson_Hyperlegible_Mono({
     subsets: ["latin"],
     variable: "--font-atkin",
+    adjustFontFallback: false,
 });
