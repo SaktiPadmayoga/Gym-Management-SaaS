@@ -41,16 +41,22 @@ Route::get('/debug-central-db', function() {
         $tenants = DB::connection('central')->table('tenants')->get();
         $domains = DB::connection('central')->table('domains')->get();
         $subscriptions = DB::connection('central')->table('subscriptions')->get();
+        
+        // Query pg_database to list all database names
+        $databases = DB::connection('central')->select("SELECT datname FROM pg_database WHERE datname LIKE 'gym_%'");
+        
         return response()->json([
             'success' => true,
             'tenants' => $tenants,
             'domains' => $domains,
             'subscriptions' => $subscriptions,
+            'databases' => $databases,
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
             'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
         ], 500);
     }
 });
