@@ -44,6 +44,24 @@ Route::prefix('tenant')->group(function () {
     Route::get('/current', [TenantController::class, 'current']);
 });
 
+Route::get('/debug-tenant', function() {
+    try {
+        return response()->json([
+            'success' => true,
+            'tenant' => tenant(),
+            'connection' => DB::connection()->getName(),
+            'database' => DB::connection()->getDatabaseName(),
+            'branches_count' => DB::table('branches')->count(),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+        ], 500);
+    }
+});
+
 Route::get('/branches/{branch}/settings/public', [BranchSettingController::class, 'public']);
 
 Route::prefix('member')->group(function () {
