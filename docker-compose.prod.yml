@@ -59,10 +59,16 @@ services:
     image: adminer:latest
     container_name: gym-adminer
     restart: unless-stopped
-    ports:
-      - "8888:8080"
     networks:
       - gym-network
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.gymfit-adminer.rule=Host(`adminer.gymfit.id`)"
+      - "traefik.http.routers.gymfit-adminer.entrypoints=websecure"
+      - "traefik.http.routers.gymfit-adminer.tls=true"
+      - "traefik.http.services.gymfit-adminer.loadbalancer.server.port=8080"
 
   # ========================================
   # PHP-FPM - Laravel Application
