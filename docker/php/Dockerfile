@@ -39,7 +39,12 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev --prefer-so
 # Fix permissions untuk www-data
 RUN chown -R www-data:www-data /var/www/html
 
+# Entrypoint script — memastikan storage directories exist setelah volume di-mount
+COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 9000
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["php-fpm"]
