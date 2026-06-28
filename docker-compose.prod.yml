@@ -6,210 +6,214 @@
 # =============================================
 
 services:
-    # ========================================
-    # Caddy — Tenant Domain Router
-    # SSL ditangani oleh reverse proxy utama VPS
-    # Caddy bertugas routing wildcard subdomain tenant
-    # ========================================
-    caddy:
-        build:
-            context: ./docker/caddy
-            dockerfile: Dockerfile
-        container_name: gym-caddy
-        ports:
-            - "3100:80"
-        volumes:
-            - ./Caddyfile:/etc/caddy/Caddyfile:ro
-        environment:
-            CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
-        depends_on:
-            - nginx
-        networks:
-            - gym-network
-            - dokploy-network
-        restart: unless-stopped
+  # ========================================
+  # Caddy — Tenant Domain Router
+  # Caddy bertugas routing wildcard subdomain tenant
+  # ========================================
+  caddy:
+    build:
+      context: ./docker/caddy
+      dockerfile: Dockerfile
+    container_name: gym-caddy
+    ports:
+      - "3100:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+    depends_on:
+      - nginx
+    networks:
+      - gym-network
+      - dokploy-network
+    restart: unless-stopped
 
-    # ========================================
-    # PostgreSQL - Primary Database
-    # ========================================
-    postgres:
-        build:
-            context: ./docker/postgres
-            dockerfile: Dockerfile
-        container_name: gym-postgres
-        environment:
-            POSTGRES_DB: gym_central
-            POSTGRES_USER: ${DB_USERNAME:-postgres}
-            POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
-            POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
-        volumes:
-            - postgres_data:/var/lib/postgresql/data
-            - postgres_backups:/backups
-        # Production: TIDAK expose port ke luar
-        networks:
-            - gym-network
-        healthcheck:
-            test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d gym_central"]
-            interval: 10s
-            timeout: 5s
-            retries: 5
-        restart: unless-stopped
+  # ========================================
+  # PostgreSQL - Primary Database
+  # ========================================
+  postgres:
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
+    container_name: gym-postgres
+    environment:
+      POSTGRES_DB: gym_central
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_backups:/backups
+    # Production: TIDAK expose port ke luar
+    networks:
+      - gym-network
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d gym_central"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-    # ========================================
-    # PHP-FPM - Laravel Application
-    # ========================================
-    php:
-        build:
-            context: .
-            dockerfile: docker/php/Dockerfile
-        container_name: gym-php
-        working_dir: /var/www/html
-        environment:
-            APP_NAME: "Gymfit"
-            APP_ENV: production
-            APP_DEBUG: "false"
-            APP_KEY: ${APP_KEY}
-            APP_URL: https://gymfit.id
+  adminer:
+    image: adminer:latest
+    container_name: gym-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - gym-network
 
-            DB_CONNECTION: pgsql
-            DB_HOST: postgres
-            DB_PORT: 5432
-            DB_DATABASE: gym_central
-            DB_USERNAME: ${DB_USERNAME:-postgres}
-            DB_PASSWORD: ${DB_PASSWORD:-secret}
+  # ========================================
+  # PHP-FPM - Laravel Application
+  # ========================================
+  php:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: gym-php
+    working_dir: /var/www/html
+    environment:
+      APP_NAME: "Gymfit"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      APP_URL: https://gymfit.id
 
-            CACHE_STORE: database
-            CACHE_DRIVER: database
-            QUEUE_CONNECTION: sync
-            SESSION_DRIVER: file
-            SESSION_DOMAIN: .gymfit.id
-            SESSION_SECURE_COOKIE: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: gym_central
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
 
-            SANCTUM_STATEFUL_DOMAINS: "gymfit.id,*.gymfit.id"
+      CACHE_STORE: database
+      CACHE_DRIVER: database
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: file
+      SESSION_DOMAIN: .gymfit.id
+      SESSION_SECURE_COOKIE: "true"
 
-            TENANCY_DATABASE_MANAGER: postgres
-            TENANCY_CACHE_DRIVER: database
+      SANCTUM_STATEFUL_DOMAINS: "gymfit.id,*.gymfit.id"
 
-            FRONTEND_PORT: ""
+      TENANCY_DATABASE_MANAGER: postgres
+      TENANCY_CACHE_DRIVER: database
 
-            MAIL_MAILER: ${MAIL_MAILER:-smtp}
-            MAIL_HOST: ${MAIL_HOST:-}
-            MAIL_PORT: ${MAIL_PORT:-587}
-            MAIL_USERNAME: ${MAIL_USERNAME:-}
-            MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-            MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
-            MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@gymfit.id}
-            MAIL_FROM_NAME: "Gymfit"
+      FRONTEND_PORT: ""
 
-            GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-            GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-            GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-}
-            GOOGLE_MEMBER_REDIRECT_URL: ${GOOGLE_MEMBER_REDIRECT_URL:-}
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-noreply@gymfit.id}
+      MAIL_FROM_NAME: "Gymfit"
 
-            # Cloudflare R2 — Product Image Storage
-            CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
-            CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
-            CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET:-gymfit-assets}
-            CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
-            CLOUDFLARE_R2_URL: ${CLOUDFLARE_R2_URL:-https://cdn.gymfit.id}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL:-}
+      GOOGLE_MEMBER_REDIRECT_URL: ${GOOGLE_MEMBER_REDIRECT_URL:-}
 
-            # Midtrans Payment Gateway
-            # WAJIB: Ganti dengan Production Key dari https://dashboard.midtrans.com
-            # Settings → Access Keys → toggle ke "Production"
-            MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
-            MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
-            MIDTRANS_IS_PRODUCTION: "true" # Hardcode true — file ini khusus production
-            MIDTRANS_IS_SANITIZED: "true"
-            MIDTRANS_IS_3DS: "true"
-            FRONTEND_URL: https://gymfit.id
-        volumes:
-            - laravel_storage:/var/www/html/storage
-        depends_on:
-            postgres:
-                condition: service_healthy
-        networks:
-            - gym-network
-        restart: unless-stopped
+      CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET:-gymfit-assets}
+      CLOUDFLARE_R2_ENDPOINT: ${CLOUDFLARE_R2_ENDPOINT}
+      CLOUDFLARE_R2_URL: ${CLOUDFLARE_R2_URL:-https://cdn.gymfit.id}
 
-    # ========================================
-    # Next.js Frontend — Production Mode
-    # ========================================
-    nextjs:
-        build:
-            context: ./frontend
-            dockerfile: ../docker/nextjs/Dockerfile
-            args:
-                - NEXT_PUBLIC_API_URL=https://gymfit.id/api
-                - NEXT_PUBLIC_API_BASE_URL=https://gymfit.id/api
-                - NEXT_PUBLIC_ROOT_DOMAIN=gymfit.id
-                - NEXT_PUBLIC_APP_NAME=Gymfit
-                - NEXT_PUBLIC_TENANT_DOMAIN=gymfit.id
-        container_name: gym-nextjs
-        environment:
-            NODE_ENV: production
-            HOSTNAME: "0.0.0.0"
-            PORT: "3000"
-            NEXT_PUBLIC_API_URL: https://gymfit.id/api
-            NEXT_PUBLIC_API_BASE_URL: https://gymfit.id/api
-            NEXT_PUBLIC_ROOT_DOMAIN: gymfit.id
-            NEXT_PUBLIC_APP_NAME: Gymfit
-            NEXT_PUBLIC_TENANT_DOMAIN: gymfit.id
-            NODE_OPTIONS: "--max-old-space-size=1024" # ← Batasi RAM Node.js maksimal 1GB
-        networks:
-            - gym-network
-        restart: unless-stopped
+      # Midtrans Payment Gateway
+      # WAJIB: Ganti dengan Production Key dari https://dashboard.midtrans.com
+      # Settings → Access Keys → toggle ke "Production"
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY}
+      MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY}
+      MIDTRANS_IS_PRODUCTION: "true"
+      MIDTRANS_IS_SANITIZED: "true"
+      MIDTRANS_IS_3DS: "true"
+      FRONTEND_URL: https://gymfit.id
+    volumes:
+      - laravel_storage:/var/www/html/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - gym-network
+    restart: unless-stopped
 
-    # ========================================
-    # Nginx - Internal Web Server
-    # ========================================
-    nginx:
-        build:
-            context: .
-            dockerfile: docker/nginx/Dockerfile
-        container_name: gym-nginx
-        ports:
-            - "8080:80"
-        volumes:
-            - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-        labels:
-            - "traefik.enable=true"
-            - "traefik.docker.network=dokploy-network"
-            # Bulletproof Wildcard HTTP
-            - "traefik.http.routers.gymfit-wildcard-http.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gymfit-wildcard-http.entrypoints=web"
-            - "traefik.http.routers.gymfit-wildcard-http.service=gymfit-nginx-wc"
-            # Bulletproof Wildcard HTTPS
-            - "traefik.http.routers.gymfit-wildcard-https.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
-            - "traefik.http.routers.gymfit-wildcard-https.entrypoints=websecure"
-            - "traefik.http.routers.gymfit-wildcard-https.tls=true"
-            - "traefik.http.routers.gymfit-wildcard-https.service=gymfit-nginx-wc"
-            # Shared Service
-            - "traefik.http.services.gymfit-nginx-wc.loadbalancer.server.port=80"
-        depends_on:
-            - php
-            - nextjs
-        networks:
-            - gym-network
-            - dokploy-network
-        restart: unless-stopped
+  # ========================================
+  # Next.js Frontend — Production Mode
+  # ========================================
+  nextjs:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/nextjs/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=https://gymfit.id/api
+        - NEXT_PUBLIC_API_BASE_URL=https://gymfit.id/api
+        - NEXT_PUBLIC_ROOT_DOMAIN=gymfit.id
+        - NEXT_PUBLIC_APP_NAME=Gymfit
+        - NEXT_PUBLIC_TENANT_DOMAIN=gymfit.id
+    container_name: gym-nextjs
+    environment:
+      NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      PORT: "3000"
+      NEXT_PUBLIC_API_URL: https://gymfit.id/api
+      NEXT_PUBLIC_API_BASE_URL: https://gymfit.id/api
+      NEXT_PUBLIC_ROOT_DOMAIN: gymfit.id
+      NEXT_PUBLIC_APP_NAME: Gymfit
+      NEXT_PUBLIC_TENANT_DOMAIN: gymfit.id
+      NODE_OPTIONS: "--max-old-space-size=1024"
+    networks:
+      - gym-network
+    restart: unless-stopped
 
+  # ========================================
+  # Nginx - Internal Web Server
+  # ========================================
+  nginx:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    container_name: gym-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
+      - "traefik.http.routers.gymfit-wildcard-http.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
+      - "traefik.http.routers.gymfit-wildcard-http.entrypoints=web"
+      - "traefik.http.routers.gymfit-wildcard-http.service=gymfit-nginx-wc"
+      - "traefik.http.routers.gymfit-wildcard-https.rule=HostRegexp(`{subdomain:[a-zA-Z0-9-]+}.gymfit.id`)"
+      - "traefik.http.routers.gymfit-wildcard-https.entrypoints=websecure"
+      - "traefik.http.routers.gymfit-wildcard-https.tls=true"
+      - "traefik.http.routers.gymfit-wildcard-https.service=gymfit-nginx-wc"
+      - "traefik.http.services.gymfit-nginx-wc.loadbalancer.server.port=80"
+    depends_on:
+      - php
+      - nextjs
+    networks:
+      - gym-network
+      - dokploy-network
+    restart: unless-stopped
 
 # ========================================
 # Networks
 # ========================================
 networks:
-    gym-network:
-        driver: bridge
-    dokploy-network:
-        external: true
+  gym-network:
+    driver: bridge
+  dokploy-network:
+    external: true
 
 # ========================================
 # Volumes
 # ========================================
 volumes:
-    postgres_data:
-        driver: local
-    postgres_backups:
-        driver: local
-    laravel_storage:
-        driver: local
+  postgres_data:
+    driver: local
+  postgres_backups:
+    driver: local
+  laravel_storage:
+    driver: local
