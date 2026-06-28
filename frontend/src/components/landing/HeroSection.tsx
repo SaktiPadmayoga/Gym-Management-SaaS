@@ -42,7 +42,7 @@ const HeroSection = () => {
                 <div className="lg:col-span-4 rounded-[2.5rem] lg:rounded-[2rem] border border-slate-200 flex flex-col justify-between group overflow-hidden relative min-h-[450px] lg:min-h-[400px]">
                     {/* Background Image with Gradient Overlay */}
                     <Image
-                        src="/images/hero.png"
+                        src="/images/hero.webp"
                         alt="Gym Management"
                         fill
                         className="object-cover transition-transform duration-700 group-hover:scale-110 z-0"

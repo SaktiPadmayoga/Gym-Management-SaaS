@@ -75,7 +75,7 @@ export default function AdminLogin() {
                         {/* Gambar Siluet */}
                         <div
                             className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-[0.15] mix-blend-luminosity grayscale"
-                            style={{ backgroundImage: "url('/images/tenant-gym-1.png')" }}
+                            style={{ backgroundImage: "url('/images/tenant-gym-1.webp')" }}
                         />
                         {/* Gradient Masking agar gambar menyatu halus dengan warna hitam */}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />

@@ -140,7 +140,7 @@ export default function StaffLoginPage() {
     const { data: publicSettings } = usePublicBranchSettings(undefined);
 
     const primaryColor = publicSettings?.primary_color ?? "#0f766e"; // Default Teal
-    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || "/images/logobaru.png";
+    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || "/images/logobaru.webp";
     const tenantName = tenant?.name ?? "Loading Workspace...";
 
     useEffect(() => {
@@ -171,7 +171,7 @@ export default function StaffLoginPage() {
                 {/* Gym Background Image */}
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity"
-                    style={{ backgroundImage: "url('/images/tenant-gym-2.png')" }}
+                    style={{ backgroundImage: "url('/images/tenant-gym-2.webp')" }}
                 />
 
                 {/* Gradient Masking dengan Hint PrimaryColor milik Tenant */}

@@ -103,6 +103,7 @@ const PricingSection = () => {
               </span>
               <button
                 onClick={() => setBillingCycle(prev => prev === "monthly" ? "yearly" : "monthly")}
+                aria-label="Toggle pricing plan"
                 className="relative w-14 h-7 bg-slate-200 rounded-full p-1 transition-colors hover:bg-slate-300 focus:outline-none"
               >
                 <motion.div

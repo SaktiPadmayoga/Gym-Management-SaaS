@@ -227,7 +227,7 @@ const MembersPage = () => (
                             <td className="px-6 py-4 text-sm text-slate-500">Male</td>
                             <td className="px-6 py-4 text-sm text-slate-500">3/28/2026</td>
                             <td className="px-6 py-4 text-right">
-                                <button className="text-slate-400 hover:text-slate-600">
+                                <button aria-label="Action options" className="text-slate-400 hover:text-slate-600">
                                     <MoreVertical size={16} />
                                 </button>
                             </td>
@@ -251,7 +251,7 @@ const MembersPage = () => (
                             <td className="px-6 py-4 text-sm text-slate-500">Male</td>
                             <td className="px-6 py-4 text-sm text-slate-500">3/29/2026</td>
                             <td className="px-6 py-4 text-right">
-                                <button className="text-slate-400 hover:text-slate-600">
+                                <button aria-label="Action options" className="text-slate-400 hover:text-slate-600">
                                     <MoreVertical size={16} />
                                 </button>
                             </td>

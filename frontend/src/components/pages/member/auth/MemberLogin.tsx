@@ -134,7 +134,7 @@ export default function MemberLogin() {
     const { data: publicSettings } = usePublicBranchSettings(undefined);
 
     const primaryColor = publicSettings?.primary_color ?? "#2563eb"; // default to brand blue
-    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || "/images/logobaru.png";
+    const logoUrl = publicSettings?.logo_url || tenant?.logo_url || "/images/logobaru.webp";
     const tenantName = tenant?.name ?? "Workspace...";
 
     useEffect(() => {
@@ -164,7 +164,7 @@ export default function MemberLogin() {
                 {/* Gym Background Image */}
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 mix-blend-luminosity scale-105"
-                    style={{ backgroundImage: "url('/images/tenant-gym-3.png')" }}
+                    style={{ backgroundImage: "url('/images/tenant-gym-3.webp')" }}
                 />
 
                 {/* Gradient Masking */}

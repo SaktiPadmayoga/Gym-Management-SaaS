@@ -29,7 +29,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex items-center justify-between h-12">
                     <NavLink to="/" className="flex items-center gap-3 group">
-                        <Image src="/images/logobaru.png" alt="GymFit Logo" width={40} height={40} className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6 shadow-md" />
+                        <Image src="/images/logobaru.webp" alt="GymFit Logo" width={40} height={40} className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6 shadow-md" />
                         <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
                             GYMFIT<span className="text-teal-500">.</span>
                         </span>
@@ -53,7 +53,7 @@ const Navbar = () => {
                         </Button>
                     </div>
 
-                    <button className="md:hidden w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors" onClick={() => setOpen(!open)}>
+                    <button aria-label="Toggle mobile menu" className="md:hidden w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors" onClick={() => setOpen(!open)}>
                         {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                     </button>
                 </div>
