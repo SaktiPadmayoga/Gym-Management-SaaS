@@ -37,7 +37,18 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            // Selalu kembalikan JSON jika path mengandung /api/ untuk memudahkan debugging remote
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Exception caught globally',
+                    'error' => $e->getMessage(),
+                    'class' => get_class($e),
+                    'trace' => substr($e->getTraceAsString(), 0, 2000), // Batasi panjang trace
+                ], 500);
+            }
+        });
     })
     
     ->create();
