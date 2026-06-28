@@ -36,6 +36,25 @@ Route::post('/payment/member-webhook', [MidtransWebhookController::class, 'handl
 // Rute public untuk landing page SaaS
 Route::get('/public-plans', [\App\Http\Controllers\PublicPlanController::class, 'index']);
 
+Route::get('/debug-central-db', function() {
+    try {
+        $tenants = DB::connection('central')->table('tenants')->get();
+        $domains = DB::connection('central')->table('domains')->get();
+        $subscriptions = DB::connection('central')->table('subscriptions')->get();
+        return response()->json([
+            'success' => true,
+            'tenants' => $tenants,
+            'domains' => $domains,
+            'subscriptions' => $subscriptions,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage(),
+        ], 500);
+    }
+});
+
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);
     Route::post('/register-paid', [TenantRegistrationController::class, 'registerPaid']);
