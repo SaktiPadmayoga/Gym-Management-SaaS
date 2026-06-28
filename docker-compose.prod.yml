@@ -56,29 +56,28 @@ services:
     restart: unless-stopped
 
   adminer:
-    adminer:
-      image: adminer:latest
-      container_name: gym-adminer
-      restart: unless-stopped
-      networks:
-        - gym-network
-        - dokploy-network
-      labels:
-        - "traefik.enable=true"
-        - "traefik.docker.network=dokploy-network"
+    image: adminer:latest
+    container_name: gym-adminer
+    restart: unless-stopped
+    networks:
+      - gym-network
+      - dokploy-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dokploy-network"
 
-        - "traefik.http.routers.gymfit-adminer-http.rule=Host(`adminer.gymfit.id`)"
-        - "traefik.http.routers.gymfit-adminer-http.entrypoints=web"
-        - "traefik.http.routers.gymfit-adminer-http.service=gymfit-adminer-svc"
-        - "traefik.http.routers.gymfit-adminer-http.priority=1000"
+      - "traefik.http.routers.gymfit-adminer-http.rule=Host(`adminer.gymfit.id`)"
+      - "traefik.http.routers.gymfit-adminer-http.entrypoints=web"
+      - "traefik.http.routers.gymfit-adminer-http.service=gymfit-adminer-svc"
+      - "traefik.http.routers.gymfit-adminer-http.priority=1000"
 
-        - "traefik.http.routers.gymfit-adminer-https.rule=Host(`adminer.gymfit.id`)"
-        - "traefik.http.routers.gymfit-adminer-https.entrypoints=websecure"
-        - "traefik.http.routers.gymfit-adminer-https.tls=true"
-        - "traefik.http.routers.gymfit-adminer-https.service=gymfit-adminer-svc"
-        - "traefik.http.routers.gymfit-adminer-https.priority=1000"
+      - "traefik.http.routers.gymfit-adminer-https.rule=Host(`adminer.gymfit.id`)"
+      - "traefik.http.routers.gymfit-adminer-https.entrypoints=websecure"
+      - "traefik.http.routers.gymfit-adminer-https.tls=true"
+      - "traefik.http.routers.gymfit-adminer-https.service=gymfit-adminer-svc"
+      - "traefik.http.routers.gymfit-adminer-https.priority=1000"
 
-        - "traefik.http.services.gymfit-adminer-svc.loadbalancer.server.port=8080"
+      - "traefik.http.services.gymfit-adminer-svc.loadbalancer.server.port=8080"
 
   # ========================================
   # PHP-FPM - Laravel Application
