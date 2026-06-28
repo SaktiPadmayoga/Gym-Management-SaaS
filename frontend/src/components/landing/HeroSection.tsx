@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Zap, ArrowRight, MapPin, Building2, ShoppingCart, Receipt, Nfc, Rocket, CheckCircle2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NavLink } from "./NavLink";
+import Image from "next/image";
 
 const HeroSection = () => {
     const [email, setEmail] = useState("");
@@ -40,9 +41,11 @@ const HeroSection = () => {
                 {/* --- BLOCK 2: CTA CARD (GRADIENT IMAGE TO FORM) --- */}
                 <div className="lg:col-span-4 rounded-[2.5rem] lg:rounded-[2rem] border border-slate-200 flex flex-col justify-between group overflow-hidden relative min-h-[450px] lg:min-h-[400px]">
                     {/* Background Image with Gradient Overlay */}
-                    <div
-                        className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')" }}
+                    <Image
+                        src="/images/hero.png"
+                        alt="Gym Management"
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110 z-0"
                     />
                     <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/20 via-black/60 to-teal-900/95" />
 

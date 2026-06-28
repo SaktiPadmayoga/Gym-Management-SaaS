@@ -2,6 +2,8 @@
 
 import { Dumbbell } from "lucide-react";
 import { motion } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
 
 const footerSections = [
     { title: "Platform", links: ["Fitur", "Harga", "Integrasi", "Changelog", "Aplikasi Mobile"] },
@@ -24,13 +26,13 @@ const Footer = () => {
                 <div className="grid grid-cols-1 md:grid-cols-6 gap-8 md:gap-6 mb-20 lg:mb-16 items-center">
                     {/* Brand Info */}
                     <div className="md:col-span-2 flex flex-col justify-center">
-                        <a href="#" className="flex items-center gap-3 mb-6 group w-fit">
-                            <img src="/images/logobaru.png" alt="GymFit Logo" className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 shadow-lg" />
+                        <Link href="/" className="flex items-center gap-3 mb-6 group w-fit">
+                            <Image src="/images/logobaru.png" alt="GymFit Logo" width={40} height={40} className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 shadow-lg" />
 
                             <span className="text-2xl font-black text-white tracking-tighter uppercase">
                                 GYMFIT<span className="text-teal-500">.</span>
                             </span>
-                        </a>
+                        </Link>
 
                         <p className="text-xs font-bold leading-relaxed text-slate-500 uppercase tracking-wide max-w-xs">Sistem operasi modern untuk bisnis kebugaran. Kelola, kembangkan, dan tingkatkan skala dengan percaya diri.</p>
                     </div>

@@ -5,6 +5,7 @@ import { Menu, X, Dumbbell, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { NavLink } from "./NavLink"; // Sesuaikan dengan path file NavLink Anda
+import Image from "next/image";
 
 const navLinks = [
     { label: "Fitur", to: "/#features" },
@@ -28,7 +29,7 @@ const Navbar = () => {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex items-center justify-between h-12">
                     <NavLink to="/" className="flex items-center gap-3 group">
-                        <img src="/images/logobaru.png" alt="GymFit Logo" className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6 shadow-md" />
+                        <Image src="/images/logobaru.png" alt="GymFit Logo" width={40} height={40} className="w-10 h-10 rounded-xl object-cover transition-transform duration-500 group-hover:scale-105 group-hover:rotate-6 shadow-md" />
                         <span className="text-2xl font-black text-slate-900 tracking-tighter uppercase">
                             GYMFIT<span className="text-teal-500">.</span>
                         </span>

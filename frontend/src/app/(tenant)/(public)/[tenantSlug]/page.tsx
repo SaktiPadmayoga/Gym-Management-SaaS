@@ -137,7 +137,7 @@ export default function TenantLandingPage() {
             {/* --- HERO SECTION --- */}
             <section className="relative min-h-screen flex items-center pt-24 overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop" alt="Gym Background" className="w-full h-full object-cover opacity-20 scale-105" />
+                    <img src="/images/tenant-gym-1.png" alt="Gym Background" className="w-full h-full object-cover opacity-20 scale-105" />
                     {/* Glassmorphic Grid Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950/70 to-zinc-950" />
                     <div className="absolute inset-0 bg-[radial-gradient(#2563eb_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
@@ -206,9 +206,9 @@ export default function TenantLandingPage() {
                         <div className="w-full lg:w-1/2 relative">
                             {/* Photo Grid with offset */}
                             <div className="grid grid-cols-2 gap-4">
-                                <img src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop" alt="Gym weights" className="rounded-3xl object-cover h-60 w-full shadow-2xl border border-zinc-800" />
+                                <img src="/images/tenant-gym-2.png" alt="Gym weights" className="rounded-3xl object-cover h-60 w-full shadow-2xl border border-zinc-800" />
                                 <img
-                                    src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop"
+                                    src="/images/tenant-gym-3.png"
                                     alt="Gym space"
                                     className="rounded-3xl object-cover h-72 w-full shadow-2xl translate-y-6 border border-zinc-800"
                                 />
@@ -266,7 +266,7 @@ export default function TenantLandingPage() {
                         {/* Program Card 1 */}
                         <div className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
                             <img
-                                src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=2070&auto=format&fit=crop"
+                                src="/images/tenant-gym-4.png"
                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 alt="Strength"
                             />
@@ -281,7 +281,7 @@ export default function TenantLandingPage() {
                         {/* Program Card 2 */}
                         <div className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
                             <img
-                                src="https://images.unsplash.com/photo-1599058917212-d750089bc07e?q=80&w=2069&auto=format&fit=crop"
+                                src="/images/tenant-gym-1.png"
                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 alt="HIIT"
                             />
@@ -296,7 +296,7 @@ export default function TenantLandingPage() {
                         {/* Program Card 3 */}
                         <div className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
                             <img
-                                src="https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?q=80&w=2070&auto=format&fit=crop"
+                                src="/images/tenant-gym-2.png"
                                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                 alt="Yoga"
                             />

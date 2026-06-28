@@ -41,6 +41,8 @@ Route::prefix('tenant-auth')->group(function () {
 // Rute Webhook Midtrans khusus Tenant (Bypass CSRF & Auth)
 Route::post('/payment/member-webhook', [MidtransWebhookController::class, 'handle']);
 
+// Rute public untuk landing page SaaS
+Route::get('/public-plans', [\App\Http\Controllers\PublicPlanController::class, 'index']);
 
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);

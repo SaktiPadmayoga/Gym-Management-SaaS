@@ -46,6 +46,29 @@ const nextConfig: NextConfig = {
         webpackBuildWorker: false, // Nonaktifkan worker terpisah agar hemat RAM (single-thread build)
     },
 
+    async headers() {
+        return [
+            {
+                source: '/images/:all*',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    }
+                ],
+            },
+            {
+                source: '/_next/static/:all*',
+                headers: [
+                    {
+                        key: 'Cache-Control',
+                        value: 'public, max-age=31536000, immutable',
+                    }
+                ],
+            }
+        ];
+    },
+
     env: {
         NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL || "https://gymfit.id/api",
     },

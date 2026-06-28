@@ -5,13 +5,13 @@ import { CheckCircle2, CreditCard, Sparkles, Loader2, AlertCircle } from "lucide
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Link from "next/link"; // Tambahkan import Link untuk navigasi
-import { usePlans } from "@/hooks/usePlans"; 
+import { usePublicPlans } from "@/hooks/usePublicPlans"; 
 
 const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const { data: plansData, isLoading, isError } = usePlans();
+  const { data: plansData, isLoading, isError } = usePublicPlans();
 
-  const publicPlans = plansData?.filter((plan) => plan.is_public) || [];
+  const publicPlans = plansData || [];
 
   // Sort plans from lowest monthly price to highest monthly price, with Custom (price 0) at the end
   const sortedPlans = [...publicPlans].sort((a, b) => {

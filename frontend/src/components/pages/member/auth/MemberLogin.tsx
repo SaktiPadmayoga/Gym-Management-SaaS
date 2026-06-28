@@ -164,7 +164,7 @@ export default function MemberLogin() {
                 {/* Gym Background Image */}
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 mix-blend-luminosity scale-105"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')" }}
+                    style={{ backgroundImage: "url('/images/tenant-gym-3.png')" }}
                 />
 
                 {/* Gradient Masking */}

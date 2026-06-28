@@ -10,6 +10,7 @@ export const metadata: Metadata = {
         default: "GymFit - Gym Management Sistem",
         template: "%s | GymFit",
     },
+    description: "Platform manajemen gym terlengkap untuk mengelola anggota, jadwal kelas, dan pembayaran. Mulai scale-up bisnis fitness Anda bersama GymFit hari ini.",
     icons: {
         icon: "/images/logobaru.png",
     },

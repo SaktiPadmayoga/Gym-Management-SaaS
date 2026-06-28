@@ -171,7 +171,7 @@ export default function StaffLoginPage() {
                 {/* Gym Background Image */}
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40 mix-blend-luminosity"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2070&auto=format&fit=crop')" }}
+                    style={{ backgroundImage: "url('/images/tenant-gym-2.png')" }}
                 />
 
                 {/* Gradient Masking dengan Hint PrimaryColor milik Tenant */}
