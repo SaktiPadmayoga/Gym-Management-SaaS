@@ -32,6 +32,7 @@ export function useTenants(params?: TenantsQueryParams) {
         queryKey: ["tenants", params],
         queryFn: () => tenantsAPI.getAll(params),
         staleTime: 300000,
+        retry: false, // Mencegah refetch berkali-kali saat 401
     });
 }
 /* =====================================================
