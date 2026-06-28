@@ -2,14 +2,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import apiClient from "@/lib/api-client";
 
-export const useCentralNotifications = () => {
+export const useCentralNotifications = (enabled = true) => {
     return useQuery({
         queryKey: ["central-notifications"],
         queryFn: async () => {
             const response = await apiClient.get("/central/notifications");
             return response.data.data;
         },
-        refetchInterval: 30000,
+        enabled, // hanya fetch jika enabled = true (user sudah login)
+        refetchInterval: enabled ? 30000 : false, // hanya polling jika enabled
+        retry: false, // jangan retry saat 401
     });
 };
 

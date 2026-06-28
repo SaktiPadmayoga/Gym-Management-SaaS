@@ -35,15 +35,12 @@ apiClient.interceptors.response.use(
         return response;
     },
     (error: AxiosError) => {
-        if (error.response?.status === 401) {
-            if (typeof window !== "undefined") {
-                const path = window.location.pathname;
-                if (!path.includes('/auth/login') && !path.includes('/auth/forgot-password') && !path.includes('/auth/reset-password')) {
-                    window.location.href = "/auth/login";
-                }
-            }
+        // Jangan paksa redirect di sini — biarkan AdminAuthProvider & React Query yang handle.
+        // Hard-redirect (window.location.href) menyebabkan infinite loop saat token expired
+        // karena query tetap jalan sebelum /me selesai dipanggil.
+        if (process.env.NODE_ENV === "development" && error.response?.status === 401) {
+            console.warn("[Admin API] 401 Unauthorized:", error.config?.url);
         }
-        console.error("[Admin API Error]:", error.response?.data);
         return Promise.reject(error);
     },
 );

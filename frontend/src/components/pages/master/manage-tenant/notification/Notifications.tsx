@@ -1,16 +1,20 @@
 "use client";
 
 import { useState } from 'react';
+
 import { Bell, CheckCircle, AlertTriangle, DollarSign } from 'lucide-react';
 import { useCentralNotifications, useMarkAllNotificationsRead, useMarkNotificationRead } from '@/hooks/useCentralNotification';
 import dayjs from 'dayjs';
 import { useRouter } from "next/navigation";
+import { useAdminAuth } from '@/providers/AdminAuthProvider';
 
 
 
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
-  const { data } = useCentralNotifications();
+  const { admin } = useAdminAuth();
+  const { data } = useCentralNotifications(!!admin); // hanya fetch jika sudah login
+
   const markAsRead = useMarkNotificationRead();
   const markAllAsRead = useMarkAllNotificationsRead();
   const unreadCount = data?.unread_count || 0;

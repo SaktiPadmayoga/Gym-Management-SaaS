@@ -50,11 +50,13 @@ const fetchCentralDashboard = async (): Promise<CentralDashboardResponse['data']
 };
 
 // --- HOOK ---
-export const useCentralDashboard = () => {
+export const useCentralDashboard = (enabled = true) => {
   return useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: fetchCentralDashboard,
+    enabled,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000, // Cache 5 menit biar database nggak berat
+    retry: false, // jangan retry saat 401
   });
 };

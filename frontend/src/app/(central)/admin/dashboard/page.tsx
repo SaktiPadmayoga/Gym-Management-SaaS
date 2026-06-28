@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useCentralDashboard } from "@/hooks/useCentralDashboard";
+import { useAdminAuth } from "@/providers/AdminAuthProvider";
 import { 
   Building2, 
   Users, 
@@ -32,7 +33,8 @@ const formatRupiah = (angka: number) => {
 };
 
 export default function CentralDashboardPage() {
-  const { data, isLoading, isError } = useCentralDashboard();
+  const { admin } = useAdminAuth();
+  const { data, isLoading, isError } = useCentralDashboard(!!admin);
 
   if (isLoading) {
     return (

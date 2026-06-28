@@ -66,27 +66,21 @@ tenantApiClient.interceptors.response.use(
         const status = error.response?.status;
         const originalRequest = error.config;
 
-        if (status === 401) {
-            if (originalRequest?.url?.includes('/login')) {
-                return Promise.reject(error);
-            }
-            if (typeof window !== "undefined") {
-                const path = window.location.pathname;
-                // Jangan redirect kalau sudah di halaman login atau reset password
-                const isAuthPage = path.includes('/tenant-auth/login') 
-                    || path.includes('/tenant-auth/forgot-password') 
-                    || path.includes('/tenant-auth/reset-password')
-                    || path.includes('/member/login');
-                    
-                if (!isAuthPage) {
-                    window.location.href = path.startsWith('/member')
-                        ? '/member/login'
-                        : '/tenant-auth/login';
-                }
-            }
+        // Jangan paksa redirect di sini — biarkan StaffAuthProvider & React Query yang handle.
+        // Hard-redirect (window.location.href) menyebabkan infinite loop saat token expired.
+        if (status === 401 && process.env.NODE_ENV === "development") {
+            console.warn("[Tenant API] 401 Unauthorized:", originalRequest?.url);
         }
 
-        console.error("[Tenant API Error]:", error.response?.data);
+        if (process.env.NODE_ENV !== "development") {
+            // Hanya log error non-401 di production agar tidak clutter console
+            if (status !== 401) {
+                console.error("[Tenant API Error]:", error.response?.data);
+            }
+        } else {
+            console.error("[Tenant API Error]:", error.response?.data);
+        }
+
         return Promise.reject(error);
     },
 );
