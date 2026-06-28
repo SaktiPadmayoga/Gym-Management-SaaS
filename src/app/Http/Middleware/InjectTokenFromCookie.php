@@ -47,13 +47,34 @@ class InjectTokenFromCookie
     {
         $path = $request->getPathInfo();
 
-        // Member & admin routes punya cookie khusus
+        // Member routes → member_token
         if (preg_match('#^/api/member(/|$)#', $path)) {
             $cookieName = 'member_token';
             $token = $request->cookie($cookieName);
-        } elseif (preg_match('#^/api/admin(/|$)#', $path)) {
+        }
+        // Admin routes — mencakup SEMUA path yang digunakan admin SaaS:
+        //   /api/admin/*          (auth, CRUD admins)
+        //   /api/central/*        (dashboard, reports, notifications)
+        //   /api/tenants*         (tenant CRUD)
+        //   /api/plans*           (plan CRUD)
+        //   /api/subscriptions*   (subscription management)
+        //   /api/payments*        (payment management)
+        //   /api/invoices*        (invoice management)
+        //   /api/domains*         (domain management)
+        //   /api/domain-requests* (domain request management)
+        //   /api/tenant-users*    (tenant user management)
+        elseif (preg_match('#^/api/(admin|central|tenants|plans|subscriptions|payments|invoices|domains|domain-requests|tenant-users)(/|$|\?)#', $path)) {
             $cookieName = 'admin_token';
             $token = $request->cookie($cookieName);
+
+            // Fallback: jika admin_token tidak ada, coba owner/staff token
+            // (beberapa route seperti /api/domains bisa diakses oleh admin DAN staff)
+            if (!$token) {
+                $ownerToken = $request->cookie('owner_token');
+                $staffToken = $request->cookie('staff_token');
+                $token = $ownerToken ?? $staffToken;
+                $cookieName = $ownerToken ? 'owner_token' : ($staffToken ? 'staff_token' : 'admin_token');
+            }
         } else {
             // Staff & owner route: coba sesuai header X-Auth-Role jika dikirim, fallback ke owner_token/staff_token.
             // Ini memungkinkan owner & staff login bersamaan di tab berbeda karena masing-masing punya cookie terpisah.

@@ -21,14 +21,6 @@ use App\Http\Controllers\CentralDashboardController;
 use App\Http\Controllers\CentralReportController;
 use App\Http\Controllers\CentralNotificationController;
 
-Route::get('/central/dashboard/summary', [CentralDashboardController::class, 'getSummary']);
-
-Route::get('/central/reports', [CentralReportController::class, 'index']);
-Route::get('/central/reports/export', [CentralReportController::class, 'export']);
-
-Route::get('/central/notifications', [CentralNotificationController::class, 'index']);
-Route::post('/central/notifications/{id}/read', [CentralNotificationController::class, 'markAsRead']);
-Route::post('/central/notifications/mark-all-read', [CentralNotificationController::class, 'markAllAsRead']);
 
 Route::prefix('tenant-auth')->group(function () {
     Route::get('/google/callback', [StaffAuthController::class, 'handleGoogleCallback']);
