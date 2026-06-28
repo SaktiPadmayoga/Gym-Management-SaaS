@@ -44,6 +44,8 @@ Route::prefix('tenant')->group(function () {
     Route::get('/current', [TenantController::class, 'current']);
 });
 
+use Illuminate\Support\Facades\DB;
+
 Route::get('/debug-tenant', function() {
     try {
         return response()->json([
@@ -53,7 +55,7 @@ Route::get('/debug-tenant', function() {
             'database' => DB::connection()->getDatabaseName(),
             'branches_count' => DB::table('branches')->count(),
         ]);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         return response()->json([
             'success' => false,
             'message' => $e->getMessage(),

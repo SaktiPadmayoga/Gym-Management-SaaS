@@ -36,6 +36,8 @@ Route::post('/payment/member-webhook', [MidtransWebhookController::class, 'handl
 // Rute public untuk landing page SaaS
 Route::get('/public-plans', [\App\Http\Controllers\PublicPlanController::class, 'index']);
 
+use Illuminate\Support\Facades\DB;
+
 Route::get('/debug-central-db', function() {
     try {
         $tenants = DB::connection('central')->table('tenants')->get();
@@ -52,7 +54,7 @@ Route::get('/debug-central-db', function() {
             'subscriptions' => $subscriptions,
             'databases' => $databases,
         ]);
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         return response()->json([
             'success' => false,
             'message' => $e->getMessage(),
