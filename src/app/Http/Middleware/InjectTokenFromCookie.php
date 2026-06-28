@@ -12,15 +12,23 @@ class InjectTokenFromCookie
 {
     public function handle(Request $request, Closure $next): mixed
 {
-    // Jika request melalui Cloudflare Worker, gunakan host asli yang dikirim di X-Tenant-Host
+    // Jika request melalui Cloudflare Worker, gunakan host asli yang dikirim di X-Tenant-Host.
+    // PENTING: Kita perlu override X-Forwarded-Host JUGA, karena TrustProxies diset ke '*'
+    // dan Symfony Request::getHost() membaca X-Forwarded-Host lebih dulu daripada HTTP_HOST.
+    // Cloudflare Worker meneruskan Host: gymfit.id + X-Forwarded-Host: gymfit.id,
+    // tapi menyimpan subdomain asli di X-Tenant-Host: sakti-gym.gymfit.id
     if ($request->hasHeader('X-Tenant-Host')) {
         $tenantHost = $request->header('X-Tenant-Host');
+        // Override semua sumber yang dibaca oleh Symfony Request::getHost()
         $request->headers->set('Host', $tenantHost);
+        $request->headers->set('X-Forwarded-Host', $tenantHost);
         $request->server->set('HTTP_HOST', $tenantHost);
         $request->server->set('SERVER_NAME', $tenantHost);
+        $request->server->set('HTTP_X_FORWARDED_HOST', $tenantHost);
         
         Log::info('[Cloudflare Host Override]', [
-            'original_host' => $tenantHost
+            'x_tenant_host' => $tenantHost,
+            'resolved_host_after' => $request->getHost(),
         ]);
     }
 
