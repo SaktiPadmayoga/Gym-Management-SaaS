@@ -12,6 +12,18 @@ class InjectTokenFromCookie
 {
     public function handle(Request $request, Closure $next): mixed
 {
+    // Jika request melalui Cloudflare Worker, gunakan host asli yang dikirim di X-Tenant-Host
+    if ($request->hasHeader('X-Tenant-Host')) {
+        $tenantHost = $request->header('X-Tenant-Host');
+        $request->headers->set('Host', $tenantHost);
+        $request->server->set('HTTP_HOST', $tenantHost);
+        $request->server->set('SERVER_NAME', $tenantHost);
+        
+        Log::info('[Cloudflare Host Override]', [
+            'original_host' => $tenantHost
+        ]);
+    }
+
     Log::info('[InjectToken] bearer sebelum inject', [
         'has_bearer' => !empty($request->bearerToken()),
         'path'       => $request->getPathInfo(),
