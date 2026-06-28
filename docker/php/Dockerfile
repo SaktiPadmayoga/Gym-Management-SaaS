@@ -33,6 +33,9 @@ RUN mkdir -p bootstrap/cache \
     storage/framework/views \
     storage/framework/cache
 
+# Disable HTTP/2 untuk menghindari error HTTP/2 400 Bad Request dari GitHub codeload saat build
+ENV COMPOSER_DISABLE_HTTP2=1
+
 # Install PHP dependencies menggunakan Composer
 RUN composer install --no-interaction --optimize-autoloader --no-dev
 
