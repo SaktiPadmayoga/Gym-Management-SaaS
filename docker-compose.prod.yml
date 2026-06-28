@@ -60,7 +60,7 @@ services:
     container_name: gym-adminer
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8888:8080"
     networks:
       - gym-network
 
