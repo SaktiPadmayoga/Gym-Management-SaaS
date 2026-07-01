@@ -47,33 +47,38 @@ Route::get('/debug-central-db', function() {
         // Query pg_database to list all database names
         $databases = DB::connection('central')->select("SELECT datname FROM pg_database WHERE datname LIKE 'gym_%'");
         
-        // Let's dynamically test connecting to the first tenant database if it exists
-        $tenantConnectionError = null;
-        $tenantTables = [];
-        if (count($tenants) > 0) {
-            $firstTenant = $tenants[0];
-            $dbName = 'gym_tenant_' . $firstTenant->id;
+        // Let's dynamically test connecting to all tenant databases
+        $tenantDbsStatus = [];
+        foreach ($tenants as $t) {
+            $dbName = 'gym_tenant_' . $t->id;
+            $tenantTables = [];
+            $tenantConnectionError = null;
             
             try {
                 // Clone Central connection and override database name
                 $config = config('database.connections.central');
                 $config['database'] = $dbName;
                 
-                config(['database.connections.temp_tenant_test' => $config]);
+                $connName = 'temp_tenant_test_' . $t->id;
+                config(["database.connections.{$connName}" => $config]);
                 
-                // Try to get tables list or do a simple query
-                $tenantTables = DB::connection('temp_tenant_test')->select("
+                // Try to get tables list
+                $tenantTables = DB::connection($connName)->select("
                     SELECT table_name 
                     FROM information_schema.tables 
                     WHERE table_schema = 'public'
                 ");
+                $tenantTables = array_column($tenantTables, 'table_name');
             } catch (\Throwable $err) {
-                $tenantConnectionError = [
-                    'message' => $err->getMessage(),
-                    'code' => $err->getCode(),
-                    'trace' => substr($err->getTraceAsString(), 0, 1000), // Limit trace length
-                ];
+                $tenantConnectionError = $err->getMessage();
             }
+            
+            $tenantDbsStatus[$t->slug] = [
+                'database' => $dbName,
+                'connection_error' => $tenantConnectionError,
+                'tables_count' => count($tenantTables),
+                'tables' => $tenantTables,
+            ];
         }
         
         return response()->json([
@@ -82,11 +87,7 @@ Route::get('/debug-central-db', function() {
             'domains' => $domains,
             'subscriptions' => $subscriptions,
             'databases' => $databases,
-            'tenant_db_test' => [
-                'target_database' => isset($dbName) ? $dbName : null,
-                'connection_error' => $tenantConnectionError,
-                'tables' => $tenantTables,
-            ]
+            'tenant_dbs_status' => $tenantDbsStatus
         ]);
     } catch (\Throwable $e) {
         return response()->json([
