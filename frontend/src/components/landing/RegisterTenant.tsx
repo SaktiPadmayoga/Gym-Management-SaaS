@@ -144,7 +144,8 @@ function RegisterTenantContent() {
                 onSuccess: () => {
                     toast.success("Pembayaran berhasil! Menyiapkan sistem Anda...");
                     setTimeout(() => {
-                        window.location.href = `http://${tenantDomain}/tenant-auth/login?registered=true`;
+                        const protocol = window.location.protocol;
+                        window.location.href = `${protocol}//${tenantDomain}/tenant-auth/login?registered=true`;
                     }, 2000);
                 },
                 onPending: () => {

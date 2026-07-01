@@ -79,9 +79,8 @@ export default function CreateTrialTenant() {
             
             // 3. Redirect ke halaman Login Tenant dengan penanganan Port Localhost
             setTimeout(() => {
-               
-                
-                window.location.href = `${tenantDomain}/tenant-auth/login?registered=true`;
+                const protocol = window.location.protocol; // Cth: http: atau https:
+                window.location.href = `${protocol}//${tenantDomain}/tenant-auth/login?registered=true`;
             }, 1500);
             
         } catch (error: any) {
