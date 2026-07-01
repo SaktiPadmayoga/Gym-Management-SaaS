@@ -12,6 +12,14 @@ class InitializeTenancy
     {
         $tenantSlug = $request->header('X-Tenant');
 
+        \Illuminate\Support\Facades\Log::info('[InitializeTenancy] Incoming request', [
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'x_tenant' => $tenantSlug,
+            'has_auth' => $request->hasHeader('Authorization'),
+            'all_headers' => collect($request->headers->all())->map(fn($v) => $v[0])->toArray(),
+        ]);
+
         if (!$tenantSlug) {
             return $next($request);
         }
