@@ -117,7 +117,7 @@ Route::get('/read-laravel-log', function() {
             return response()->json(['success' => false, 'message' => 'Log file not found']);
         }
         $lines = file($logPath);
-        $lastLines = array_slice($lines, -150);
+        $lastLines = array_slice($lines, -800);
         return response()->json([
             'success' => true,
             'log' => $lastLines
