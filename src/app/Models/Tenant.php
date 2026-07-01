@@ -76,7 +76,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         }
 
         // Gunakan disk R2 jika key R2 tersedia (production)
-        if (!env('CLOUDFLARE_R2_ACCESS_KEY_ID')) {
+        if (!config('filesystems.disks.r2.key')) {
             return '/storage/' . $raw;
         }
 

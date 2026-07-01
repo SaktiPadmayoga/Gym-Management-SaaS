@@ -69,7 +69,7 @@ class Product extends Model
 
         // Gunakan disk yang sama dengan saat upload:
         // R2 jika key tersedia (production), public disk jika tidak (local dev)
-        if (!env('CLOUDFLARE_R2_ACCESS_KEY_ID')) {
+        if (!config('filesystems.disks.r2.key')) {
             return '/storage/' . $this->image;
         }
 

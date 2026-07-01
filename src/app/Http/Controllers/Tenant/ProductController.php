@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 function getProductDisk(): string
 {
-    return env('CLOUDFLARE_R2_ACCESS_KEY_ID') ? 'r2' : 'public';
+    return config('filesystems.disks.r2.key') ? 'r2' : 'public';
 }
 
 class ProductController extends Controller

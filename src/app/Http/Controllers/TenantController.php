@@ -306,7 +306,7 @@ public function current(Request $request)
             }
 
             // Disk yang dipakai: R2 jika ada key (production), public disk jika tidak (local dev)
-            $disk = env('CLOUDFLARE_R2_ACCESS_KEY_ID') ? 'r2' : 'public';
+            $disk = config('filesystems.disks.r2.key') ? 'r2' : 'public';
 
             // Hapus logo lama jika ada dan bukan URL eksternal
             $oldLogo = $tenantData->logo_url;
