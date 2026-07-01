@@ -7,13 +7,13 @@ use App\Models\Branch;
 use App\Observers\BranchObserver;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
-// JANGAN LUPA DUA IMPORT INI 👇
 use Illuminate\Support\Facades\Gate;
 use App\Models\Tenant\Staff;
-// Import untuk Rate Limiting
+use App\Models\Tenant as TenantModel;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -69,7 +69,30 @@ class AppServiceProvider extends ServiceProvider
             $id   = $token->tokenable_id;
 
             if (str_contains($type, 'Staff') || str_contains($type, 'Tenant\\Staff')) {
-                // Staff ada di tenant DB — pakai current tenant connection
+                // Pastikan tenancy sudah terinisialisasi sebelum query ke tenant DB.
+                // Jika belum (misal Sanctum dipanggil sebelum middleware InitializeTenancy),
+                // kita inisialisasi manual dari header X-Tenant.
+                if (!tenancy()->initialized) {
+                    $tenantSlug = request()->header('X-Tenant');
+                    Log::info('[AppServiceProvider] tenancy not initialized, X-Tenant header: ' . ($tenantSlug ?? 'null'));
+
+                    if ($tenantSlug) {
+                        $tenant = \App\Models\Tenant::where('slug', $tenantSlug)->first();
+                        if ($tenant) {
+                            tenancy()->initialize($tenant);
+                            Log::info('[AppServiceProvider] tenancy initialized for: ' . $tenantSlug);
+                        } else {
+                            Log::warning('[AppServiceProvider] Tenant not found for slug: ' . $tenantSlug);
+                            return null;
+                        }
+                    } else {
+                        // Tidak ada X-Tenant, tidak bisa resolve staff
+                        Log::warning('[AppServiceProvider] No X-Tenant header, cannot resolve Staff from tenant DB');
+                        return null;
+                    }
+                }
+
+                // Sekarang tenancy sudah terinisialisasi, koneksi 'tenant' mengarah ke DB tenant yang benar
                 return $type::on('tenant')->find($id);
             }
 
