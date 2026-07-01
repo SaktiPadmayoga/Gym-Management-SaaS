@@ -127,6 +127,58 @@ Route::get('/read-laravel-log', function() {
     }
 });
 
+Route::get('/test-r2', function() {
+    try {
+        $disk = Storage::disk('r2');
+        $fileName = 'test-' . time() . '.txt';
+        
+        // Temporarily force throw to true to get the exception
+        config(['filesystems.disks.r2.throw' => true]);
+        
+        $disk->put($fileName, 'R2 Connection Test Successful');
+        $exists = $disk->exists($fileName);
+        $content = $exists ? $disk->get($fileName) : null;
+        $url = $disk->url($fileName);
+        
+        // Clean up
+        if ($exists) {
+            $disk->delete($fileName);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'R2 connection is working!',
+            'file_name' => $fileName,
+            'exists' => $exists,
+            'content' => $content,
+            'generated_url' => $url,
+            'config' => [
+                'driver' => config('filesystems.disks.r2.driver'),
+                'bucket' => config('filesystems.disks.r2.bucket'),
+                'endpoint' => config('filesystems.disks.r2.endpoint'),
+                'url' => config('filesystems.disks.r2.url'),
+                'key_length' => strlen(config('filesystems.disks.r2.key') ?? ''),
+                'secret_length' => strlen(config('filesystems.disks.r2.secret') ?? ''),
+            ]
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'R2 connection failed: ' . $e->getMessage(),
+            'class' => get_class($e),
+            'trace' => substr($e->getTraceAsString(), 0, 1000),
+            'config' => [
+                'driver' => config('filesystems.disks.r2.driver'),
+                'bucket' => config('filesystems.disks.r2.bucket'),
+                'endpoint' => config('filesystems.disks.r2.endpoint'),
+                'url' => config('filesystems.disks.r2.url'),
+                'key_length' => strlen(config('filesystems.disks.r2.key') ?? ''),
+                'secret_length' => strlen(config('filesystems.disks.r2.secret') ?? ''),
+            ]
+        ], 500);
+    }
+});
+
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);
     Route::post('/register-paid', [TenantRegistrationController::class, 'registerPaid']);
