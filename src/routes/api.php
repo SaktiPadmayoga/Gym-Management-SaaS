@@ -104,6 +104,23 @@ Route::get('/debug-central-db', function() {
     }
 });
 
+Route::get('/read-laravel-log', function() {
+    try {
+        $logPath = storage_path('logs/laravel.log');
+        if (!file_exists($logPath)) {
+            return response()->json(['success' => false, 'message' => 'Log file not found']);
+        }
+        $lines = file($logPath);
+        $lastLines = array_slice($lines, -150);
+        return response()->json([
+            'success' => true,
+            'log' => $lastLines
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()]);
+    }
+});
+
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('/register-trial', [TenantRegistrationController::class, 'registerTrial']);
     Route::post('/register-paid', [TenantRegistrationController::class, 'registerPaid']);
