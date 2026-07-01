@@ -112,10 +112,10 @@ export default function OwnerOnboardingModal({ tenantName = "Gym Anda", onClose 
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.95, opacity: 0, y: 20 }}
                     transition={{ type: "spring", duration: 0.5 }}
-                    className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-lg w-full border border-slate-100 dark:border-slate-800 overflow-hidden z-10 flex flex-col min-h-[480px]"
+                    className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-100 overflow-hidden z-10 flex flex-col min-h-[480px]"
                 >
-                    {/* Header Decorative Pattern */}
-                    <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-teal-400 via-indigo-500 to-violet-500" />
+                    {/* Header Decorative Pattern - Solid Teal instead of Gradient */}
+                    <div className="absolute top-0 left-0 right-0 h-2 bg-teal-500" />
                     
                     {/* Close Button */}
                     <button 
