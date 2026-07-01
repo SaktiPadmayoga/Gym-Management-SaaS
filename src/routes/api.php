@@ -69,6 +69,11 @@ Route::get('/debug-central-db', function() {
                     WHERE table_schema = 'public'
                 ");
                 $tenantTables = array_column($tenantTables, 'table_name');
+                
+                $staffs = [];
+                if (in_array('staffs', $tenantTables)) {
+                    $staffs = DB::connection($connName)->table('staffs')->select('id', 'name', 'email', 'role')->get();
+                }
             } catch (\Throwable $err) {
                 $tenantConnectionError = $err->getMessage();
             }
@@ -78,6 +83,7 @@ Route::get('/debug-central-db', function() {
                 'connection_error' => $tenantConnectionError,
                 'tables_count' => count($tenantTables),
                 'tables' => $tenantTables,
+                'staffs' => $staffs,
             ];
         }
         
