@@ -27,6 +27,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import dayjs from "dayjs";
 import "dayjs/locale/id";
 
+// Custom components & hooks
+import { useTenantHeader } from "@/hooks/useTenantHeader";
+import OwnerOnboardingModal from "@/components/owner/OwnerOnboardingModal";
+
 dayjs.locale("id");
 
 // Helper format Rupiah
@@ -58,6 +62,7 @@ const getGreeting = () => {
 };
 
 export default function DashboardOwner() {
+    const { data: tenantData } = useTenantHeader();
     const { data, isLoading, isError } = useOwnerDashboard();
 
     if (isLoading) {
@@ -580,6 +585,9 @@ export default function DashboardOwner() {
                     )}
                 </div>
             </div> */}
+
+            {/* Modal Onboarding Owner */}
+            <OwnerOnboardingModal tenantName={tenantData?.name} />
         </div>
     );
 }
