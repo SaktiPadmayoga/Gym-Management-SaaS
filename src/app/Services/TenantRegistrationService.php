@@ -118,6 +118,10 @@ class TenantRegistrationService
                 'phone'    => $data['phone'] ?? null,
                 'role'     => 'owner',
             ]);
+
+            // Seed default roles and permissions (branch_manager, receptionist, trainer, cashier)
+            $seeder = new \Database\Seeders\RolePermissionSeeder();
+            $seeder->run();
         });
 
         // Setup sukses, ubah status ke final (trial / suspended)
