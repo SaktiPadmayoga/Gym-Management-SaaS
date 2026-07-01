@@ -12,6 +12,10 @@ class InitializeTenancy
     {
         $tenantSlug = $request->header('X-Tenant');
 
+        if (!$tenantSlug) {
+            return $next($request);
+        }
+
         $tenant = Tenant::where('slug', $tenantSlug)->first();
 
         if (!$tenant) {

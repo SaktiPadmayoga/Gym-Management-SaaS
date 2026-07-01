@@ -184,7 +184,7 @@ Route::middleware('auth:admin')->group(function () {
 // ============================================
 // TENANT-SCOPED ROUTES (tenant database)
 // ============================================
-Route::middleware(['auth:staff', \App\Http\Middleware\InitializeTenancy::class, 'check_tenant_access'])->group(function () {
+Route::middleware([\App\Http\Middleware\InitializeTenancy::class, 'auth:staff', 'check_tenant_access'])->group(function () {
     Route::apiResource('branches', BranchController::class);
     Route::patch('branches/{branch}/toggle-active', [BranchController::class, 'toggleActive']);
 
@@ -198,7 +198,7 @@ Route::middleware(['auth:staff', \App\Http\Middleware\InitializeTenancy::class, 
 // DOMAIN ROUTES (SHARED ADMIN & STAFF)
 // central database
 // ============================================
-Route::middleware('auth:admin,staff')->group(function () {
+Route::middleware([\App\Http\Middleware\InitializeTenancy::class, 'auth:admin,staff'])->group(function () {
     Route::apiResource('domains', DomainController::class);
     Route::patch('domains/{domain}/toggle-primary', [DomainController::class, 'togglePrimary']);
 
