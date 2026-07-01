@@ -74,6 +74,11 @@ Route::get('/debug-central-db', function() {
                 if (in_array('staffs', $tenantTables)) {
                     $staffs = DB::connection($connName)->table('staffs')->select('id', 'name', 'email', 'role')->get();
                 }
+                
+                $products = [];
+                if (in_array('products', $tenantTables)) {
+                    $products = DB::connection($connName)->table('products')->select('id', 'name', 'image')->get();
+                }
             } catch (\Throwable $err) {
                 $tenantConnectionError = $err->getMessage();
             }
@@ -84,6 +89,7 @@ Route::get('/debug-central-db', function() {
                 'tables_count' => count($tenantTables),
                 'tables' => $tenantTables,
                 'staffs' => $staffs,
+                'products' => $products,
             ];
         }
         
