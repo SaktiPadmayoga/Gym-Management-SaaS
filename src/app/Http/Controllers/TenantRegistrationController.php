@@ -83,6 +83,7 @@ class TenantRegistrationController extends Controller
             return ApiResponse::error('Plan not found', null, 404);
         }
 
+        $tenant = null;
         try {
             $tenant = $this->registrationService->provisionTenant($validated, 'suspended');
 
@@ -102,6 +103,13 @@ class TenantRegistrationController extends Controller
 
         } catch (\Exception $e) {
             Log::error('[RegisterPaid] ' . $e->getMessage());
+            if ($tenant) {
+                try {
+                    $tenant->delete();
+                } catch (\Throwable $delEx) {
+                    Log::error('[RegisterPaidCleanupFailed] ' . $delEx->getMessage());
+                }
+            }
             return ApiResponse::error('Gagal registrasi: ' . $e->getMessage(), null, 500);
         }
     }

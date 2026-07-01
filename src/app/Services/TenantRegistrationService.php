@@ -63,7 +63,13 @@ class TenantRegistrationService
                     'slug'          => $tenant->slug,
                 ];  
         } catch (\Exception $e) {
-            $this->markAsFailed($tenant, $e->getMessage());
+            if ($tenant) {
+                try {
+                    $tenant->delete();
+                } catch (\Throwable $delEx) {
+                    Log::error('[RegisterTrialCleanupFailed] ' . $delEx->getMessage());
+                }
+            }
             throw $e;
         }
     }
