@@ -32,7 +32,7 @@ class CustomPersonalAccessToken extends SanctumToken
                 ]);
 
                 if ($tenantSlug) {
-                    $tenant = Tenant::where('slug', $tenantSlug)->first();
+                    $tenant = \App\Models\Tenant::where('slug', $tenantSlug)->first();
                     if ($tenant) {
                         tenancy()->initialize($tenant);
                         Log::info('[CustomPersonalAccessToken] tenancy initialized for: ' . $tenantSlug);
