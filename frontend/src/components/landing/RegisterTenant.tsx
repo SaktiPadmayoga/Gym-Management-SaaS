@@ -13,7 +13,7 @@ import { TextInput } from "@/components/ui/input/Input";
 import { SearchableDropdown, DropdownOption } from "@/components/ui/input/CustomDropdown";
 
 // --- HOOKS BARU ---
-import { usePlans } from "@/hooks/usePlans";
+import { usePublicPlans } from "@/hooks/usePublicPlans";
 import { useRegisterPaid } from "@/hooks/useRegister"; // Hook register baru Anda
 import { useMidtransSnap } from "@/hooks/useMidtransSnap"; // Hook Midtrans Snap
 
@@ -45,7 +45,7 @@ function RegisterTenantContent() {
     const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
 
     // --- DATA FETCHING & MUTATIONS ---
-    const { data: plansData, isLoading: isLoadingPlans, isError: isErrorPlans } = usePlans();
+    const { data: plansData, isLoading: isLoadingPlans, isError: isErrorPlans } = usePublicPlans();
     const publicPlans = plansData?.filter((plan) => plan.is_public) || [];
 
     const registerPaidMutation = useRegisterPaid();
