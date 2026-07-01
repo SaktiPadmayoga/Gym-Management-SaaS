@@ -72,7 +72,7 @@ return [
             'endpoint'                => env('CLOUDFLARE_R2_ENDPOINT'),                     // https://<account-id>.r2.cloudflarestorage.com
             'use_path_style_endpoint' => true,
             'visibility'              => 'public',
-            'throw'                   => false,
+            'throw'                   => true,
             'report'                  => false,
         ],
 
