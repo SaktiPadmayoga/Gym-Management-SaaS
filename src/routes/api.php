@@ -239,6 +239,43 @@ Route::get('/migrate-images-to-r2', function() {
     ]);
 });
 
+Route::get('/scan-storage', function() {
+    try {
+        $storagePath = storage_path();
+        
+        $files = [];
+        $directory = new RecursiveDirectoryIterator($storagePath);
+        $iterator = new RecursiveIteratorIterator($directory);
+        
+        foreach ($iterator as $fileinfo) {
+            if ($fileinfo->isFile()) {
+                $filePath = $fileinfo->getPathname();
+                // Get path relative to storage_path
+                $relative = str_replace($storagePath, '', $filePath);
+                // Only show files with image extension or files in app/public
+                if (preg_match('/\.(jpg|jpeg|png|gif|webp|svg)$/i', $filePath) || str_contains($relative, '/app/public')) {
+                    $files[] = [
+                        'path' => $relative,
+                        'size' => $fileinfo->getSize(),
+                    ];
+                }
+            }
+        }
+        
+        return response()->json([
+            'success' => true,
+            'storage_path' => $storagePath,
+            'files_count' => count($files),
+            'files' => array_slice($files, 0, 200), // Limit to first 200 files
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
 Route::get('/test-r2', function() {
     try {
         $disk = \Illuminate\Support\Facades\Storage::disk('r2');
