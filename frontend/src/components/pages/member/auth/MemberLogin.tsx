@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { toast, Toaster } from "sonner";
 import { useMemberAuth } from "@/providers/MemberAuthProvider";
@@ -10,7 +10,7 @@ import { usePublicBranchSettings } from "@/hooks/tenant/useBranchSettings";
 import { TextInput } from "@/components/ui/input/Input";
 import CustomButton from "@/components/ui/button/CustomButton";
 import Link from "next/link";
-import { Eye, EyeOff, Building2, Dumbbell, Users, CheckCircle2, Activity } from "lucide-react";
+import { Building2, Dumbbell, Users, CheckCircle2, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 
 /* =========================
@@ -35,7 +35,6 @@ interface LoginFormProps {
 
 function LoginForm({ primaryColor }: LoginFormProps) {
     const { login, loginWithGoogle, isLoading } = useMemberAuth();
-    const [showPassword, setShowPassword] = useState(false);
 
     const form = useForm({ defaultValues: { email: "", password: "" } });
 
@@ -63,17 +62,7 @@ function LoginForm({ primaryColor }: LoginFormProps) {
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
                 <TextInput name="email" label="Alamat Email" placeholder="member@email.com" type="email" />
 
-                <div className="relative">
-                    <TextInput name="password" label="Kata Sandi" placeholder="••••••••••••" type={showPassword ? "text" : "password"} />
-                    <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-[34px] p-1.5 text-zinc-400 hover:text-zinc-700 transition-colors bg-transparent rounded-md focus:outline-none flex items-center justify-center"
-                        tabIndex={-1}
-                    >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                </div>
+                <TextInput name="password" label="Kata Sandi" placeholder="••••••••••••" type="password" />
 
                 <div className="flex items-center justify-between mt-[-8px]">
                     <label className="flex items-center gap-2 cursor-pointer">
