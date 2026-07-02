@@ -129,7 +129,7 @@ Route::get('/read-laravel-log', function() {
 
 Route::get('/test-r2', function() {
     try {
-        $disk = Storage::disk('r2');
+        $disk = \Illuminate\Support\Facades\Storage::disk('r2');
         $fileName = 'test-' . time() . '.txt';
         
         // Temporarily force throw to true to get the exception
@@ -159,6 +159,13 @@ Route::get('/test-r2', function() {
                 'url' => config('filesystems.disks.r2.url'),
                 'key_length' => strlen(config('filesystems.disks.r2.key') ?? ''),
                 'secret_length' => strlen(config('filesystems.disks.r2.secret') ?? ''),
+            ],
+            'env_raw' => [
+                'key_length' => strlen(env('CLOUDFLARE_R2_ACCESS_KEY_ID') ?? ''),
+                'secret_length' => strlen(env('CLOUDFLARE_R2_SECRET_ACCESS_KEY') ?? ''),
+                'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+                'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
+                'url' => env('CLOUDFLARE_R2_URL'),
             ]
         ]);
     } catch (\Throwable $e) {
@@ -167,13 +174,20 @@ Route::get('/test-r2', function() {
             'message' => 'R2 connection failed: ' . $e->getMessage(),
             'class' => get_class($e),
             'trace' => substr($e->getTraceAsString(), 0, 1000),
-            'config' => [
+            'config_cached' => [
                 'driver' => config('filesystems.disks.r2.driver'),
                 'bucket' => config('filesystems.disks.r2.bucket'),
                 'endpoint' => config('filesystems.disks.r2.endpoint'),
                 'url' => config('filesystems.disks.r2.url'),
                 'key_length' => strlen(config('filesystems.disks.r2.key') ?? ''),
                 'secret_length' => strlen(config('filesystems.disks.r2.secret') ?? ''),
+            ],
+            'env_raw' => [
+                'key_length' => strlen(env('CLOUDFLARE_R2_ACCESS_KEY_ID') ?? ''),
+                'secret_length' => strlen(env('CLOUDFLARE_R2_SECRET_ACCESS_KEY') ?? ''),
+                'bucket' => env('CLOUDFLARE_R2_BUCKET'),
+                'endpoint' => env('CLOUDFLARE_R2_ENDPOINT'),
+                'url' => env('CLOUDFLARE_R2_URL'),
             ]
         ], 500);
     }
