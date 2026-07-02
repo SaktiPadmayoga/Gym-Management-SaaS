@@ -127,6 +127,118 @@ Route::get('/read-laravel-log', function() {
     }
 });
 
+// ============================================================
+// ONE-TIME: Migrate product images dari local storage ke R2
+// Jalankan SEKALI setelah R2 dikonfigurasi dengan benar.
+// ============================================================
+Route::get('/migrate-images-to-r2', function() {
+    $results   = [];
+    $totalOk   = 0;
+    $totalFail = 0;
+    $totalSkip = 0;
+
+    $tenants = \Illuminate\Support\Facades\DB::table('tenants')->get();
+
+    foreach ($tenants as $tenant) {
+        $tenantId = $tenant->id;
+        $dbName   = "gym_tenant_{$tenantId}";
+        $connName = "tenant_{$tenantId}";
+
+        // Daftarkan koneksi sementara ke database tenant
+        config(["database.connections.{$connName}" => array_merge(
+            config('database.connections.pgsql'),
+            ['database' => $dbName]
+        )]);
+
+        try {
+            \Illuminate\Support\Facades\DB::connection($connName)->getPdo();
+        } catch (\Throwable $e) {
+            $results[$tenant->slug ?? $tenantId] = ['error' => 'DB connect failed: ' . $e->getMessage()];
+            continue;
+        }
+
+        $products = \Illuminate\Support\Facades\DB::connection($connName)
+            ->table('products')
+            ->whereNotNull('image')
+            ->whereNull('deleted_at')
+            ->get(['id', 'name', 'image']);
+
+        $tenantResults = [];
+
+        foreach ($products as $product) {
+            $imagePath = $product->image;
+
+            // Skip jika sudah di R2 (sudah ada di sana — cek via Storage)
+            try {
+                $existsInR2 = \Illuminate\Support\Facades\Storage::disk('r2')->exists($imagePath);
+                if ($existsInR2) {
+                    $tenantResults[] = ['name' => $product->name, 'status' => 'skip_already_in_r2'];
+                    $totalSkip++;
+                    continue;
+                }
+            } catch (\Throwable $e) {
+                // R2 error saat cek — lanjut coba upload
+            }
+
+            // Coba cari file di local storage (public disk)
+            $localPath = storage_path("app/public/{$imagePath}");
+
+            // Juga coba path alternatif (tenant storage pattern)
+            if (!file_exists($localPath)) {
+                // Pattern: tenant_{uuid}/... → storage/app/public/tenant_{uuid}/...
+                $localPath2 = storage_path("app/public/" . $imagePath);
+                $localPath  = file_exists($localPath2) ? $localPath2 : null;
+            }
+
+            if (!$localPath || !file_exists($localPath)) {
+                $tenantResults[] = [
+                    'name'   => $product->name,
+                    'status' => 'fail_local_not_found',
+                    'path'   => $imagePath,
+                ];
+                $totalFail++;
+                continue;
+            }
+
+            // Upload ke R2
+            try {
+                $fileContents = file_get_contents($localPath);
+                $mimeType     = mime_content_type($localPath) ?: 'image/jpeg';
+
+                \Illuminate\Support\Facades\Storage::disk('r2')->put(
+                    $imagePath,
+                    $fileContents,
+                    ['ContentType' => $mimeType, 'visibility' => 'public']
+                );
+
+                $tenantResults[] = [
+                    'name'   => $product->name,
+                    'status' => 'ok_uploaded',
+                    'path'   => $imagePath,
+                    'url'    => \Illuminate\Support\Facades\Storage::disk('r2')->url($imagePath),
+                ];
+                $totalOk++;
+            } catch (\Throwable $e) {
+                $tenantResults[] = [
+                    'name'   => $product->name,
+                    'status' => 'fail_upload_error',
+                    'error'  => $e->getMessage(),
+                    'path'   => $imagePath,
+                ];
+                $totalFail++;
+            }
+        }
+
+        $results[$tenant->slug ?? $tenantId] = $tenantResults;
+    }
+
+    return response()->json([
+        'success'    => true,
+        'summary'    => ['uploaded' => $totalOk, 'skipped' => $totalSkip, 'failed' => $totalFail],
+        'details'    => $results,
+    ]);
+});
+
 Route::get('/test-r2', function() {
     try {
         $disk = \Illuminate\Support\Facades\Storage::disk('r2');
