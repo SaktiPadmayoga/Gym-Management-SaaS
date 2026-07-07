@@ -101,7 +101,7 @@ export function MemberAuthProvider({ children }: { children: ReactNode }) {
                     type: "SET_AUTH",
                     payload: { member: { ...rawMember, email: rawMember.email ?? "" } },
                 });
-                router.push("/member/dashboard");
+                window.location.href = "/member/dashboard";
             } catch (e) {
                 dispatch({ type: "SET_LOADING", payload: false });
                 throw e;

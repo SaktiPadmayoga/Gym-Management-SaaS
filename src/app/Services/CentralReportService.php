@@ -65,6 +65,22 @@ class CentralReportService
         $mrrYearly  = DB::connection('central')->table('subscriptions')->where('status', 'active')->where('billing_cycle', 'yearly')->sum('amount');
         $currentMrr = $mrrMonthly + ($mrrYearly / 12);
 
+        // 5 Tenant dengan total spent (akumulasi spending) terbanyak secara lifetime
+        $topSpenders = DB::connection('central')->table('payments')
+            ->where('payments.status', 'success')
+            ->join('tenants', 'payments.tenant_id', '=', 'tenants.id')
+            ->selectRaw('tenants.name, tenants.slug, tenants.owner_email, SUM(payments.gross_amount) as total_spent')
+            ->groupBy('tenants.id', 'tenants.name', 'tenants.slug', 'tenants.owner_email')
+            ->orderByDesc('total_spent')
+            ->take(5)
+            ->get()
+            ->map(fn($item) => [
+                'name'        => $item->name,
+                'slug'        => $item->slug,
+                'owner_email' => $item->owner_email,
+                'total_spent' => (float) $item->total_spent,
+            ]);
+
         return [
             'summary' => [
                 'total_revenue'      => (float) $totalRevenue,
@@ -79,6 +95,7 @@ class CentralReportService
             ],
             'tables' => [
                 'recent_transactions' => $recentTransactions,
+                'top_spenders'        => $topSpenders,
             ],
         ];
     }

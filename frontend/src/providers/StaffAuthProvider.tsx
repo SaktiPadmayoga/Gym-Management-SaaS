@@ -178,7 +178,7 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
                         dispatch({ type: "SELECT_BRANCH", payload: branch });
                         saveSelectedBranch(branch);
                     }
-                    router.push("/owner/dashboard");
+                    window.location.href = "/owner/dashboard";
                     return;
                 }
 
@@ -187,9 +187,9 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
                     dispatch({ type: "SELECT_BRANCH", payload: branch });
                     saveSelectedBranch(branch);
                     if (branch.role === 'trainer') {
-                        router.push("/dashboard/trainer");
+                        window.location.href = "/dashboard/trainer";
                     } else {
-                        router.push("/dashboard");
+                        window.location.href = "/dashboard";
                     }
                     return;
                 }
@@ -219,12 +219,12 @@ export function StaffAuthProvider({ children }: { children: ReactNode }) {
             dispatch({ type: "SELECT_BRANCH", payload: branch });
             saveSelectedBranch(branch);
             if (branch.role === 'trainer') {
-                router.push("/dashboard/trainer");
+                window.location.href = "/dashboard/trainer";
             } else {
-                router.push("/dashboard");
+                window.location.href = "/dashboard";
             }
         },
-        [router],
+        [],
     );
 
     const logout = useCallback(async () => {

@@ -135,6 +135,14 @@ export default function FinanceTab({ data, startDate, endDate, onFilterChange }:
         revenue: toNumber(t.revenue),
     }));
 
+    // 5 Tenant paling produktif (lifetime spend terbanyak)
+    const topSpenders = (tables?.top_spenders || []).map((t: any) => ({
+        name: t.name,
+        slug: t.slug,
+        ownerEmail: t.owner_email,
+        totalSpent: toNumber(t.total_spent),
+    }));
+
     const displayedDate = startDate && endDate ? `${dayjs(startDate).format("DD MMM YYYY")} - ${dayjs(endDate).format("DD MMM YYYY")}` : "7 Hari Terakhir";
 
     return (
@@ -277,10 +285,46 @@ export default function FinanceTab({ data, startDate, endDate, onFilterChange }:
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {/* CHARTS ROW 2: Top 5 Tenant — conditional */}
+            {/* GRID DUA KOLOM: 5 Tenant Produktif & Top 5 Tenant by Revenue */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* 5 Tenant Paling Produktif (Lifetime Spenders) */}
+                {topSpenders.length > 0 && (
+                    <div className="bg-white p-6 rounded-xl border border-gray-500/20">
+                        <h2 className="text-lg font-semibold text-zinc-900 mb-1 flex items-center gap-2">
+                            <TrendingUp size={18} /> 5 Tenant Paling Produktif
+                        </h2>
+                        <p className="text-xs text-zinc-400 mb-4">5 Tenant yang paling banyak spent uang di SaaS (Lifetime)</p>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-gray-100 text-xs text-zinc-500 uppercase tracking-wider">
+                                        <th className="py-2.5 px-2">No</th>
+                                        <th className="py-2.5 px-2">Tenant</th>
+                                        <th className="py-2.5 px-2">Email Owner</th>
+                                        <th className="py-2.5 px-2 text-right">Total Spent</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {topSpenders.map((t: any, idx: number) => (
+                                        <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
+                                            <td className="py-2.5 px-2 text-zinc-500 font-medium">{idx + 1}</td>
+                                            <td className="py-2.5 px-2">
+                                                <div className="font-medium text-zinc-900">{t.name}</div>
+                                                <div className="text-xs text-zinc-400">{t.slug}.gymfit.id</div>
+                                            </td>
+                                            <td className="py-2.5 px-2 text-zinc-500 text-xs">{t.ownerEmail}</td>
+                                            <td className="py-2.5 px-2 text-right font-bold text-zinc-900">{formatRupiah(t.totalSpent)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Top 5 Tenant by Revenue (Current Period) */}
                 {topTenants.length > 0 && (
-                    <div className="bg-white p-6 rounded-xl border border-gray-500/20 md:col-span-2">
+                    <div className="bg-white p-6 rounded-xl border border-gray-500/20">
                         <h2 className="text-lg font-semibold text-zinc-900 mb-1">Top 5 Tenant by Revenue</h2>
                         <p className="text-xs text-zinc-400 mb-4">Tenant dengan kontribusi pendapatan terbesar di periode ini</p>
                         <div className="h-64 -ml-8">
@@ -296,45 +340,45 @@ export default function FinanceTab({ data, startDate, endDate, onFilterChange }:
                         </div>
                     </div>
                 )}
+            </div>
 
-                {/* TABLE */}
-                <div className="bg-white p-6 rounded-xl border border-gray-500/20 md:col-span-3">
-                    <h2 className="text-lg font-semibold text-zinc-900 mb-4">Transaksi Terakhir</h2>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-gray-100 text-xs text-zinc-500 uppercase tracking-wider">
-                                    <th className="py-3 px-2">Order ID</th>
-                                    <th className="py-3 px-2">Tenant</th>
-                                    <th className="py-3 px-2">Metode</th>
-                                    <th className="py-3 px-2">Waktu Bayar</th>
-                                    <th className="py-3 px-2 text-right">Total</th>
+            {/* TABLE TRANSAKSI TERAKHIR (FULL-WIDTH) */}
+            <div className="bg-white p-6 rounded-xl border border-gray-500/20">
+                <h2 className="text-lg font-semibold text-zinc-900 mb-4">Transaksi Terakhir</h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="border-b border-gray-100 text-xs text-zinc-500 uppercase tracking-wider">
+                                <th className="py-3 px-2">Order ID</th>
+                                <th className="py-3 px-2">Tenant</th>
+                                <th className="py-3 px-2">Metode</th>
+                                <th className="py-3 px-2">Waktu Bayar</th>
+                                <th className="py-3 px-2 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(tables?.recent_transactions || []).length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-6 text-zinc-500">
+                                        Tidak ada transaksi di periode ini.
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {(tables?.recent_transactions || []).length === 0 ? (
-                                    <tr>
-                                        <td colSpan={5} className="text-center py-6 text-zinc-500">
-                                            Tidak ada transaksi di periode ini.
+                            ) : (
+                                (tables?.recent_transactions || []).map((tx: any, idx: number) => (
+                                    <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
+                                        <td className="py-3 px-2 text-zinc-600 font-mono text-xs">{tx.order_id}</td>
+                                        <td className="py-3 px-2 font-medium text-zinc-900">{tx.tenant_name}</td>
+                                        <td className="py-3 px-2">
+                                            <span className="uppercase text-xs bg-gray-100 text-zinc-900 px-2 py-1 rounded">{tx.payment_type || "MIDTRANS"}</span>
                                         </td>
+                                        {/* paid_at sudah di-select di backend query, tinggal tampilkan */}
+                                        <td className="py-3 px-2 text-zinc-500 text-xs">{tx.paid_at ? dayjs(tx.paid_at).format("DD MMM YYYY, HH:mm") : "-"}</td>
+                                        <td className="py-3 px-2 text-right font-bold text-zinc-900">{formatRupiah(toNumber(tx.gross_amount))}</td>
                                     </tr>
-                                ) : (
-                                    (tables?.recent_transactions || []).map((tx: any, idx: number) => (
-                                        <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 text-sm">
-                                            <td className="py-3 px-2 text-zinc-600 font-mono text-xs">{tx.order_id}</td>
-                                            <td className="py-3 px-2 font-medium text-zinc-900">{tx.tenant_name}</td>
-                                            <td className="py-3 px-2">
-                                                <span className="uppercase text-xs bg-gray-100 text-zinc-900 px-2 py-1 rounded">{tx.payment_type || "MIDTRANS"}</span>
-                                            </td>
-                                            {/* paid_at sudah di-select di backend query, tinggal tampilkan */}
-                                            <td className="py-3 px-2 text-zinc-500 text-xs">{tx.paid_at ? dayjs(tx.paid_at).format("DD MMM YYYY, HH:mm") : "-"}</td>
-                                            <td className="py-3 px-2 text-right font-bold text-zinc-900">{formatRupiah(toNumber(tx.gross_amount))}</td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
