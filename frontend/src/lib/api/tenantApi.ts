@@ -9,6 +9,7 @@ const apiClient = axios.create({
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "X-Requested-With": "XMLHttpRequest",
     },
 });
 
@@ -35,7 +36,10 @@ export const tenantAPI = {
         const formData = new FormData();
         formData.append("logo", file);
         const res = await apiClient.post("/tenant/logo", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
+            headers: { 
+                "Content-Type": "multipart/form-data",
+                "X-Requested-With": "XMLHttpRequest"
+            },
         });
         return res.data.data;
     },
