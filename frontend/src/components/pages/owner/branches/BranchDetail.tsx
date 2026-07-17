@@ -69,10 +69,8 @@ export default function BranchDetailPage() {
     /* =====================================
      * SAVE UPDATE
      * ===================================== */
-    const handleSave = async () => {
+    const handleSave = async (formData: BranchFormData) => {
         try {
-            const formData = form.getValues();
-
             const payload: TenantBranchUpdateRequest = {
                 branch_code: formData.branch_code,
                 name: formData.name,
@@ -120,7 +118,7 @@ export default function BranchDetailPage() {
 
     return (
         <FormProvider {...form}>
-            <form>
+            <form onSubmit={form.handleSubmit(handleSave)}>
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
@@ -161,9 +159,8 @@ export default function BranchDetailPage() {
                                     Batal
                                 </CustomButton>
                                 <CustomButton
-                                    type="button"
+                                    type="submit"
                                     className="bg-aksen-secondary text-white px-4 py-2.5"
-                                    onClick={handleSave}
                                     disabled={updateMutation.isPending}
                                 >
                                     {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
@@ -179,10 +176,14 @@ export default function BranchDetailPage() {
                         <h2 className="text-lg font-semibold text-gray-800">Informasi Dasar</h2>
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Nama Cabang" disabled={!isEditMode} />
+                                <TextInput name="name" label="Nama Cabang" disabled={!isEditMode} rules={{
+                                    required: "Nama Cabang Tidak Boleh Kosong",
+                                }}/>
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="branch_code" label="Kode Cabang" disabled={!isEditMode} />
+                                <TextInput name="branch_code" label="Kode Cabang" disabled={!isEditMode} rules={{
+                                    required: "Kode Cabang Tidak Boleh Kosong",
+                                }} />
                             </div>
                         </div>
 
@@ -191,7 +192,9 @@ export default function BranchDetailPage() {
                                 <TextInput name="email" label="Email" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-6">
-                                <TextInput name="phone" label="Nomor Telepon" disabled={!isEditMode} />
+                                <TextInput name="phone" label="Nomor Telepon" disabled={!isEditMode} rules={{
+                                    required: "Nomor Telepon Tidak Boleh Kosong",
+                                }} />
                             </div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">

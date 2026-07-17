@@ -149,6 +149,7 @@ export default function MemberForgotForm() {
                                     label="Alamat Email"
                                     placeholder="member@email.com"
                                     type="email"
+                                    rules={{ required: "Alamat email wajib diisi" }}
                                 />
 
                                 <CustomButton

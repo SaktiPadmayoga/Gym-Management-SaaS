@@ -102,8 +102,9 @@ export default function CreatePtSessionPlan() {
             await createMutation.mutateAsync(payload);
             toast.success("Paket sesi PT berhasil dibuat");
             router.push("/pt-sessions-plans?success=true");
-        } catch (err) {
-            toast.error("Gagal membuat paket sesi PT");
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || "Gagal membuat paket sesi PT";
+            toast.error(message);
             console.error(err);
         }
     };
@@ -144,26 +145,64 @@ export default function CreatePtSessionPlan() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Nama Paket" placeholder="Masukkan nama paket" />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Paket"
+                                    placeholder="Masukkan nama paket"
+                                    rules={{ required: "Nama paket wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="duration" label="Durasi" />
+                                <NumberInput
+                                    name="duration"
+                                    label="Durasi"
+                                    rules={{
+                                        required: "Durasi wajib diisi",
+                                        min: { value: 1, message: "Durasi minimal 1" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-3">
-                                <SearchableDropdown name="duration_unit" label="Satuan Durasi" options={durationUnitOptions} />
+                                <SearchableDropdown
+                                    name="duration_unit"
+                                    label="Satuan Durasi"
+                                    options={durationUnitOptions}
+                                    rules={{ required: "Satuan durasi wajib diisi" }}
+                                />
                             </div>
                         </div>
 
                         {/* PRICE, SESSIONS, MINUTES */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-3">
-                                <NumberInput name="price" label="Harga (Rp)" />
+                                <NumberInput
+                                    name="price"
+                                    label="Harga (Rp)"
+                                    rules={{
+                                        required: "Harga wajib diisi",
+                                        min: { value: 0, message: "Harga tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="total_sessions" label="Total Sesi" />
+                                <NumberInput
+                                    name="total_sessions"
+                                    label="Total Sesi"
+                                    rules={{
+                                        required: "Total sesi wajib diisi",
+                                        min: { value: 1, message: "Total sesi minimal 1" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="minutes_per_session" label="Menit per Sesi" />
+                                <NumberInput
+                                    name="minutes_per_session"
+                                    label="Menit per Sesi"
+                                    rules={{
+                                        required: "Menit per sesi wajib diisi",
+                                        min: { value: 1, message: "Menit per sesi minimal 1" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-3">
                                 <NumberInput name="loyalty_points_reward" label="Poin Loyalitas" />

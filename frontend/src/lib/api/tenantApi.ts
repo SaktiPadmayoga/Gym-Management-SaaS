@@ -43,6 +43,11 @@ export const tenantAPI = {
         });
         return res.data.data;
     },
+
+    updateSettings: async (payload: { name: string }): Promise<{ name: string }> => {
+        const res = await apiClient.put("/tenant/settings", payload);
+        return res.data.data;
+    },
 };
 
 export default apiClient;

@@ -94,9 +94,8 @@ export default function ClassPlanDetail() {
     /* =========================
      * SAVE
      * ========================= */
-    const handleSave = async () => {
+    const handleSave = async (formData: ClassPlanFormData) => {
         try {
-            const formData = form.getValues();
             const payload: ClassPlanUpdateRequest = {
                 name: formData.name,
                 category: formData.category || undefined,
@@ -120,8 +119,9 @@ export default function ClassPlanDetail() {
             toast.success("Paket kelas berhasil diperbarui");
             setIsEditMode(false);
             router.push("/class-plans?updated=true");
-        } catch {
-            toast.error("Gagal memperbarui paket kelas");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || error?.message || "Gagal memperbarui paket kelas";
+            toast.error(message);
         }
     };
 
@@ -151,7 +151,7 @@ export default function ClassPlanDetail() {
     return (
         <FormProvider {...form}>
             <Toaster position="top-center" />
-            <form>
+            <form onSubmit={form.handleSubmit(handleSave)}>
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
@@ -215,7 +215,7 @@ export default function ClassPlanDetail() {
                                     <CustomButton type="button" className="border px-4 py-2.5" onClick={handleCancel}>
                                         Batal
                                     </CustomButton>
-                                    <CustomButton type="button" className="bg-aksen-secondary text-white px-4 py-2.5" onClick={handleSave} disabled={updateMutation.isPending}>
+                                    <CustomButton type="submit" className="bg-aksen-secondary text-white px-4 py-2.5" disabled={updateMutation.isPending}>
                                         {updateMutation.isPending ? "Menyimpan..." : "Simpan"}
                                     </CustomButton>
                                 </>
@@ -229,7 +229,12 @@ export default function ClassPlanDetail() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Nama Kelas" disabled={!isEditMode} />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Kelas"
+                                    disabled={!isEditMode}
+                                    rules={{ required: "Nama kelas wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-3">
                                 <TextInput name="category" label="Kategori" disabled={!isEditMode} />
@@ -242,13 +247,37 @@ export default function ClassPlanDetail() {
                         {/* PRICE, DURATION, CAPACITY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Harga (Rp)" disabled={!isEditMode} />
+                                <NumberInput
+                                    name="price"
+                                    label="Harga (Rp)"
+                                    disabled={!isEditMode}
+                                    rules={{
+                                        required: "Harga wajib diisi",
+                                        min: { value: 0, message: "Harga tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="minutes_per_session" label="Durasi (menit)" disabled={!isEditMode} />
+                                <NumberInput
+                                    name="minutes_per_session"
+                                    label="Durasi (menit)"
+                                    disabled={!isEditMode}
+                                    rules={{
+                                        required: "Durasi wajib diisi",
+                                        min: { value: 1, message: "Durasi minimal 1 menit" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="max_capacity" label="Kapasitas Maksimal (pax)" disabled={!isEditMode} />
+                                <NumberInput
+                                    name="max_capacity"
+                                    label="Kapasitas Maksimal (pax)"
+                                    disabled={!isEditMode}
+                                    rules={{
+                                        required: "Kapasitas wajib diisi",
+                                        min: { value: 1, message: "Kapasitas minimal 1 pax" }
+                                    }}
+                                />
                             </div>
                         </div>
 

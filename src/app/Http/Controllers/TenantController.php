@@ -280,6 +280,49 @@ public function current(Request $request)
 }
 
     /**
+     * PUT /api/tenant/settings
+     * Update settings (seperti nama gym) untuk tenant saat ini.
+     */
+    public function updateCurrentSettings(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => ['required', 'string', 'max:255'],
+            ]);
+
+            $tenantModel = tenant();
+            if (!$tenantModel) {
+                return ApiResponse::error('Tenant context not found', null, 404);
+            }
+
+            // Update nama di central database
+            DB::connection('central')
+                ->table('tenants')
+                ->where('id', $tenantModel->id)
+                ->update([
+                    'name' => $request->name,
+                    'updated_at' => now()
+                ]);
+
+            Log::info('Tenant settings updated', ['tenant_id' => $tenantModel->id, 'name' => $request->name]);
+
+            return ApiResponse::success([
+                'name' => $request->name,
+            ], 'Pengaturan gym berhasil diperbarui');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponse::error('Validasi gagal', $e->errors(), 422);
+        } catch (\Exception $e) {
+            Log::error('updateCurrentSettings error', ['message' => $e->getMessage()]);
+            return ApiResponse::error(
+                'Gagal memperbarui pengaturan gym',
+                config('app.debug') ? $e->getMessage() : null,
+                500
+            );
+        }
+    }
+
+    /**
      * POST /api/tenant/logo
      * Upload logo gym ke R2. Hanya bisa diakses oleh owner tenant itu sendiri.
      */

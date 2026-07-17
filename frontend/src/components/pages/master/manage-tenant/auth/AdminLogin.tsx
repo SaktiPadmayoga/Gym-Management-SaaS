@@ -131,10 +131,22 @@ export default function AdminLogin() {
 
                     <FormProvider {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-                            <TextInput name="email" label="Alamat Email" placeholder="admin@gymfit.id" type="email" />
+                            <TextInput
+                                name="email"
+                                label="Alamat Email"
+                                placeholder="admin@gymfit.id"
+                                type="email"
+                                rules={{ required: "Alamat email wajib diisi" }}
+                            />
 
                             <div className="relative group">
-                                <TextInput name="password" label="Kata Sandi" placeholder="••••••••••••" type={showPassword ? "text" : "password"} />
+                                <TextInput
+                                    name="password"
+                                    label="Kata Sandi"
+                                    placeholder="••••••••••••"
+                                    type={showPassword ? "text" : "password"}
+                                    rules={{ required: "Kata sandi wajib diisi" }}
+                                />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}

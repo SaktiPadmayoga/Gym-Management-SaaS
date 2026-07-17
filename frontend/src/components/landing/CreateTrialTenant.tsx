@@ -136,12 +136,12 @@ export default function CreateTrialTenant() {
                                 {/* DATA PEMILIK */}
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <TextInput name="owner_name" label="Nama Lengkap"  />
-                                        <TextInput name="phone" label="No. WhatsApp"  />
+                                        <TextInput name="owner_name" label="Nama Lengkap" rules={{ required: "Nama lengkap pemilik wajib diisi" }} />
+                                        <TextInput name="phone" label="No. WhatsApp" rules={{ required: "Nomor WhatsApp wajib diisi" }} />
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <TextInput name="owner_email" label="Email Aktif" type="email"  />
-                                        <TextInput name="password" label="Buat Password" type="password" />
+                                        <TextInput name="owner_email" label="Email Aktif" type="email" rules={{ required: "Email aktif wajib diisi" }} />
+                                        <TextInput name="password" label="Buat Password" type="password" rules={{ required: "Password wajib diisi", minLength: { value: 8, message: "Password minimal 8 karakter" } }} />
                                     </div>
                                 </div>
 
@@ -150,10 +150,10 @@ export default function CreateTrialTenant() {
                                 {/* DATA GYM */}
                                 <div className="space-y-4">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <TextInput name="tenant_name" label="Nama Gym" placeholder="GYMFIT Studio"  />
+                                        <TextInput name="tenant_name" label="Nama Gym" placeholder="GYMFIT Studio" rules={{ required: "Nama gym wajib diisi" }} />
                                         
                                         <div>
-                                            <TextInput name="slug" label="Subdomain Sistem" placeholder="gymfit" />
+                                            <TextInput name="slug" label="Subdomain Sistem" placeholder="gymfit" rules={{ required: "Subdomain wajib diisi", pattern: { value: /^[a-z0-9-]+$/, message: "Subdomain hanya boleh berisi huruf kecil, angka, dan strip" } }} />
                                             <p className="text-[10px] font-bold text-slate-400 mt-1.5 ml-1">
                                                 <span className="text-teal-500 lowercase">{form.watch("slug") || "nama-gym"}</span>.gymfit.id
                                             </p>
@@ -161,7 +161,7 @@ export default function CreateTrialTenant() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <SearchableDropdown name="timezone" label="Zona Waktu" options={timezoneOptions} />
-                                        <TextInput name="city" label="Kota" />
+                                        <TextInput name="city" label="Kota" rules={{ required: "Kota wajib diisi" }} />
                                     </div>
                                 </div>
 

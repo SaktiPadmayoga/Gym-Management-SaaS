@@ -131,8 +131,9 @@ export default function CreateMembershipPlan() {
             await createMutation.mutateAsync(payload);
             toast.success("Paket keanggotaan berhasil dibuat");
             router.push("/membership-plans?success=true");
-        } catch (err) {
-            toast.error("Gagal membuat paket keanggotaan");
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || "Gagal membuat paket keanggotaan";
+            toast.error(message);
             console.error(err);
         }
     };
@@ -173,7 +174,12 @@ export default function CreateMembershipPlan() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <TextInput name="name" label="Nama Paket" placeholder="Masukkan nama paket" />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Paket"
+                                    placeholder="Masukkan nama paket"
+                                    rules={{ required: "Nama paket wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-4">
                                 <TextInput name="category" label="Kategori" placeholder="misal: Basic, Premium, VIP" />
@@ -186,13 +192,32 @@ export default function CreateMembershipPlan() {
                         {/* PRICE & DURATION */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Harga (Rp)" />
+                                <NumberInput
+                                    name="price"
+                                    label="Harga (Rp)"
+                                    rules={{
+                                        required: "Harga wajib diisi",
+                                        min: { value: 0, message: "Harga tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="duration" label="Durasi" />
+                                <NumberInput
+                                    name="duration"
+                                    label="Durasi"
+                                    rules={{
+                                        required: "Durasi wajib diisi",
+                                        min: { value: 1, message: "Durasi minimal 1" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="duration_unit" label="Satuan Durasi" options={durationUnitOptions} />
+                                <SearchableDropdown
+                                    name="duration_unit"
+                                    label="Satuan Durasi"
+                                    options={durationUnitOptions}
+                                    rules={{ required: "Satuan durasi wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-4">
                                 <NumberInput name="loyalty_points_reward" label="Hadiah Poin Loyalitas" />

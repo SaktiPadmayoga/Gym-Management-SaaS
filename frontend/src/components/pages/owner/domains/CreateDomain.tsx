@@ -67,9 +67,14 @@ export default function CreateDomain() {
             await createMutation.mutateAsync(payload);
             toast.success("Domain berhasil dibuat");
             router.push("/owner/domains?success=true");
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            toast.error("Gagal membuat domain");
+            const message =
+                error?.response?.data?.error ||
+                error?.response?.data?.message ||
+                error?.message ||
+                "Gagal membuat domain";
+            toast.error(message);
         }
     };
 
@@ -112,7 +117,12 @@ export default function CreateDomain() {
 
                         <div className="grid grid-cols-12 gap-4">
                             <div className="col-span-8">
-                                <TextInput name="domain" label="Nama Domain" placeholder="contoh: utama.gymbali.localhost" />
+                                <TextInput
+                                    name="domain"
+                                    label="Nama Domain"
+                                    placeholder="contoh: utama.gymbali.localhost"
+                                    rules={{ required: "Nama domain wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-4">
                                 <SearchableDropdown name="type" label="Tipe" options={typeOptions} />

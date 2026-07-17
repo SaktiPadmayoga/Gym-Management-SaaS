@@ -44,7 +44,10 @@ export default function TrainerMemberProgressPage() {
                 setEditingId(null);
                 refetch();
             },
-            onError: () => toast.error("Gagal menyimpan catatan"),
+            onError: (err: any) => {
+                const message = err?.response?.data?.message || err?.message || "Gagal menyimpan catatan";
+                toast.error(message);
+            },
         });
     };
 

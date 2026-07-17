@@ -173,6 +173,10 @@ export default function MemberResetForm() {
                                     label="Kata Sandi Baru"
                                     placeholder="Min. 8 karakter"
                                     type={showPassword ? "text" : "password"}
+                                    rules={{
+                                        required: "Kata sandi baru wajib diisi",
+                                        minLength: { value: 8, message: "Kata sandi baru minimal 8 karakter" }
+                                    }}
                                 />
                                 <button
                                     type="button"
@@ -190,6 +194,7 @@ export default function MemberResetForm() {
                                     label="Konfirmasi Kata Sandi"
                                     placeholder="Ulangi kata sandi baru"
                                     type={showConfirmPassword ? "text" : "password"}
+                                    rules={{ required: "Konfirmasi kata sandi wajib diisi" }}
                                 />
                                 <button
                                     type="button"

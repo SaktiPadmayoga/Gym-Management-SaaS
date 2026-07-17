@@ -405,8 +405,9 @@ Route::middleware(['auth:staff', 'check_tenant_access', 'check_branch_access'])-
     Route::get('/subscription/current', [SubscriptionTenantController::class, 'current']);
     Route::get('/subscription/history', [SubscriptionTenantController::class, 'history']);
 
-    // Gym Settings — Logo Upload
+    // Gym Settings — Logo Upload & settings update
     Route::post('/tenant/logo', [TenantController::class, 'uploadLogo']);
+    Route::put('/tenant/settings', [TenantController::class, 'updateCurrentSettings']);
 
     // Misc
     Route::post('/upgrade', [PlanController::class, 'upgrade']);

@@ -314,15 +314,40 @@ function RegisterTenantContent() {
 
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                     <div className="sm:col-span-2">
-                                                        <TextInput name="owner_name" label="Nama Lengkap" placeholder="Cth: Budi Santoso" />
+                                                        <TextInput
+                                                            name="owner_name"
+                                                            label="Nama Lengkap"
+                                                            placeholder="Cth: Budi Santoso"
+                                                            rules={{ required: "Nama lengkap pemilik wajib diisi" }}
+                                                        />
                                                     </div>
 
                                                     <div className="sm:col-span-2">
-                                                        <TextInput name="phone" label="No. WhatsApp Aktif" placeholder="08123456789" />
+                                                        <TextInput
+                                                            name="phone"
+                                                            label="No. WhatsApp Aktif"
+                                                            placeholder="08123456789"
+                                                            rules={{ required: "Nomor WhatsApp wajib diisi" }}
+                                                        />
                                                     </div>
 
-                                                    <TextInput name="owner_email" label="Email Login" type="email" placeholder="budi@email.com" />
-                                                    <TextInput name="password" label="Buat Password" type="password" placeholder="Minimal 8 karakter" />
+                                                    <TextInput
+                                                        name="owner_email"
+                                                        label="Email Login"
+                                                        type="email"
+                                                        placeholder="budi@email.com"
+                                                        rules={{ required: "Email login wajib diisi" }}
+                                                    />
+                                                    <TextInput
+                                                        name="password"
+                                                        label="Buat Password"
+                                                        type="password"
+                                                        placeholder="Minimal 8 karakter"
+                                                        rules={{
+                                                            required: "Kata sandi wajib diisi",
+                                                            minLength: { value: 8, message: "Password minimal 8 karakter" }
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
 
@@ -345,10 +370,26 @@ function RegisterTenantContent() {
                                                 <h3 className="text-xs font-black uppercase tracking-widest text-teal-500 border-b border-slate-100 pb-2">Detail Cabang Utama</h3>
 
                                                 <div className="grid grid-cols-1 gap-3">
-                                                    <TextInput name="name" label="Nama Gym / Studio" placeholder="Cth: GYMFIT Gym & Studio" />
+                                                    <TextInput
+                                                        name="name"
+                                                        label="Nama Gym / Studio"
+                                                        placeholder="Cth: GYMFIT Gym & Studio"
+                                                        rules={{ required: "Nama gym wajib diisi" }}
+                                                    />
 
                                                     <div>
-                                                        <TextInput name="slug" label="URL Sistem Bisnis Anda" placeholder="gymfit-gym" />
+                                                        <TextInput
+                                                            name="slug"
+                                                            label="URL Sistem Bisnis Anda"
+                                                            placeholder="gymfit-gym"
+                                                            rules={{
+                                                                required: "Subdomain wajib diisi",
+                                                                pattern: {
+                                                                    value: /^[a-z0-9-]+$/,
+                                                                    message: "Subdomain hanya boleh berisi huruf kecil, angka, dan strip"
+                                                                }
+                                                            }}
+                                                        />
                                                         <p className="text-[10px] font-bold text-slate-400 mt-1.5 ml-1">
                                                             Akses sistem: <span className="text-teal-500 lowercase">{form.watch("slug") || "nama-gym"}</span>.gymfit.id
                                                         </p>
@@ -356,7 +397,12 @@ function RegisterTenantContent() {
 
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                                         <SearchableDropdown name="timezone" label="Zona Waktu" options={timezoneOptions} />
-                                                        <TextInput name="city" label="Kota Utama (Pusat)" placeholder="Cth: Gianyar" />
+                                                        <TextInput
+                                                            name="city"
+                                                            label="Kota Utama (Pusat)"
+                                                            placeholder="Cth: Gianyar"
+                                                            rules={{ required: "Kota wajib diisi" }}
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>

@@ -163,9 +163,8 @@ export default function MemberDetail() {
     /* =========================
      * SAVE PROFILE
      * ========================= */
-    const handleSave = async () => {
+    const handleSave = async (formData: MemberFormData) => {
         try {
-            const formData = form.getValues();
             const payload = new FormData();
             payload.append("name", formData.name);
             if (formData.email) payload.append("email", formData.email);
@@ -183,18 +182,18 @@ export default function MemberDetail() {
             toast.success("Profil anggota berhasil diperbarui");
             setIsEditMode(false);
             setAvatarFile(null);
-        } catch {
-            toast.error("Gagal memperbarui profil anggota");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || error?.message || "Gagal memperbarui profil anggota";
+            toast.error(message);
         }
     };
 
     /* =========================
      * SAVE MEMBERSHIP
      * ========================= */
-    const handleSaveMembership = async () => {
+    const handleSaveMembership = async (formData: MembershipFormData) => {
         if (!currentMembership) return;
         try {
-            const formData = membershipForm.getValues();
             const payload: UpdateMembershipRequest = {
                 status: formData.status as "active" | "expired" | "frozen" | "cancelled",
                 end_date: formData.end_date || undefined,
@@ -209,8 +208,9 @@ export default function MemberDetail() {
             });
             toast.success("Keanggotaan diperbarui");
             setIsMembershipEdit(false);
-        } catch {
-            toast.error("Gagal memperbarui keanggotaan");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || error?.message || "Gagal memperbarui keanggotaan";
+            toast.error(message);
         }
     };
 
@@ -250,7 +250,7 @@ export default function MemberDetail() {
         <>
         <FormProvider {...form}>
             <Toaster position="top-center" />
-            <form>
+            <form onSubmit={form.handleSubmit(handleSave)}>
                 <div className="font-figtree rounded-xl bg-white border border-gray-500/20 px-6 py-4">
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
@@ -303,7 +303,7 @@ export default function MemberDetail() {
                                 <CustomButton type="button" className="border px-4 py-2.5" onClick={() => { setIsEditMode(false); setAvatarFile(null); setPreviewUrl(member?.avatar_url ?? null); }}>
                                     Batal
                                 </CustomButton>
-                                <CustomButton type="button" className="bg-aksen-secondary text-white px-5 py-2.5" onClick={handleSave} disabled={updateMutation.isPending}>
+                                <CustomButton type="submit" className="bg-aksen-secondary text-white px-5 py-2.5" disabled={updateMutation.isPending}>
                                     {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                 </CustomButton>
                             </div>
@@ -315,7 +315,7 @@ export default function MemberDetail() {
                     <div className="flex flex-col gap-6 mt-6">
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-4">
-                            <div className="col-span-12 md:col-span-6"><TextInput name="name" label="Nama Lengkap" disabled={!isEditMode} /></div>
+                            <div className="col-span-12 md:col-span-6"><TextInput name="name" label="Nama Lengkap" disabled={!isEditMode} rules={{ required: "Nama lengkap wajib diisi" }} /></div>
                             <div className="col-span-12 md:col-span-6"><TextInput name="email" label="Email" disabled={!isEditMode} /></div>
                         </div>
                         <div className="grid grid-cols-12 gap-4">
@@ -394,8 +394,8 @@ export default function MemberDetail() {
                                                 <CustomButton type="button" className="border bg-white text-zinc-700 px-3 py-2 text-sm shadow-sm" onClick={() => setIsMembershipEdit(true)}>Ubah Detail Paket</CustomButton>
                                             ) : (
                                                 <>
-                                                    <CustomButton type="button" className="border bg-white px-3 py-2 text-sm" onClick={() => setIsMembershipEdit(false)}>Batal</CustomButton>
-                                                    <CustomButton type="button" className="bg-zinc-800 text-white px-4 py-2 text-sm" onClick={handleSaveMembership} disabled={membershipMutation.isPending}>
+                                                    <CustomButton type="button" className="border bg-white px-3 py-2 text-sm" onClick={() => { setIsMembershipEdit(false); membershipForm.reset(); }}>Batal</CustomButton>
+                                                    <CustomButton type="button" className="bg-zinc-800 text-white px-4 py-2 text-sm" onClick={membershipForm.handleSubmit(handleSaveMembership)} disabled={membershipMutation.isPending}>
                                                         {membershipMutation.isPending ? "Menyimpan..." : "Simpan Paket"}
                                                     </CustomButton>
                                                 </>
@@ -405,9 +405,32 @@ export default function MemberDetail() {
                                     </div>
 
                                     <div className="grid grid-cols-12 gap-4 pt-2">
-                                        <div className="col-span-12 md:col-span-4"><SearchableDropdown name="status" label="Status Paket" options={membershipStatusOptions} disabled={!isMembershipEdit} /></div>
-                                        <div className="col-span-12 md:col-span-4"><TextInput name="end_date" label="Tanggal Berakhir" type="date" disabled={!isMembershipEdit} /></div>
-                                        <div className="col-span-12 md:col-span-4"><TextInput name="frozen_until" label="Dibekukan Hingga" type="date" disabled={!isMembershipEdit} /></div>
+                                        <div className="col-span-12 md:col-span-4">
+                                            <SearchableDropdown
+                                                name="status"
+                                                label="Status Paket"
+                                                options={membershipStatusOptions}
+                                                disabled={!isMembershipEdit}
+                                                rules={{ required: "Status paket wajib diisi" }}
+                                            />
+                                        </div>
+                                        <div className="col-span-12 md:col-span-4">
+                                            <TextInput
+                                                name="end_date"
+                                                label="Tanggal Berakhir"
+                                                type="date"
+                                                disabled={!isMembershipEdit}
+                                                rules={{ required: "Tanggal berakhir wajib diisi" }}
+                                            />
+                                        </div>
+                                        <div className="col-span-12 md:col-span-4">
+                                            <TextInput
+                                                name="frozen_until"
+                                                label="Dibekukan Hingga"
+                                                type="date"
+                                                disabled={!isMembershipEdit}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="grid grid-cols-12 gap-4">
                                         <div className="col-span-12"><TextInput name="notes" label="Catatan (opsional)" disabled={!isMembershipEdit} /></div>

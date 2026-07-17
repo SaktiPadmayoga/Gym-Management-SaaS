@@ -115,9 +115,8 @@ export default function ProductDetail() {
     /* =========================
      * SAVE
      * ========================= */
-    const handleSave = async () => {
+    const handleSave = async (formData: ProductFormData) => {
         try {
-            const formData = form.getValues();
             const payload: ProductUpdateRequest = {
                 name: formData.name,
                 code: formData.code || undefined,
@@ -135,8 +134,9 @@ export default function ProductDetail() {
             setIsEditMode(false);
             setImageFile(undefined);
             router.push("/products?updated=true");
-        } catch {
-            toast.error("Gagal memperbarui produk");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || error?.message || "Gagal memperbarui produk";
+            toast.error(message);
         }
     };
 
@@ -191,7 +191,7 @@ export default function ProductDetail() {
     return (
         <FormProvider {...form}>
             <Toaster position="top-center" />
-            <form>
+            <form onSubmit={form.handleSubmit(handleSave)}>
                 <div className="font-figtree text-zinc-900 rounded-xl bg-white border border-gray-500/20 px-6 py-4">
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
@@ -207,16 +207,16 @@ export default function ProductDetail() {
                     {/* Header */}
                     <div className="mb-6 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-gray-800">
-                            <Link href="/products">
-                                <Icon name="back" className="h-7 w-7 cursor-pointer" />
-                            </Link>
+                            <button type="button" onClick={() => router.push("/products")}>
+                                <Icon name="back" className="h-7 w-7" />
+                            </button>
                             <h1 className="text-2xl font-semibold">Detail Produk</h1>
                         </div>
 
                         <div className="flex items-center gap-2">
                             <CustomButton
                                 type="button"
-                                className={`border px-3 py-2 text-sm ${product?.is_active ? "text-white border-red-500 bg-red-500" : "text-green-600 border-green-200"}`}
+                                className={`border px-3 py-2 text-sm ${product?.is_active ? "text-white bg-red-500 border-red-500" : "text-green-600 border-green-200"}`}
                                 onClick={() =>
                                     toggleMutation.mutate(id, {
                                         onSuccess: () => toast.success(`Produk berhasil ${product?.is_active ? "dinonaktifkan" : "diaktifkan"}`),
@@ -237,7 +237,7 @@ export default function ProductDetail() {
                                     <CustomButton type="button" className="border py-2.5 px-4" onClick={handleCancel}>
                                         Batal
                                     </CustomButton>
-                                    <CustomButton type="button" className="bg-aksen-secondary text-white py-2.5 px-4" onClick={handleSave} disabled={updateMutation.isPending}>
+                                    <CustomButton type="submit" className="bg-aksen-secondary text-white py-2.5 px-4" disabled={updateMutation.isPending}>
                                         {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                     </CustomButton>
                                 </div>
@@ -251,7 +251,7 @@ export default function ProductDetail() {
                         {/* NAME, CATEGORY, code */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Nama Produk" disabled={!isEditMode} />
+                                <TextInput name="name" label="Nama Produk" disabled={!isEditMode} rules={{ required: "Nama produk wajib diisi" }} />
                             </div>
                             <div className="col-span-3">
                                 <TextInput name="category" label="Kategori" disabled={!isEditMode} />
@@ -267,13 +267,13 @@ export default function ProductDetail() {
                                 <NumberInput name="cost_price" label="Harga Beli (Rp)" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="selling_price" label="Harga Jual (Rp)" disabled={!isEditMode} />
+                                <NumberInput name="selling_price" label="Harga Jual (Rp)" disabled={!isEditMode} rules={{ required: "Harga jual wajib diisi", min: { value: 0, message: "Harga jual tidak boleh negatif" } }} />
                             </div>
                             <div className="col-span-3">
                                 <NumberInput name="min_stock" label="Peringatan Stok Minim" disabled={!isEditMode} />
                             </div>
                             <div className="col-span-3">
-                                <SearchableDropdown name="unit" label="Satuan" options={unitOptions} disabled={!isEditMode} />
+                                <SearchableDropdown name="unit" label="Satuan" options={unitOptions} disabled={!isEditMode} rules={{ required: "Satuan wajib diisi" }} />
                             </div>
                         </div>
 

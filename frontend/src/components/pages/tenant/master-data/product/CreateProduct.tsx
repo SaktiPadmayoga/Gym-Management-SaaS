@@ -93,8 +93,9 @@ export default function CreateProduct() {
             await createMutation.mutateAsync({ payload, imageFile });
             toast.success("Produk berhasil dibuat");
             router.push("/products?success=true");
-        } catch (err) {
-            toast.error("Gagal membuat produk");
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || "Gagal membuat produk";
+            toast.error(message);
             console.error(err);
         }
     };
@@ -146,7 +147,12 @@ export default function CreateProduct() {
                         {/* NAME & CATEGORY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Nama Produk" placeholder="Masukkan nama produk" />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Produk"
+                                    placeholder="Masukkan nama produk"
+                                    rules={{ required: "Nama produk wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-3">
                                 <TextInput name="category" label="Kategori" placeholder="Misal: Suplemen" />
@@ -162,7 +168,14 @@ export default function CreateProduct() {
                                 <NumberInput name="cost_price"    label="Harga Beli (Rp)"    />
                             </div>
                             <div className="col-span-3">
-                                <NumberInput name="selling_price" label="Harga Jual (Rp)" />
+                                <NumberInput
+                                    name="selling_price"
+                                    label="Harga Jual (Rp)"
+                                    rules={{
+                                        required: "Harga jual wajib diisi",
+                                        min: { value: 0, message: "Harga jual tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-2">
                                 <NumberInput name="stock"         label="Stok Awal"      />
@@ -171,7 +184,12 @@ export default function CreateProduct() {
                                 <NumberInput name="min_stock"     label="Peringatan Stok Minim"    />
                             </div>
                             <div className="col-span-2">
-                                <SearchableDropdown name="unit" label="Satuan" options={unitOptions} />
+                                <SearchableDropdown
+                                    name="unit"
+                                    label="Satuan"
+                                    options={unitOptions}
+                                    rules={{ required: "Satuan wajib diisi" }}
+                                />
                             </div>
                         </div>
 

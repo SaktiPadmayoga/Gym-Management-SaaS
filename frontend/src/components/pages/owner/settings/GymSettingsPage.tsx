@@ -14,6 +14,8 @@ import {
     IconMail,
     IconUser,
     IconLink,
+    IconPencil,
+    IconX,
 } from "@tabler/icons-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -50,6 +52,11 @@ export default function GymSettingsPage() {
     const [isDragging, setIsDragging] = useState(false);
     const [uploadSuccess, setUploadSuccess] = useState(false);
 
+    // Edit Gym Name States
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [editName, setEditName] = useState("");
+    const [savingName, setSavingName] = useState(false);
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +72,7 @@ export default function GymSettingsPage() {
                     owner_email: data.owner_email,
                     logo_url: data.logo_url ?? null,
                 });
+                setEditName(data.name);
             } catch {
                 toast.error("Gagal memuat data gym");
             } finally {
@@ -143,6 +151,25 @@ export default function GymSettingsPage() {
         }
     };
 
+    // ── Save Gym Name
+    const handleSaveName = async () => {
+        if (!editName.trim()) return;
+        setSavingName(true);
+        try {
+            await tenantAPI.updateSettings({ name: editName.trim() });
+            setTenant((prev) => prev ? { ...prev, name: editName.trim() } : prev);
+            setIsEditingName(false);
+            // Invalidate cache agar TenantHeader langsung update nama gym
+            queryClient.invalidateQueries({ queryKey: TENANT_HEADER_KEY });
+            toast.success("Nama gym berhasil diperbarui!");
+        } catch (err: any) {
+            const msg = err?.response?.data?.message ?? "Gagal memperbarui nama gym. Coba lagi.";
+            toast.error(msg);
+        } finally {
+            setSavingName(false);
+        }
+    };
+
     // ── Cancel preview
     const handleCancel = () => {
         setSelectedFile(null);
@@ -188,19 +215,63 @@ export default function GymSettingsPage() {
                 <hr className="border-zinc-200 mb-6" />
 
                 <div className="grid grid-cols-12 gap-8">
-                    {/* ── KIRI: Informasi Gym (Read-only) */}
+                    {/* ── KIRI: Informasi Gym */}
                     <div className="col-span-12 md:col-span-4 space-y-4">
                         <h2 className="text-lg font-semibold text-zinc-800">Informasi Gym</h2>
                         
                         <div className="bg-zinc-50 rounded-xl border border-zinc-200/60 p-5 space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-aksen-secondary/10 flex items-center justify-center flex-shrink-0 text-aksen-secondary">
-                                    <IconBuildingStore size={20} />
+                            <div className="flex items-start justify-between gap-3 border-b border-zinc-200/60 pb-3">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="w-10 h-10 rounded-lg bg-aksen-secondary/10 flex items-center justify-center flex-shrink-0 text-aksen-secondary">
+                                        <IconBuildingStore size={20} />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-xs text-zinc-400 font-medium">Nama Gym</p>
+                                        {isEditingName ? (
+                                            <input
+                                                type="text"
+                                                value={editName}
+                                                onChange={(e) => setEditName(e.target.value)}
+                                                className="w-full mt-1 px-2 py-1 text-xs border border-zinc-300 rounded focus:outline-none focus:border-aksen-secondary"
+                                                disabled={savingName}
+                                                autoFocus
+                                            />
+                                        ) : (
+                                            <p className="font-bold text-zinc-800 truncate text-sm">{tenant?.name}</p>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="text-xs text-zinc-400 font-medium">Nama Gym</p>
-                                    <p className="font-bold text-zinc-800 truncate text-sm">{tenant?.name}</p>
-                                </div>
+                                {!isEditingName ? (
+                                    <button
+                                        onClick={() => {
+                                            setEditName(tenant?.name ?? "");
+                                            setIsEditingName(true);
+                                        }}
+                                        className="text-zinc-400 hover:text-aksen-secondary transition-colors p-1.5 rounded-lg hover:bg-zinc-100 flex-shrink-0"
+                                        title="Ubah Nama Gym"
+                                    >
+                                        <IconPencil size={16} />
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-1 mt-3 flex-shrink-0">
+                                        <button
+                                            onClick={handleSaveName}
+                                            disabled={savingName || !editName.trim()}
+                                            className="text-green-600 hover:text-green-700 transition-colors p-1 rounded hover:bg-green-50 disabled:opacity-50"
+                                            title="Simpan"
+                                        >
+                                            <IconCheck size={16} />
+                                        </button>
+                                        <button
+                                            onClick={() => setIsEditingName(false)}
+                                            disabled={savingName}
+                                            className="text-red-500 hover:text-red-600 transition-colors p-1 rounded hover:bg-red-50 disabled:opacity-50"
+                                            title="Batal"
+                                        >
+                                            <IconX size={16} />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="flex items-center gap-3">

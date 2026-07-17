@@ -60,9 +60,21 @@ function LoginForm({ primaryColor }: LoginFormProps) {
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-6">
-                <TextInput name="email" label="Alamat Email" placeholder="member@email.com" type="email" />
+                <TextInput
+                    name="email"
+                    label="Alamat Email"
+                    placeholder="member@email.com"
+                    type="email"
+                    rules={{ required: "Alamat email wajib diisi" }}
+                />
 
-                <TextInput name="password" label="Kata Sandi" placeholder="••••••••••••" type="password" />
+                <TextInput
+                    name="password"
+                    label="Kata Sandi"
+                    placeholder="••••••••••••"
+                    type="password"
+                    rules={{ required: "Kata sandi wajib diisi" }}
+                />
 
                 <div className="flex items-center justify-between mt-[-8px]">
                     <label className="flex items-center gap-2 cursor-pointer">

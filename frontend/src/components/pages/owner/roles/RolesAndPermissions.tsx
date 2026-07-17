@@ -270,8 +270,13 @@ function RoleForm({ mode, role, onBack }: RoleFormProps) {
             }
 
             onBack();
-        } catch {
-            toast.error(mode === "create" ? "Gagal membuat role" : "Gagal memperbarui role");
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.error ||
+                error?.response?.data?.message ||
+                error?.message ||
+                (mode === "create" ? "Gagal membuat role" : "Gagal memperbarui role");
+            toast.error(message);
         }
     };
 

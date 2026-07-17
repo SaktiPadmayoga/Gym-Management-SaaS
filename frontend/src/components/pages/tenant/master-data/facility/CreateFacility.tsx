@@ -103,8 +103,9 @@ export default function CreateFacility() {
             await createMutation.mutateAsync(payload);
             toast.success("Fasilitas berhasil dibuat");
             router.push("/facilities?success=true");
-        } catch (err) {
-            toast.error("Gagal membuat fasilitas");
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || "Gagal membuat fasilitas";
+            toast.error(message);
             console.error(err);
         }
     };
@@ -145,7 +146,12 @@ export default function CreateFacility() {
                         {/* NAME */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-8">
-                                <TextInput name="name" label="Nama Fasilitas" placeholder="misal: Kolam Renang, Sauna" />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Fasilitas"
+                                    placeholder="misal: Kolam Renang, Sauna"
+                                    rules={{ required: "Nama fasilitas wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-4">
                                 <TextInput name="category" label="Kategori (opsional)" placeholder="misal: Akuatik, Kebugaran" />
@@ -165,13 +171,34 @@ export default function CreateFacility() {
                         {/* PRICE, SESSION, CAPACITY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Harga per Sesi (Rp)" />
+                                <NumberInput
+                                    name="price"
+                                    label="Harga per Sesi (Rp)"
+                                    rules={{
+                                        required: "Harga wajib diisi",
+                                        min: { value: 0, message: "Harga tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="minutes_per_session" label="Durasi per Sesi (menit)" />
+                                <NumberInput
+                                    name="minutes_per_session"
+                                    label="Durasi per Sesi (menit)"
+                                    rules={{
+                                        required: "Durasi wajib diisi",
+                                        min: { value: 1, message: "Durasi minimal 1 menit" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="capacity" label="Kapasitas Maksimal (pax)" />
+                                <NumberInput
+                                    name="capacity"
+                                    label="Kapasitas Maksimal (pax)"
+                                    rules={{
+                                        required: "Kapasitas wajib diisi",
+                                        min: { value: 1, message: "Kapasitas minimal 1 pax" }
+                                    }}
+                                />
                             </div>
                         </div>
 

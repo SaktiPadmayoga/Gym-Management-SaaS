@@ -102,8 +102,9 @@ export default function CreateClassPlan() {
             await createMutation.mutateAsync(payload);
             toast.success("Paket kelas berhasil dibuat");
             router.push("/class-plans?success=true");
-        } catch (err) {
-            toast.error("Gagal membuat paket kelas");
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || "Gagal membuat paket kelas";
+            toast.error(message);
             console.error(err);
         }
     };
@@ -144,7 +145,12 @@ export default function CreateClassPlan() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-6">
-                                <TextInput name="name" label="Nama Kelas" placeholder="misal: Yoga Pagi" />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Kelas"
+                                    placeholder="misal: Yoga Pagi"
+                                    rules={{ required: "Nama kelas wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-3">
                                 <TextInput name="category" label="Kategori" placeholder="misal: Yoga, HIIT, Zumba" />
@@ -157,13 +163,34 @@ export default function CreateClassPlan() {
                         {/* PRICE, DURATION, CAPACITY */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Harga (Rp)" />
+                                <NumberInput
+                                    name="price"
+                                    label="Harga (Rp)"
+                                    rules={{
+                                        required: "Harga wajib diisi",
+                                        min: { value: 0, message: "Harga tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="minutes_per_session" label="Durasi (menit)" />
+                                <NumberInput
+                                    name="minutes_per_session"
+                                    label="Durasi (menit)"
+                                    rules={{
+                                        required: "Durasi wajib diisi",
+                                        min: { value: 1, message: "Durasi minimal 1 menit" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="max_capacity" label="Kapasitas Maksimal (pax)" />
+                                <NumberInput
+                                    name="max_capacity"
+                                    label="Kapasitas Maksimal (pax)"
+                                    rules={{
+                                        required: "Kapasitas wajib diisi",
+                                        min: { value: 1, message: "Kapasitas minimal 1 pax" }
+                                    }}
+                                />
                             </div>
                         </div>
 

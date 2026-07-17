@@ -152,7 +152,13 @@ export default function MemberProfilePage() {
                             <form onSubmit={form.handleSubmit(onSubmitPassword)} className="space-y-5">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="relative">
-                                        <TextInput name="current_password" label="Kata Sandi Saat Ini" type={showPassword.current ? "text" : "password"} placeholder="••••••••••••" />
+                                        <TextInput
+                                            name="current_password"
+                                            label="Kata Sandi Saat Ini"
+                                            type={showPassword.current ? "text" : "password"}
+                                            placeholder="••••••••••••"
+                                            rules={{ required: "Kata sandi saat ini wajib diisi" }}
+                                        />
                                         <button type="button" onClick={() => toggleShow("current")} className="absolute right-3 top-[32px] p-1.5 text-zinc-400 hover:text-zinc-700 bg-white">
                                             {showPassword.current ? <EyeOff className="mt-1.5 w-4 h-4" /> : <Eye className="mt-1.5 w-4 h-4" />}
                                         </button>
@@ -161,14 +167,29 @@ export default function MemberProfilePage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="relative">
-                                        <TextInput name="new_password" label="Kata Sandi Baru" type={showPassword.new ? "text" : "password"} placeholder="••••••••••••" />
+                                        <TextInput
+                                            name="new_password"
+                                            label="Kata Sandi Baru"
+                                            type={showPassword.new ? "text" : "password"}
+                                            placeholder="••••••••••••"
+                                            rules={{
+                                                required: "Kata sandi baru wajib diisi",
+                                                minLength: { value: 8, message: "Kata sandi baru minimal 8 karakter" }
+                                            }}
+                                        />
                                         <button type="button" onClick={() => toggleShow("new")} className="absolute right-3 top-[32px] p-1.5 text-zinc-400 hover:text-zinc-700 bg-white">
                                             {showPassword.new ? <EyeOff className="mt-1.5 w-4 h-4" /> : <Eye className="mt-1.5 w-4 h-4" />}
                                         </button>
                                     </div>
 
                                     <div className="relative">
-                                        <TextInput name="new_password_confirmation" label="Konfirmasi Sandi Baru" type={showPassword.confirm ? "text" : "password"} placeholder="••••••••••••" />
+                                        <TextInput
+                                            name="new_password_confirmation"
+                                            label="Konfirmasi Sandi Baru"
+                                            type={showPassword.confirm ? "text" : "password"}
+                                            placeholder="••••••••••••"
+                                            rules={{ required: "Konfirmasi sandi baru wajib diisi" }}
+                                        />
                                         <button type="button" onClick={() => toggleShow("confirm")} className="absolute right-3 top-[32px] p-1.5 text-zinc-400 hover:text-zinc-700 bg-white">
                                             {showPassword.confirm ? <EyeOff className="mt-1.5 w-4 h-4" /> : <Eye className="mt-1.5 w-4 h-4" />}
                                         </button>

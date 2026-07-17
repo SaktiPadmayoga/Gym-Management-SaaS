@@ -102,8 +102,9 @@ export default function CreateMember() {
 
             // Redirect ke halaman detail agar staff bisa melanjutkan proses Assign Membership (Langkah 2)
             router.push(`/members/${newMember.id}?success=true`);
-        } catch (err) {
-            toast.error("Gagal membuat anggota");
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || "Gagal membuat anggota";
+            toast.error(message);
             console.error(err);
         }
     };
@@ -173,7 +174,12 @@ export default function CreateMember() {
                         <div className="flex-1 flex flex-col gap-6">
                             <div className="grid grid-cols-12 gap-4">
                                 <div className="col-span-12 md:col-span-6">
-                                    <TextInput name="name" label="Nama Lengkap *" placeholder="misal: John Doe" />
+                                    <TextInput
+                                        name="name"
+                                        label="Nama Lengkap *"
+                                        placeholder="misal: John Doe"
+                                        rules={{ required: "Nama lengkap wajib diisi" }}
+                                    />
                                 </div>
                                 <div className="col-span-12 md:col-span-6">
                                     <TextInput name="email" label="Email (opsional)" placeholder="misal: member@email.com" />

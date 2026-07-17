@@ -213,9 +213,8 @@ export default function MembershipPlanDetail() {
     /* =========================
      * SAVE
      * ========================= */
-    const handleSave = async () => {
+    const handleSave = async (formData: MembershipPlanFormData) => {
         try {
-            const formData = form.getValues();
             const payload: MembershipPlanUpdateRequest = {
                 name: formData.name,
                 category: formData.category,
@@ -242,8 +241,9 @@ export default function MembershipPlanDetail() {
             toast.success("Paket keanggotaan berhasil diperbarui");
             setIsEditMode(false);
             router.push("/membership-plans?updated=true");
-        } catch {
-            toast.error("Gagal memperbarui paket keanggotaan");
+        } catch (error: any) {
+            const message = error?.response?.data?.message || error?.message || "Gagal memperbarui paket keanggotaan";
+            toast.error(message);
         }
     };
 
@@ -277,7 +277,7 @@ export default function MembershipPlanDetail() {
     return (
         <FormProvider {...form}>
             <Toaster position="top-center" />
-            <form>
+            <form onSubmit={form.handleSubmit(handleSave)}>
                 <div className="font-figtree rounded-xl bg-white border px-6 py-4">
                     {/* Breadcrumb */}
                     <div className="breadcrumbs text-sm text-zinc-400 mb-4">
@@ -340,7 +340,7 @@ export default function MembershipPlanDetail() {
                                     <CustomButton type="button" className="border py-2.5 px-4" onClick={handleCancel}>
                                         Batal
                                     </CustomButton>
-                                    <CustomButton type="button" className="bg-aksen-secondary text-white py-2.5 px-4" onClick={handleSave} disabled={updateMutation.isPending}>
+                                    <CustomButton type="submit" className="bg-aksen-secondary text-white py-2.5 px-4" disabled={updateMutation.isPending}>
                                         {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
                                     </CustomButton>
                                 </div>
@@ -354,7 +354,12 @@ export default function MembershipPlanDetail() {
                         {/* BASIC INFO */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <TextInput name="name" label="Nama Paket" disabled={!isEditMode} />
+                                <TextInput
+                                    name="name"
+                                    label="Nama Paket"
+                                    disabled={!isEditMode}
+                                    rules={{ required: "Nama paket wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-4">
                                 <TextInput name="category" label="Kategori" disabled={!isEditMode} />
@@ -367,13 +372,35 @@ export default function MembershipPlanDetail() {
                         {/* PRICE & DURATION */}
                         <div className="grid grid-cols-12 gap-3">
                             <div className="col-span-4">
-                                <NumberInput name="price" label="Harga (Rp)" disabled={!isEditMode} />
+                                <NumberInput
+                                    name="price"
+                                    label="Harga (Rp)"
+                                    disabled={!isEditMode}
+                                    rules={{
+                                        required: "Harga wajib diisi",
+                                        min: { value: 0, message: "Harga tidak boleh negatif" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <NumberInput name="duration" label="Durasi" disabled={!isEditMode} />
+                                <NumberInput
+                                    name="duration"
+                                    label="Durasi"
+                                    disabled={!isEditMode}
+                                    rules={{
+                                        required: "Durasi wajib diisi",
+                                        min: { value: 1, message: "Durasi minimal 1" }
+                                    }}
+                                />
                             </div>
                             <div className="col-span-4">
-                                <SearchableDropdown name="duration_unit" label="Satuan Durasi" options={durationUnitOptions} disabled={!isEditMode} />
+                                <SearchableDropdown
+                                    name="duration_unit"
+                                    label="Satuan Durasi"
+                                    options={durationUnitOptions}
+                                    disabled={!isEditMode}
+                                    rules={{ required: "Satuan durasi wajib diisi" }}
+                                />
                             </div>
                             <div className="col-span-4">
                                 <NumberInput name="loyalty_points_reward" label="Hadiah Poin Loyalitas" disabled={!isEditMode} />

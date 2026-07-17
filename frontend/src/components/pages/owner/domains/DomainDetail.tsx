@@ -103,6 +103,7 @@ function RequestDomainModal({
                             name="requested_domain"
                             label="Domain yang Diajukan"
                             placeholder="contoh: gymsaya.com"
+                            rules={{ required: "Domain yang diajukan wajib diisi" }}
                         />
 
                         <p className="text-xs text-zinc-400">
