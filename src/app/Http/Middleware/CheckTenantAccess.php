@@ -17,6 +17,7 @@ class CheckTenantAccess
         'api/subscription/current',
         'api/subscription/history',
         'api/upgrade',
+        'api/payment/token', // ✅ Izinkan owner checkout pembayaran saat trial/subscription expired
         'api/tenant-auth/logout',
         'api/auth/logout',
     ];

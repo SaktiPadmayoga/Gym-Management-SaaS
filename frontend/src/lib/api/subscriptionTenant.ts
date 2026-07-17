@@ -19,7 +19,7 @@ export const subscriptionTenantAPI = {
     },
 
     getPlans: async () => {
-    const res = await apiClient.get("/plans", { params: { per_page: 100 } });
+    const res = await apiClient.get("/public-plans");
     // ✅ filter trial di sini
     return res.data.data.filter((plan: any) => 
         plan.code !== "TRIAL" && plan.code !== "trial"
