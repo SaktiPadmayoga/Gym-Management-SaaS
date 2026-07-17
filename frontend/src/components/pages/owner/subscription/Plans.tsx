@@ -18,6 +18,7 @@ interface Plan {
     };
     limits?: {
         max_branches?: number;
+        max_membership?: number;
     };
     features?: string[];
 }
@@ -87,25 +88,37 @@ function PlanCard({ plan, billing, isCurrentPlan, isProcessing, onSelect }: { pl
 
                 <div className="flex flex-col gap-3 mb-6 flex-1">
                     <ul className="space-y-2.5">
+                        {/* Member Limit */}
                         <li className="flex items-center gap-2.5 text-xs font-bold text-zinc-800">
                             <div className="w-4 h-4 rounded-full bg-zinc-900 flex items-center justify-center flex-shrink-0">
                                 <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            {maxBranches === 0 || !maxBranches ? "Cabang Tanpa Batas" : `${maxBranches} Cabang`}
+                            {plan.limits?.max_membership === 0 || !plan.limits?.max_membership 
+                              ? "Member Tanpa Batas" 
+                              : `Maks. ${plan.limits?.max_membership.toLocaleString("id-ID")} Member`}
                         </li>
-                        {Array.isArray(plan.features) &&
-                            plan.features.map((feature: string, i: number) => (
-                                <li key={i} className="flex items-center gap-2.5 text-xs text-zinc-500 font-medium">
-                                    <div className="w-4 h-4 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 border border-zinc-200 flex-shrink-0">
-                                        <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    {feature}
-                                </li>
-                            ))}
+                        {/* Branch Limit */}
+                        <li className="flex items-center gap-2.5 text-xs font-bold text-zinc-800">
+                            <div className="w-4 h-4 rounded-full bg-zinc-900 flex items-center justify-center flex-shrink-0">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            {maxBranches === 0 || !maxBranches ? "Cabang Tanpa Batas" : `Maks. ${maxBranches.toLocaleString("id-ID")} Cabang`}
+                        </li>
+                        {/* Dummy/Static Features */}
+                        {["Semua fitur", "Custom branding", "Priority support"].map((feature, i) => (
+                            <li key={i} className="flex items-center gap-2.5 text-xs text-zinc-500 font-medium">
+                                <div className="w-4 h-4 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 border border-zinc-200 flex-shrink-0">
+                                    <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                {feature}
+                            </li>
+                        ))}
                     </ul>
                 </div>
 
