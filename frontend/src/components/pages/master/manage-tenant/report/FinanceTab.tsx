@@ -114,63 +114,22 @@ export default function FinanceTab({ data, startDate, endDate, onFilterChange }:
 
     const { summary, charts, tables } = data;
 
-    const isDataEmpty = !summary?.total_revenue || toNumber(summary?.total_revenue) === 0;
+    const activeSummary = summary || {
+        total_revenue: 0,
+        total_transactions: 0,
+        current_mrr: 0,
+        current_arr: 0
+    };
 
-    const activeSummary = isDataEmpty ? {
-        total_revenue: 25750000,
-        total_transactions: 45,
-        current_mrr: 3500000,
-        current_arr: 42000000
-    } : summary;
+    const activeCharts = charts || {
+        revenue_trend: [],
+        revenue_by_method: [],
+        top_tenants: []
+    };
 
-    const activeCharts = isDataEmpty ? {
-        revenue_trend: [
-            { date: "01 Jul", revenue: 1200000 },
-            { date: "02 Jul", revenue: 1800000 },
-            { date: "03 Jul", revenue: 850000 },
-            { date: "04 Jul", revenue: 2200000 },
-            { date: "05 Jul", revenue: 3100000 },
-            { date: "06 Jul", revenue: 1500000 },
-            { date: "07 Jul", revenue: 4100000 }
-        ],
-        revenue_by_method: [
-            { name: "qris", value: 14500000 },
-            { name: "bank_transfer", value: 8250000 },
-            { name: "gopay", value: 3000000 }
-        ],
-        top_tenants: [
-            { name: "Sakti Gym Center", revenue: 8500000 },
-            { name: "Maguwo Fitness", revenue: 6200000 },
-            { name: "Atma Gym", revenue: 5100000 },
-            { name: "Barbar Gym", revenue: 3800000 },
-            { name: "Testing Gym", revenue: 2150000 }
-        ]
-    } : charts;
-
-    const activeTables = isDataEmpty ? {
-        recent_transactions: [
-            { order_id: "INV-2026-001", tenant_name: "Sakti Gym Center", payment_type: "qris", paid_at: "2026-07-07 10:15:30", gross_amount: 750000 },
-            { order_id: "INV-2026-002", tenant_name: "Maguwo Fitness", payment_type: "bank_transfer", paid_at: "2026-07-07 09:12:00", gross_amount: 1200000 },
-            { order_id: "INV-2026-003", tenant_name: "Atma Gym", payment_type: "gopay", paid_at: "2026-07-06 14:22:15", gross_amount: 500000 },
-            { order_id: "INV-2026-004", tenant_name: "Barbar Gym", payment_type: "qris", paid_at: "2026-07-05 16:45:00", gross_amount: 850000 },
-            { order_id: "INV-2026-005", tenant_name: "Testing Gym", payment_type: "qris", paid_at: "2026-07-04 11:30:00", gross_amount: 350000 }
-        ],
-        top_spenders: [
-            { name: "Sakti Gym Center", slug: "sakti-gym", owner_email: "sakti@gymfit.id", total_spent: 7500000 },
-            { name: "Maguwo Fitness", slug: "maguwo-gym", owner_email: "owner@maguwogym.com", total_spent: 5200000 },
-            { name: "Atma Gym", slug: "atmagym", owner_email: "admin@atmagym.id", total_spent: 4800000 },
-            { name: "Barbar Gym", slug: "barbar", owner_email: "barbargym@gmail.com", total_spent: 3100000 },
-            { name: "Testing Gym", slug: "testing", owner_email: "test@gymfit.id", total_spent: 1500000 }
-        ]
-    } : {
+    const activeTables = {
         recent_transactions: tables?.recent_transactions || [],
-        top_spenders: tables?.top_spenders || [
-            { name: "Sakti Gym Center", slug: "sakti-gym", owner_email: "sakti@gymfit.id", total_spent: 7500000 },
-            { name: "Maguwo Fitness", slug: "maguwo-gym", owner_email: "owner@maguwogym.com", total_spent: 5200000 },
-            { name: "Atma Gym", slug: "atmagym", owner_email: "admin@atmagym.id", total_spent: 4800000 },
-            { name: "Barbar Gym", slug: "barbar", owner_email: "barbargym@gmail.com", total_spent: 3100000 },
-            { name: "Testing Gym", slug: "testing", owner_email: "test@gymfit.id", total_spent: 1500000 }
-        ]
+        top_spenders: tables?.top_spenders || []
     };
 
     // ── Derived metrics (kalkulasi di FE, nol query tambahan) ──────────────
