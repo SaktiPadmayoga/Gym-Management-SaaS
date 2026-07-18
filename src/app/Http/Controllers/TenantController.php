@@ -443,7 +443,7 @@ public function current(Request $request)
 
             Log::info('Tenant landing page settings updated', ['tenant_id' => $tenantModel->id]);
 
-            return ApiResponse::success($tenantData->data['landing_page'] ?? [], 'Konfigurasi landing page berhasil diperbarui');
+            return ApiResponse::success($validated, 'Konfigurasi landing page berhasil diperbarui');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error('Validasi gagal', $e->errors(), 422);
