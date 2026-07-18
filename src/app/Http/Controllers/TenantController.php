@@ -432,13 +432,18 @@ public function current(Request $request)
                 return ApiResponse::error('Tenant data not found', null, 404);
             }
 
-            // Atur properti landing_page (yang akan mentrigger mutator setLandingPageAttribute)
-            $tenantData->landing_page = $validated;
-            $tenantData->save();
+            // Update data json secara eksplisit untuk memastikan Eloquent mendeteksi perubahan
+            $data = $tenantData->data ?? [];
+            $data['landing_page'] = $validated;
+            
+            $tenantData->update([
+                'data' => $data,
+                'updated_at' => now(),
+            ]);
 
             Log::info('Tenant landing page settings updated', ['tenant_id' => $tenantModel->id]);
 
-            return ApiResponse::success($tenantData->landing_page, 'Konfigurasi landing page berhasil diperbarui');
+            return ApiResponse::success($tenantData->data['landing_page'] ?? [], 'Konfigurasi landing page berhasil diperbarui');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             return ApiResponse::error('Validasi gagal', $e->errors(), 422);
