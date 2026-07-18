@@ -432,12 +432,10 @@ public function current(Request $request)
                 return ApiResponse::error('Tenant data not found', null, 404);
             }
 
-            // Update data json secara eksplisit untuk memastikan Eloquent mendeteksi perubahan
-            $data = $tenantData->data ?? [];
-            $data['landing_page'] = $validated;
-            
+            // Gunakan metode update standar, Stancl Tenancy akan otomatis menyimpannya
+            // ke dalam kolom JSON `data` karena `landing_page` bukan kolom custom.
             $tenantData->update([
-                'data' => $data,
+                'landing_page' => $validated,
                 'updated_at' => now(),
             ]);
 
