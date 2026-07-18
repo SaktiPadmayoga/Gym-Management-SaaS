@@ -36,53 +36,41 @@ export default function TenantLandingPage() {
 
     const gymName = tenantData?.name || (tenantSlug ? `${tenantSlug.replace(/-/g, " ")}` : "GYMFIT Gym");
 
-    const landingConfig = (tenantData as any)?.landing_page || {
+    const landingConfig = {
         hero_title: "BENTUK FISIK TERBAIKMU.",
         hero_subtitle: `Selamat datang di ${gymName}. Kami menyediakan ekosistem kebugaran tingkat tinggi dengan peralatan mutakhir, pelatih bersertifikasi internasional, dan kelas komunitas energik yang menantang batas kemampuan Anda.`,
         hero_cta_text: "Mulai Latihan Sekarang",
+        hero_image_url: "",
         show_about: true,
         about_description: `Di ${gymName}, kami tidak hanya menyediakan fasilitas olahraga. Kami membangun komunitas terpadu di mana impian kebugaran Anda didukung penuh. Dengan perpaduan alat beban kelas industri, zona kardio inovatif, serta area pemulihan (recovery area), kami memastikan setiap sesi latihan Anda berjalan maksimal dan aman.`,
+        about_image_url_1: "",
+        about_image_url_2: "",
         show_classes: true,
+        programs: [],
         show_locations: true,
+        branch_info: [],
         show_pricing: true,
         show_faq: true,
+        faqs: [],
+        testimonials: [],
+        footer: {
+            description: "Menyediakan ekosistem kebugaran premium berkinerja tinggi untuk mendukung gaya hidup sehat aktif secara profesional dan menyenangkan.",
+            instagram: "",
+            facebook: "",
+            twitter: "",
+            whatsapp: ""
+        },
+        ...((tenantData as any)?.landing_page || {})
     };
 
     const scrollTo = (id: string) => {
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const branches = [
-        {
-            name: `${gymName} - SCBD Executive Center`,
-            address: "Sahid Sudirman Center, Lt. 12, Jl. Jend. Sudirman, Jakarta Pusat",
-            hours: "Senin - Minggu: 06:00 - 22:00",
-            phone: "+62 21-5002-1234",
-            email: `scbd@${tenantSlug || "gymfit"}.id`,
-            features: ["Peralatan Angkat Beban Premium", "Indoor Pool", "Sauna & Steam Room", "Juice Bar", "Parkir Gratis"],
-        },
-        {
-            name: `${gymName} - Kemang Premium Studio`,
-            address: "Jl. Kemang Raya No. 45, Bangka, Mampang Prapatan, Jakarta Selatan",
-            hours: "Senin - Minggu: 07:00 - 21:00",
-            phone: "+62 21-7890-5678",
-            email: `kemang@${tenantSlug || "gymfit"}.id`,
-            features: ["Cardio Zone Terlengkap", "Locker Room Mewah", "Group Class Studio", "Personal Trainer Berpengalaman"],
-        },
-        {
-            name: `${gymName} - Canggu Paradise Gym`,
-            address: "Jl. Pantai Batu Bolong No. 88, Canggu, Kuta Utara, Bali",
-            hours: "Senin - Minggu: 06:00 - 23:00",
-            phone: "+62 812-3456-7890",
-            email: `canggu@${tenantSlug || "gymfit"}.id`,
-            features: ["Outdoor Gym Area", "Recovery Ice Bath", "Healthy Cafe Inside", "PT & Rehab Specialists"],
-        },
-    ];
-
-    const faqs = [
+    const defaultFaqs = [
         {
             q: "Apakah saya bisa berlatih di semua cabang gym?",
-            a: "Ya! Dengan mengambil paket keanggotaan Premium / Pro, Anda berhak berlatih di seluruh cabang kami (SCBD, Kemang, dan Canggu Bali) tanpa biaya tambahan.",
+            a: "Ya! Dengan mengambil paket keanggotaan Premium / Pro, Anda berhak berlatih di seluruh cabang kami tanpa biaya tambahan.",
         },
         {
             q: "Bagaimana cara melakukan pemesanan kelas?",
@@ -97,6 +85,8 @@ export default function TenantLandingPage() {
             a: "Sistem kami terintegrasi dengan Payment Gateway nasional yang aman. Anda dapat membayar menggunakan QRIS, Virtual Account Bank, atau Kartu Kredit dengan opsi penagihan otomatis yang mudah diatur.",
         },
     ];
+    
+    const faqs = landingConfig.faqs?.length > 0 ? landingConfig.faqs : defaultFaqs;
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white font-figtree selection:bg-blue-600 selection:text-white antialiased">
@@ -105,9 +95,13 @@ export default function TenantLandingPage() {
             <header className="fixed top-0 w-full z-50 border-b border-zinc-900 bg-zinc-950/80 backdrop-blur-xl transition-all">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-                        <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white font-black text-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] uppercase transition-transform group-hover:scale-105 group-hover:rotate-3">
-                            {gymName.charAt(0)}
-                        </div>
+                        {tenantData?.logo_url ? (
+                            <img src={tenantData.logo_url} alt={gymName} className="h-10 w-auto object-contain transition-transform group-hover:scale-105" />
+                        ) : (
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center text-white font-black text-xl shadow-[0_0_20px_rgba(37,99,235,0.4)] uppercase transition-transform group-hover:scale-105 group-hover:rotate-3">
+                                {gymName.charAt(0)}
+                            </div>
+                        )}
                         <span className="font-black text-2xl text-white tracking-tight uppercase hidden sm:block">
                             {gymName}
                             <span className="text-blue-500">.</span>
@@ -159,7 +153,7 @@ export default function TenantLandingPage() {
             {/* --- HERO SECTION --- */}
             <section className="relative min-h-screen flex items-center pt-24 overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <img src="/images/tenant-gym-1.webp" alt="Gym Background" className="w-full h-full object-cover opacity-20 scale-105" />
+                    <img src={landingConfig.hero_image_url || "/images/tenant-gym-1.webp"} alt="Gym Background" className="w-full h-full object-cover opacity-20 scale-105" />
                     {/* Glassmorphic Grid Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-zinc-950/70 to-zinc-950" />
                     <div className="absolute inset-0 bg-[radial-gradient(#2563eb_1px,transparent_1px)] [background-size:32px_32px] opacity-10" />
@@ -195,29 +189,6 @@ export default function TenantLandingPage() {
                     </div>
                 </div>
 
-                {/* Stat Cards - Modern Glassmorphic Row */}
-                <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-zinc-950 to-transparent pt-38 pb-8 mt-10">
-                    <div className="max-w-7xl mx-auto px-6">
-                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 border-t border-zinc-900 pt-8">
-                            <div className="bg-zinc-900/30 border border-zinc-900/50 rounded-2xl p-4 backdrop-blur-sm">
-                                <h4 className="text-3xl font-black text-blue-500 mb-0.5">50+</h4>
-                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Alat Beban Premium</p>
-                            </div>
-                            <div className="bg-zinc-900/30 border border-zinc-900/50 rounded-2xl p-4 backdrop-blur-sm">
-                                <h4 className="text-3xl font-black text-blue-500 mb-0.5">15+</h4>
-                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Pelatih Ahli Certified</p>
-                            </div>
-                            <div className="bg-zinc-900/30 border border-zinc-900/50 rounded-2xl p-4 backdrop-blur-sm">
-                                <h4 className="text-3xl font-black text-blue-500 mb-0.5">30+</h4>
-                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Kelas Eksklusif Mingguan</p>
-                            </div>
-                            <div className="bg-zinc-900/30 border border-zinc-900/50 rounded-2xl p-4 backdrop-blur-sm">
-                                <h4 className="text-3xl font-black text-blue-500 mb-0.5">3 Cabang</h4>
-                                <p className="text-zinc-500 text-[10px] font-black uppercase tracking-widest">Akses Multi-Klub</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </section>
 
             {/* --- ABOUT SECTION --- */}
@@ -228,9 +199,9 @@ export default function TenantLandingPage() {
                             <div className="w-full lg:w-1/2 relative">
                                 {/* Photo Grid with offset */}
                                 <div className="grid grid-cols-2 gap-4">
-                                    <img src="/images/tenant-gym-2.webp" alt="Gym weights" className="rounded-3xl object-cover h-60 w-full shadow-2xl border border-zinc-800" />
+                                    <img src={landingConfig.about_image_url_1 || "/images/tenant-gym-2.webp"} alt="Gym weights" className="rounded-3xl object-cover h-60 w-full shadow-2xl border border-zinc-800" />
                                     <img
-                                        src="/images/tenant-gym-3.webp"
+                                        src={landingConfig.about_image_url_2 || "/images/tenant-gym-3.webp"}
                                         alt="Gym space"
                                         className="rounded-3xl object-cover h-72 w-full shadow-2xl translate-y-6 border border-zinc-800"
                                     />
@@ -286,51 +257,26 @@ export default function TenantLandingPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            {/* Program Card 1 */}
-                            <div className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
-                                <img
-                                    src="/images/tenant-gym-4.webp"
-                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                    alt="Strength"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-                                <div className="absolute bottom-0 left-0 p-8 w-full">
-                                    <h4 className="text-2xl font-black text-white uppercase mb-2">Strength Training</h4>
-                                    <p className="text-zinc-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 duration-300">
-                                        Latihan beban tersusun dengan fokus teknik mengangkat beban yang benar untuk menaikkan kekuatan murni dan massa otot.
-                                    </p>
+                            {(landingConfig.programs?.length > 0 ? landingConfig.programs : [
+                                { title: "Strength Training", description: "Latihan beban tersusun dengan fokus teknik mengangkat beban yang benar untuk menaikkan kekuatan murni dan massa otot.", image_url: "/images/tenant-gym-4.webp" },
+                                { title: "HIIT Burnout", description: "Kombinasi interval kardio intensitas tinggi untuk memaksimalkan pembakaran kalori dan memompa detak jantung Anda.", image_url: "/images/tenant-gym-1.webp" },
+                                { title: "Yoga & Mobility", description: "Latihan kelenturan, pernapasan, dan mobilitas sendi untuk membantu pemulihan tubuh Anda sekaligus menenangkan pikiran.", image_url: "/images/tenant-gym-2.webp" }
+                            ]).map((prog: any, i: number) => (
+                                <div key={i} className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
+                                    <img
+                                        src={prog.image_url || "/images/tenant-gym-4.webp"}
+                                        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        alt={prog.title}
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                                    <div className="absolute bottom-0 left-0 p-8 w-full">
+                                        <h4 className="text-2xl font-black text-white uppercase mb-2">{prog.title}</h4>
+                                        <p className="text-zinc-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0 duration-300">
+                                            {prog.description}
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                            {/* Program Card 2 */}
-                            <div className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
-                                <img
-                                    src="/images/tenant-gym-1.webp"
-                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                    alt="HIIT"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-                                <div className="absolute bottom-0 left-0 p-8 w-full">
-                                    <h4 className="text-2xl font-black text-white uppercase mb-2">HIIT Burnout</h4>
-                                    <p className="text-zinc-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 duration-300">
-                                        Kombinasi interval kardio intensitas tinggi untuk memaksimalkan pembakaran kalori dan memompa detak jantung Anda.
-                                    </p>
-                                </div>
-                            </div>
-                            {/* Program Card 3 */}
-                            <div className="group relative h-[420px] rounded-3xl overflow-hidden cursor-pointer border border-zinc-800 shadow-lg">
-                                <img
-                                    src="/images/tenant-gym-2.webp"
-                                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                    alt="Yoga"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-                                <div className="absolute bottom-0 left-0 p-8 w-full">
-                                    <h4 className="text-2xl font-black text-white uppercase mb-2">Yoga & Mobility</h4>
-                                    <p className="text-zinc-300 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0 duration-300">
-                                        Latihan kelenturan, pernapasan, dan mobilitas sendi untuk membantu pemulihan tubuh Anda sekaligus menenangkan pikiran.
-                                    </p>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </section>
@@ -347,7 +293,9 @@ export default function TenantLandingPage() {
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            {branches.map((branch, i) => (
+                            {tenantBranches.map((branch: any, i: number) => {
+                                const bInfo = landingConfig.branch_info?.find((b: any) => b.id === branch.id) || {};
+                                return (
                                 <div key={i} className="bg-zinc-900/40 border border-zinc-900 rounded-3xl p-8 hover:border-zinc-800 transition-all flex flex-col justify-between">
                                     <div>
                                         <div className="w-12 h-12 rounded-2xl bg-blue-600/10 flex items-center justify-center border border-blue-500/20 text-blue-400 mb-6">
@@ -358,35 +306,43 @@ export default function TenantLandingPage() {
                                         <div className="space-y-4 mb-8 text-sm text-zinc-400">
                                             <div className="flex items-start gap-3">
                                                 <MapPin size={16} className="text-blue-500 shrink-0 mt-0.5" />
-                                                <span>{branch.address}</span>
+                                                <span>{branch.address || "Alamat cabang belum diatur"}</span>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <Clock size={16} className="text-blue-500 shrink-0" />
-                                                <span>{branch.hours}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Phone size={16} className="text-blue-500 shrink-0" />
-                                                <span>{branch.phone}</span>
-                                            </div>
-                                            <div className="flex items-center gap-3">
-                                                <Mail size={16} className="text-blue-500 shrink-0" />
-                                                <span className="text-zinc-300">{branch.email}</span>
-                                            </div>
+                                            {bInfo.hours && (
+                                                <div className="flex items-center gap-3">
+                                                    <Clock size={16} className="text-blue-500 shrink-0" />
+                                                    <span>{bInfo.hours}</span>
+                                                </div>
+                                            )}
+                                            {bInfo.phone && (
+                                                <div className="flex items-center gap-3">
+                                                    <Phone size={16} className="text-blue-500 shrink-0" />
+                                                    <span>{bInfo.phone}</span>
+                                                </div>
+                                            )}
+                                            {bInfo.email && (
+                                                <div className="flex items-center gap-3">
+                                                    <Mail size={16} className="text-blue-500 shrink-0" />
+                                                    <span className="text-zinc-300">{bInfo.email}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
-                                    <div className="border-t border-zinc-900 pt-6">
-                                        <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Fasilitas Cabang:</h5>
-                                        <div className="flex flex-wrap gap-2">
-                                            {branch.features.map((feat, idx) => (
-                                                <span key={idx} className="text-[10px] font-bold text-zinc-300 bg-zinc-900 px-3 py-1.5 rounded-full border border-zinc-800/80">
-                                                    {feat}
-                                                </span>
-                                            ))}
+                                    {bInfo.features && bInfo.features.length > 0 && (
+                                        <div className="border-t border-zinc-900 pt-6">
+                                            <h5 className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-3">Fasilitas Cabang:</h5>
+                                            <div className="flex flex-wrap gap-2">
+                                                {bInfo.features.map((feat: string, idx: number) => (
+                                                    <span key={idx} className="text-[10px] font-bold text-zinc-300 bg-zinc-900 px-3 py-1.5 rounded-full border border-zinc-800/80">
+                                                        {feat}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     </div>
                 </section>
@@ -517,26 +473,26 @@ export default function TenantLandingPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {[
+                        {(landingConfig.testimonials?.length > 0 ? landingConfig.testimonials : [
                             {
                                 name: "Sarah Natalia",
-                                role: "Anggota (SCBD Center)",
+                                role: "Member Aktif",
                                 text: "Peralatan latihannya sangat premium dan lengkap. Pelatih personalnya sangat ramah serta mengajari teknik angkat beban dengan sabar hingga saya mengerti.",
-                                img: "https://i.pravatar.cc/150?img=44",
+                                avatar_url: "https://i.pravatar.cc/150?img=44",
                             },
                             {
                                 name: "Rizky Wijaya",
-                                role: "Anggota (Kemang Premium)",
+                                role: "Member VIP",
                                 text: "Kemudahan check-in via QR Code di lobi sangat membantu saya yang terburu-buru sebelum jam kantor. Lokasinya bersih dan wangi.",
-                                img: "https://i.pravatar.cc/150?img=11",
+                                avatar_url: "https://i.pravatar.cc/150?img=11",
                             },
                             {
                                 name: "Dewi Lestari",
-                                role: "Anggota (Canggu Bali)",
-                                text: "Suka sekali berlatih di area outdoor gym Canggu Bali. Suasananya menyegarkan dan jus sehat di bar proteinnya sangat lezat setelah sesi angkat beban.",
-                                img: "https://i.pravatar.cc/150?img=5",
-                            },
-                        ].map((review, i) => (
+                                role: "Member Program Khusus",
+                                text: "Suka sekali berlatih di sini. Suasananya menyegarkan dan area latihannya bersih.",
+                                avatar_url: "https://i.pravatar.cc/150?img=5",
+                            }
+                        ]).map((review: any, i: number) => (
                             <div key={i} className="bg-zinc-900/30 border border-zinc-900 rounded-3xl p-8 flex flex-col justify-between">
                                 <div>
                                     <div className="flex text-amber-400 mb-6">
@@ -547,7 +503,7 @@ export default function TenantLandingPage() {
                                     <p className="text-zinc-400 text-sm italic mb-8 leading-relaxed">"{review.text}"</p>
                                 </div>
                                 <div className="flex items-center gap-4 border-t border-zinc-900 pt-6">
-                                    <img src={review.img} alt={review.name} className="w-10 h-10 rounded-xl object-cover" />
+                                    <img src={review.avatar_url || `https://i.pravatar.cc/150?u=${i}`} alt={review.name} className="w-10 h-10 rounded-xl object-cover" />
                                     <div>
                                         <h5 className="font-bold text-sm text-white">{review.name}</h5>
                                         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">{review.role}</p>
@@ -616,17 +572,23 @@ export default function TenantLandingPage() {
                                 <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-black uppercase">{gymName.charAt(0)}</div>
                                 <span className="font-black text-lg text-white uppercase tracking-tight">{gymName}</span>
                             </div>
-                            <p className="mb-6 max-w-xs">Menyediakan ekosistem kebugaran premium berkinerja tinggi untuk mendukung gaya hidup sehat aktif secara profesional dan menyenangkan.</p>
+                            <p className="mb-6 max-w-xs">{landingConfig.footer?.description || "Menyediakan ekosistem kebugaran premium berkinerja tinggi untuk mendukung gaya hidup sehat aktif secara profesional dan menyenangkan."}</p>
                             <div className="flex gap-4">
-                                <a href="#" className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors">
-                                    <Instagram size={14} />
-                                </a>
-                                <a href="#" className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors">
-                                    <Facebook size={14} />
-                                </a>
-                                <a href="#" className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors">
-                                    <Twitter size={14} />
-                                </a>
+                                {landingConfig.footer?.instagram && (
+                                    <a href={landingConfig.footer.instagram} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors">
+                                        <Instagram size={14} />
+                                    </a>
+                                )}
+                                {landingConfig.footer?.facebook && (
+                                    <a href={landingConfig.footer.facebook} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors">
+                                        <Facebook size={14} />
+                                    </a>
+                                )}
+                                {landingConfig.footer?.twitter && (
+                                    <a href={landingConfig.footer.twitter} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center text-zinc-400 hover:bg-blue-600 hover:text-white transition-colors">
+                                        <Twitter size={14} />
+                                    </a>
+                                )}
                             </div>
                         </div>
 
@@ -667,16 +629,16 @@ export default function TenantLandingPage() {
 
                         {/* Column 3 - Corporate Contacts */}
                         <div>
-                            <h4 className="text-white font-black uppercase tracking-wider text-[10px] mb-6">Cabang Utama</h4>
+                            <h4 className="text-white font-black uppercase tracking-wider text-[10px] mb-6">Hubungi Kami</h4>
                             <ul className="space-y-4">
-                                <li className="flex items-start gap-3">
-                                    <MapPin size={16} className="text-blue-500 shrink-0 mt-0.5" />
-                                    <span>Sahid Sudirman Center Lantai 12, Sudirman, Jakarta Pusat</span>
-                                </li>
-                                <li className="flex items-center gap-3">
-                                    <Phone size={16} className="text-blue-500 shrink-0" />
-                                    <span>+62 21-5002-1234</span>
-                                </li>
+                                {landingConfig.footer?.whatsapp && (
+                                    <li className="flex items-center gap-3">
+                                        <Phone size={16} className="text-blue-500 shrink-0" />
+                                        <a href={landingConfig.footer.whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                                            WhatsApp Kami
+                                        </a>
+                                    </li>
+                                )}
                                 <li className="flex items-center gap-3">
                                     <Mail size={16} className="text-blue-500 shrink-0" />
                                     <span className="text-zinc-300">hello@{tenantSlug || "gymfit"}.id</span>

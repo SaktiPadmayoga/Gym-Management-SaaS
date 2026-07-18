@@ -44,6 +44,18 @@ export const tenantAPI = {
         return res.data.data;
     },
 
+    uploadLandingImage: async (file: File): Promise<{ image_url: string; path: string }> => {
+        const formData = new FormData();
+        formData.append("image", file);
+        const res = await apiClient.post("/tenant/landing-image", formData, {
+            headers: { 
+                "Content-Type": "multipart/form-data",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+        });
+        return res.data.data;
+    },
+
     updateSettings: async (payload: { name: string }): Promise<{ name: string }> => {
         const res = await apiClient.put("/tenant/settings", payload);
         return res.data.data;

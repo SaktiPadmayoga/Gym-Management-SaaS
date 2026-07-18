@@ -20,6 +20,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import CustomButton from "@/components/ui/button/CustomButton";
+import LandingSettingsForm from "./LandingSettingsForm";
 
 // ─────────────────────────────────────────────
 // Types
@@ -30,6 +31,8 @@ interface TenantInfo {
     owner_name: string;
     owner_email: string;
     logo_url: string | null;
+    landing_page?: any;
+    branches?: any[];
 }
 
 // ─────────────────────────────────────────────
@@ -60,20 +63,6 @@ export default function GymSettingsPage() {
     // Active Tab State
     const [activeTab, setActiveTab] = useState<"gym" | "landing">("gym");
 
-    // Landing Page Config State
-    const [landingConfig, setLandingConfig] = useState({
-        hero_title: "Train. Harder. Transform.",
-        hero_subtitle: "Premium Fitness Studio & Gym dengan peralatan latihan canggih dan pelatih profesional.",
-        hero_cta_text: "Gabung Member",
-        show_about: true,
-        about_description: "Kami percaya bahwa kebugaran adalah gaya hidup. Dengan fasilitas modern dan instruktur bersertifikasi, kami siap mendampingi perjalanan transformasi Anda.",
-        show_classes: true,
-        show_locations: true,
-        show_pricing: true,
-        show_faq: true,
-    });
-    const [savingLanding, setSavingLanding] = useState(false);
-
     const fileInputRef = useRef<HTMLInputElement>(null);
     const dropZoneRef = useRef<HTMLDivElement>(null);
 
@@ -88,12 +77,10 @@ export default function GymSettingsPage() {
                     owner_name: data.owner_name,
                     owner_email: data.owner_email,
                     logo_url: data.logo_url ?? null,
+                    landing_page: data.landing_page,
+                    branches: data.branches,
                 });
                 setEditName(data.name);
-
-                if (data.landing_page) {
-                    setLandingConfig(data.landing_page as any);
-                }
             } catch {
                 toast.error("Gagal memuat data gym");
             } finally {
@@ -191,20 +178,6 @@ export default function GymSettingsPage() {
         }
     };
 
-    const handleSaveLanding = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setSavingLanding(true);
-        try {
-            await tenantAPI.updateLandingPageSettings(landingConfig);
-            queryClient.invalidateQueries({ queryKey: TENANT_HEADER_KEY });
-            toast.success("Konfigurasi landing page berhasil disimpan!");
-        } catch (err: any) {
-            const msg = err?.response?.data?.message ?? "Gagal memperbarui konfigurasi landing page.";
-            toast.error(msg);
-        } finally {
-            setSavingLanding(false);
-        }
-    };
 
     // ── Cancel preview
     const handleCancel = () => {
@@ -529,140 +502,10 @@ export default function GymSettingsPage() {
                 )}
 
                 {activeTab === "landing" && (
-                    <form onSubmit={handleSaveLanding} className="space-y-6">
-                        <div className="grid grid-cols-12 gap-8">
-                            {/* Kiri: Toggles (Visibilitas Section) */}
-                            <div className="col-span-12 md:col-span-4 space-y-4">
-                                <h2 className="text-lg font-semibold text-zinc-800">Visibilitas Section</h2>
-                                <div className="bg-zinc-50 rounded-xl border border-zinc-200/60 p-5 space-y-3.5">
-                                    <p className="text-xs text-zinc-400 font-semibold uppercase tracking-wider mb-2">Tampilkan di Landing Page</p>
-                                    
-                                    <label className="flex items-center justify-between cursor-pointer hover:bg-zinc-100/50 p-2 rounded-lg transition-all">
-                                        <span className="text-sm font-semibold text-zinc-700">Section Tentang Kami</span>
-                                        <input 
-                                            type="checkbox" 
-                                            className="toggle toggle-success toggle-sm"
-                                            checked={landingConfig.show_about}
-                                            onChange={(e) => setLandingConfig(prev => ({ ...prev, show_about: e.target.checked }))}
-                                        />
-                                    </label>
-
-                                    <label className="flex items-center justify-between cursor-pointer hover:bg-zinc-100/50 p-2 rounded-lg transition-all">
-                                        <span className="text-sm font-semibold text-zinc-700">Section Program Kelas</span>
-                                        <input 
-                                            type="checkbox" 
-                                            className="toggle toggle-success toggle-sm"
-                                            checked={landingConfig.show_classes}
-                                            onChange={(e) => setLandingConfig(prev => ({ ...prev, show_classes: e.target.checked }))}
-                                        />
-                                    </label>
-
-                                    <label className="flex items-center justify-between cursor-pointer hover:bg-zinc-100/50 p-2 rounded-lg transition-all">
-                                        <span className="text-sm font-semibold text-zinc-700">Section Lokasi Cabang</span>
-                                        <input 
-                                            type="checkbox" 
-                                            className="toggle toggle-success toggle-sm"
-                                            checked={landingConfig.show_locations}
-                                            onChange={(e) => setLandingConfig(prev => ({ ...prev, show_locations: e.target.checked }))}
-                                        />
-                                    </label>
-
-                                    <label className="flex items-center justify-between cursor-pointer hover:bg-zinc-100/50 p-2 rounded-lg transition-all">
-                                        <span className="text-sm font-semibold text-zinc-700">Section Paket Member</span>
-                                        <input 
-                                            type="checkbox" 
-                                            className="toggle toggle-success toggle-sm"
-                                            checked={landingConfig.show_pricing}
-                                            onChange={(e) => setLandingConfig(prev => ({ ...prev, show_pricing: e.target.checked }))}
-                                        />
-                                    </label>
-
-                                    <label className="flex items-center justify-between cursor-pointer hover:bg-zinc-100/50 p-2 rounded-lg transition-all">
-                                        <span className="text-sm font-semibold text-zinc-700">Section FAQ</span>
-                                        <input 
-                                            type="checkbox" 
-                                            className="toggle toggle-success toggle-sm"
-                                            checked={landingConfig.show_faq}
-                                            onChange={(e) => setLandingConfig(prev => ({ ...prev, show_faq: e.target.checked }))}
-                                        />
-                                    </label>
-                                </div>
-                            </div>
-
-                            {/* Kanan: Content Settings */}
-                            <div className="col-span-12 md:col-span-8 space-y-6">
-                                {/* Card Hero */}
-                                <div className="bg-white rounded-xl border border-zinc-200 p-6 space-y-4">
-                                    <h3 className="text-base font-bold text-zinc-800 border-b border-zinc-100 pb-2">Bagian Hero (Banner Utama)</h3>
-                                    
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Hero Title (Headline)</label>
-                                            <input 
-                                                type="text"
-                                                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-aksen-secondary transition-all text-zinc-800 font-semibold"
-                                                placeholder="Cth: Train. Harder. Transform."
-                                                value={landingConfig.hero_title}
-                                                onChange={(e) => setLandingConfig(prev => ({ ...prev, hero_title: e.target.value }))}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Hero Subtitle</label>
-                                            <textarea 
-                                                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-aksen-secondary transition-all text-zinc-800 h-20"
-                                                placeholder="Cth: Premium Fitness Studio & Gym..."
-                                                value={landingConfig.hero_subtitle}
-                                                onChange={(e) => setLandingConfig(prev => ({ ...prev, hero_subtitle: e.target.value }))}
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Teks Tombol CTA</label>
-                                            <input 
-                                                type="text"
-                                                className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-aksen-secondary transition-all text-zinc-800 font-semibold"
-                                                placeholder="Cth: Gabung Member"
-                                                value={landingConfig.hero_cta_text}
-                                                onChange={(e) => setLandingConfig(prev => ({ ...prev, hero_cta_text: e.target.value }))}
-                                                required
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Card Tentang Kami */}
-                                <div className="bg-white rounded-xl border border-zinc-200 p-6 space-y-4">
-                                    <h3 className="text-base font-bold text-zinc-800 border-b border-zinc-100 pb-2">Bagian Tentang Gym</h3>
-                                    
-                                    <div>
-                                        <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1.5">Deskripsi Tentang Kami</label>
-                                        <textarea 
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-zinc-200 text-sm focus:outline-none focus:border-aksen-secondary transition-all text-zinc-800 h-28"
-                                            placeholder="Cth: Kami percaya bahwa kebugaran adalah..."
-                                            value={landingConfig.about_description}
-                                            onChange={(e) => setLandingConfig(prev => ({ ...prev, about_description: e.target.value }))}
-                                            disabled={!landingConfig.show_about}
-                                            required={landingConfig.show_about}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Actions */}
-                                <div className="flex gap-4">
-                                    <CustomButton
-                                        type="submit"
-                                        disabled={savingLanding}
-                                        className="px-6 text-white h-12 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                                    >
-                                        {savingLanding ? "Menyimpan..." : "Simpan Konfigurasi"}
-                                    </CustomButton>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+                    <LandingSettingsForm 
+                        initialConfig={tenant?.landing_page} 
+                        branches={tenant?.branches || []} 
+                    />
                 )}
             </div>
         </div>

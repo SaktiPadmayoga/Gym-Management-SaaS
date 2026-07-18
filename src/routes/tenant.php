@@ -407,6 +407,7 @@ Route::middleware(['auth:staff', 'check_tenant_access', 'check_branch_access'])-
 
     // Gym Settings — Logo Upload & settings update
     Route::post('/tenant/logo', [TenantController::class, 'uploadLogo']);
+    Route::post('/tenant/landing-image', [TenantController::class, 'uploadLandingImage']);
     Route::put('/tenant/settings', [TenantController::class, 'updateCurrentSettings']);
     Route::put('/tenant/settings/landing-page', [TenantController::class, 'updateLandingPageSettings']);
 

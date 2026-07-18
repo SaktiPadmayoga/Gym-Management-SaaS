@@ -403,6 +403,63 @@ public function current(Request $request)
     }
 
     /**
+     * POST /api/tenant/landing-image
+     * Upload landing page images (hero, about, program) ke R2.
+     */
+    public function uploadLandingImage(Request $request)
+    {
+        try {
+            $request->validate([
+                'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            ]);
+
+            $tenantModel = tenant();
+            if (!$tenantModel) {
+                return ApiResponse::error('Tenant context not found', null, 404);
+            }
+
+            // Ambil data tenant dari central DB
+            $tenantData = DB::connection('central')
+                ->table('tenants')
+                ->where('id', $tenantModel->id)
+                ->first();
+
+            if (!$tenantData) {
+                return ApiResponse::error('Tenant not found', null, 404);
+            }
+
+            $disk = config('filesystems.disks.r2.key') ? 'r2' : 'public';
+
+            // Upload image
+            $path = $request->file('image')->store(
+                "tenant_{$tenantModel->id}/landing",
+                $disk
+            );
+
+            $imageUrl = $disk === 'r2'
+                ? Storage::disk('r2')->url($path)
+                : '/storage/' . $path;
+
+            Log::info('Landing image uploaded', ['tenant_id' => $tenantModel->id, 'path' => $path]);
+
+            return ApiResponse::success([
+                'image_url' => $imageUrl,
+                'path'     => $path,
+            ], 'Gambar berhasil diupload');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponse::error('Validasi gagal', $e->errors(), 422);
+        } catch (\Exception $e) {
+            Log::error('uploadLandingImage error', ['message' => $e->getMessage()]);
+            return ApiResponse::error(
+                'Gagal upload gambar',
+                config('app.debug') ? $e->getMessage() : null,
+                500
+            );
+        }
+    }
+
+    /**
      * PUT /api/tenant/settings/landing-page
      * Update landing page settings for tenant central config.
      */
@@ -413,12 +470,40 @@ public function current(Request $request)
                 'hero_title'        => ['required', 'string', 'max:255'],
                 'hero_subtitle'     => ['required', 'string', 'max:1000'],
                 'hero_cta_text'     => ['required', 'string', 'max:50'],
+                'hero_image_url'    => ['nullable', 'string'],
                 'show_about'        => ['required', 'boolean'],
                 'about_description' => ['required', 'string', 'max:2000'],
+                'about_image_url_1' => ['nullable', 'string'],
+                'about_image_url_2' => ['nullable', 'string'],
                 'show_classes'      => ['required', 'boolean'],
+                'programs'          => ['nullable', 'array'],
+                'programs.*.title'  => ['required', 'string', 'max:255'],
+                'programs.*.description' => ['required', 'string', 'max:500'],
+                'programs.*.image_url' => ['nullable', 'string'],
                 'show_locations'    => ['required', 'boolean'],
+                'branch_info'       => ['nullable', 'array'],
+                'branch_info.*.id'  => ['required', 'string'],
+                'branch_info.*.hours' => ['nullable', 'string'],
+                'branch_info.*.phone' => ['nullable', 'string'],
+                'branch_info.*.email' => ['nullable', 'email'],
+                'branch_info.*.features' => ['nullable', 'array'],
+                'branch_info.*.features.*' => ['string'],
                 'show_pricing'      => ['required', 'boolean'],
                 'show_faq'          => ['required', 'boolean'],
+                'faqs'              => ['nullable', 'array'],
+                'faqs.*.q'          => ['required', 'string'],
+                'faqs.*.a'          => ['required', 'string'],
+                'testimonials'      => ['nullable', 'array'],
+                'testimonials.*.name' => ['required', 'string'],
+                'testimonials.*.role' => ['required', 'string'],
+                'testimonials.*.text' => ['required', 'string'],
+                'testimonials.*.avatar_url' => ['nullable', 'string'],
+                'footer'            => ['nullable', 'array'],
+                'footer.description' => ['nullable', 'string', 'max:1000'],
+                'footer.instagram'  => ['nullable', 'string'],
+                'footer.facebook'   => ['nullable', 'string'],
+                'footer.twitter'    => ['nullable', 'string'],
+                'footer.whatsapp'   => ['nullable', 'string'],
             ]);
 
             $tenantModel = tenant();
