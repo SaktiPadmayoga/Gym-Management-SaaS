@@ -86,7 +86,7 @@ export default function TenantLandingPage() {
         },
     ];
     
-    const faqs = landingConfig.faqs?.length > 0 ? landingConfig.faqs : defaultFaqs;
+    const faqs: Array<{q: string, a: string}> = landingConfig.faqs?.length > 0 ? landingConfig.faqs : defaultFaqs;
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white font-figtree selection:bg-blue-600 selection:text-white antialiased">
@@ -525,7 +525,7 @@ export default function TenantLandingPage() {
                         </div>
 
                         <div className="space-y-4">
-                            {faqs.map((faq, i) => {
+                            {faqs.map((faq: any, i: number) => {
                                 const isOpen = activeFaq === i;
                                 return (
                                     <div key={i} className="bg-zinc-900/30 border border-zinc-900 rounded-2xl overflow-hidden transition-all duration-300">
