@@ -48,6 +48,11 @@ export const tenantAPI = {
         const res = await apiClient.put("/tenant/settings", payload);
         return res.data.data;
     },
+
+    updateLandingPageSettings: async (payload: any): Promise<any> => {
+        const res = await apiClient.put("/tenant/settings/landing-page", payload);
+        return res.data.data;
+    },
 };
 
 export default apiClient;

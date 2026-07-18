@@ -32,6 +32,17 @@ export const TenantCurrentSchema = z.object({
     current_branch: BranchSchema.nullable().optional(),
     branches: z.array(BranchSchema),
     current_domain_id: z.string().nullable().optional(),
+    landing_page: z.object({
+        hero_title: z.string(),
+        hero_subtitle: z.string(),
+        hero_cta_text: z.string(),
+        show_about: z.boolean(),
+        about_description: z.string(),
+        show_classes: z.boolean(),
+        show_locations: z.boolean(),
+        show_pricing: z.boolean(),
+        show_faq: z.boolean(),
+    }).optional(),
 });
 
 export type BranchData = z.infer<typeof BranchSchema>;

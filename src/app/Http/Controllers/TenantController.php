@@ -266,7 +266,17 @@ public function current(Request $request)
             'current_branch'       => $currentBranch,
             'branches'             => $branches,
             'current_domain_id'    => $currentDomainId,
-
+            'landing_page'         => array_merge([
+                'hero_title'        => 'Train. Harder. Transform.',
+                'hero_subtitle'     => 'Premium Fitness Studio & Gym dengan peralatan latihan canggih dan pelatih profesional.',
+                'hero_cta_text'     => 'Gabung Member',
+                'show_about'        => true,
+                'about_description' => 'Kami percaya bahwa kebugaran adalah gaya hidup. Dengan fasilitas modern dan instruktur bersertifikasi, kami siap mendampingi perjalanan transformasi Anda.',
+                'show_classes'      => true,
+                'show_locations'    => true,
+                'show_pricing'      => true,
+                'show_faq'          => true,
+            ], $tenantData->landing_page ?? []),
         ], 'Tenant data retrieved successfully');
 
     } catch (\Exception $e) {
@@ -386,6 +396,56 @@ public function current(Request $request)
             Log::error('uploadLogo error', ['message' => $e->getMessage()]);
             return ApiResponse::error(
                 'Gagal upload logo',
+                config('app.debug') ? $e->getMessage() : null,
+                500
+            );
+        }
+    }
+
+    /**
+     * PUT /api/tenant/settings/landing-page
+     * Update landing page settings for tenant central config.
+     */
+    public function updateLandingPageSettings(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'hero_title'        => ['required', 'string', 'max:255'],
+                'hero_subtitle'     => ['required', 'string', 'max:1000'],
+                'hero_cta_text'     => ['required', 'string', 'max:50'],
+                'show_about'        => ['required', 'boolean'],
+                'about_description' => ['required', 'string', 'max:2000'],
+                'show_classes'      => ['required', 'boolean'],
+                'show_locations'    => ['required', 'boolean'],
+                'show_pricing'      => ['required', 'boolean'],
+                'show_faq'          => ['required', 'boolean'],
+            ]);
+
+            $tenantModel = tenant();
+            if (!$tenantModel) {
+                return ApiResponse::error('Tenant context not found', null, 404);
+            }
+
+            // Load model tenant dari central database agar bisa simpan ke data JSON
+            $tenantData = \App\Models\Tenant::find($tenantModel->id);
+            if (!$tenantData) {
+                return ApiResponse::error('Tenant data not found', null, 404);
+            }
+
+            // Atur properti landing_page (yang akan mentrigger mutator setLandingPageAttribute)
+            $tenantData->landing_page = $validated;
+            $tenantData->save();
+
+            Log::info('Tenant landing page settings updated', ['tenant_id' => $tenantModel->id]);
+
+            return ApiResponse::success($tenantData->landing_page, 'Konfigurasi landing page berhasil diperbarui');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return ApiResponse::error('Validasi gagal', $e->errors(), 422);
+        } catch (\Exception $e) {
+            Log::error('updateLandingPageSettings error', ['message' => $e->getMessage()]);
+            return ApiResponse::error(
+                'Gagal memperbarui konfigurasi landing page',
                 config('app.debug') ? $e->getMessage() : null,
                 500
             );

@@ -84,6 +84,21 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         return Storage::disk('r2')->url($raw);
     }
 
+    /**
+     * Get/Set landing page config stored in central data JSON column
+     */
+    public function getLandingPageAttribute()
+    {
+        return $this->data['landing_page'] ?? null;
+    }
+
+    public function setLandingPageAttribute($value)
+    {
+        $data = $this->data ?? [];
+        $data['landing_page'] = $value;
+        $this->data = $data;
+    }
+
     // CATATAN: branches(), users(), settings() sekarang ada di tenant database
     // Akses melalui: $tenant->run(fn() => Branch::all())
 
